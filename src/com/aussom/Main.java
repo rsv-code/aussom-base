@@ -84,6 +84,7 @@ public class Main {
 		}
 		catch( ParseException exp ) {
 			System.out.println("CLI parse exception:" + exp.getMessage());
+			System.exit(0);
 		}
 	}
 
@@ -104,7 +105,10 @@ public class Main {
 		//System.out.println(eng.toString());
 
 		// Attempt to run the code.
-		eng.run();
+		int result = eng.run();
+
+		// Exit with the code now.
+		System.exit(result);
 	}
 
 	public static String getAussomdocMarkdown(String ScriptFile) throws Exception {

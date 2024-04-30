@@ -363,8 +363,9 @@ public class Engine {
 	 * the first class with a main function. If not found it will throw an exception. 
 	 * If found it will call the entry point of the application (main function).
 	 * @throws aussomException on failure to find main class or on parse errors.
+	 * @return An integer with 0 for success and any other value for failure.
 	 */
-	public void run() throws aussomException {
+	public int run() throws aussomException {
 		if (!this.hasParseErrors) {
 			if (this.debug)
 				System.out.println("[debug] Running program now ...");
@@ -373,7 +374,7 @@ public class Engine {
 			
 			// Set the main class and function.
 			if (this.setMainClassAndFunct()) {
-				this.callMain();
+				return this.callMain();
 			} else {
 				throw new aussomException("Engine.run(): Failed to find main class.");
 			}
@@ -458,8 +459,9 @@ public class Engine {
 	 * locals and instantiates the main class. It then compiles the main function 
 	 * arguments and then calls main to kick off program execution.
 	 * @throws aussomException
+	 * @return An integer with 0 for success and any other value for failure.
 	 */
-	private void callMain() throws aussomException {
+	private int callMain() throws aussomException {
 		Environment tenv = new Environment(this);
 		Members locals = new Members();
 		tenv.setEnvironment(null, locals, this.mainCallStack);
@@ -482,13 +484,18 @@ public class Engine {
 			AussomType ret = new AussomNull();
 			ret = this.mainClassDef.call(tenv, false, "main", margs);
 			if(ret.isEx()) {
-				AussomException ex = (AussomException)ret;
-				System.err.println(((AussomTypeInt)ex).str());
+				AussomException ex = (AussomException) ret;
+				System.err.println(((AussomTypeInt) ex).str());
+				return 1;
+			} else if (ret instanceof AussomInt) {
+				return (int)((AussomInt)ret).getNumericInt();
 			}
 		} else {
 			AussomException ex = (AussomException)tci;
 			System.err.println(ex.toString());
+			return 1;
 		}
+		return 0;
 	}
 	
 	/**
