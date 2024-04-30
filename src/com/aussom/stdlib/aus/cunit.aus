@@ -17,7 +17,7 @@
 include reflect;
 
 /**
- * The test class implements aussom unit test framework cunit.
+ * The test class implements aussom unit test framework aunit.
  */
 class test {
 	private tests = [];

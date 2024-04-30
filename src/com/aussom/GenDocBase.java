@@ -23,7 +23,7 @@ import java.io.File;
 public class GenDocBase {
     public static void main(String[] args) throws Exception {
         // Generates all the docs
-        genDoc("src/com/aussom/stdlib/aus/cunit.aus", "doc");
+        genDoc("src/com/aussom/stdlib/aus/aunit.aus", "doc");
         genDoc("src/com/aussom/stdlib/aus/lang.aus", "doc");
         genDoc("src/com/aussom/stdlib/aus/math.aus", "doc");
         genDoc("src/com/aussom/stdlib/aus/reflect.aus", "doc");

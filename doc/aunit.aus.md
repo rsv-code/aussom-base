@@ -1,4 +1,4 @@
-# file: cunit.aus
+# file: aunit.aus
 
 ## class: test
 [22:7] **extends: object** 
