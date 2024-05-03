@@ -74,6 +74,7 @@ public class Lang {
 		langIncludes.put("reflect.aus", Util.loadResource("/com/aussom/stdlib/aus/reflect.aus"));
 		langIncludes.put("aunit.aus", Util.loadResource("/com/aussom/stdlib/aus/cunit.aus"));
 		langIncludes.put("math.aus", Util.loadResource("/com/aussom/stdlib/aus/math.aus"));
+		langIncludes.put("util.aus", Util.loadResource("/com/aussom/stdlib/aus/util.aus"));
 	}
 	
 	public List<String> listResourceDirectory(String Path) throws IOException, URISyntaxException {
