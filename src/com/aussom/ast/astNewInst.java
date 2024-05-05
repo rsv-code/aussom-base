@@ -19,10 +19,7 @@ package com.aussom.ast;
 import java.util.ArrayList;
 
 import com.aussom.Environment;
-import com.aussom.types.AussomList;
-import com.aussom.types.AussomNull;
-import com.aussom.types.AussomObject;
-import com.aussom.types.AussomType;
+import com.aussom.types.*;
 
 public class astNewInst extends astNode implements astNodeInt {
 	private astFunctDefArgsList args = new astFunctDefArgsList();
@@ -66,7 +63,13 @@ public class astNewInst extends astNode implements astNodeInt {
 		AussomType ret = new AussomNull();
 		
 		if(env.getEngine().containsClass(this.getName())) {
-			AussomList cargs = (AussomList) this.args.eval(env, getref);
+			AussomType targs = this.args.eval(env, getref);
+
+			if (targs.isEx()) {
+				throw new aussomException(this, "Exception while evaluating function arguments for new instance of '" + this.getName() + "'.", ((AussomException)targs).stackTraceToString());
+			}
+
+			AussomList cargs = (AussomList) targs;
 			AussomObject cobj = (AussomObject) env.getEngine().getClassByName(this.getName()).instantiate(env, getref, cargs);
 			
 			if(cobj != null) {
