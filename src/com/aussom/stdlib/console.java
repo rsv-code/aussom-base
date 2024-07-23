@@ -19,13 +19,23 @@ package com.aussom.stdlib;
 import java.util.ArrayList;
 
 import com.aussom.Environment;
+import com.aussom.LoggingInt;
 import com.aussom.types.AussomNull;
 import com.aussom.types.AussomType;
 import com.aussom.types.AussomTypeInt;
 
 public class console {
-	static console instance = null;
-	
+	private static ThreadLocal<console> _instance =
+		new ThreadLocal<console>() {
+			@Override
+			protected console initialValue() {
+				return new console();
+			}
+		};
+
+	private LoggingInt loggingInt = null;
+
+
 	public console() {
 		this.init();
 	}
@@ -35,22 +45,70 @@ public class console {
 	}
 	
 	public static console get() {
-		if(instance == null) instance = new console();
-		return instance;
+		return _instance.get();
+	}
+
+	/**
+	 * Registers a logging interface implementation. If you
+	 * want to deregister a logging interface implementation then
+	 * pass null as an argument.
+	 * @param loggingInt is null or the LoggingInt implementation.
+	 */
+	public void register(LoggingInt loggingInt) {
+		this.loggingInt = loggingInt;
 	}
 	
-	public console log(String Str) { return this.println(Str); }
-	public console info(String Str) { return this.println("[info] " + Str); }
-	public console warn(String Str) { return this.println("[warn] " + Str); }
-	public console err(String Str) { return this.println("[error] " + Str); }
-	
-	public synchronized console print(String Text) {
-		System.out.print(Text);
-		System.out.flush();
+	public console log(String Str) {
+		if (this.loggingInt != null) {
+			this.loggingInt.log(Str);
+		} else {
+			this.println(Str);
+		}
+		return this;
+	}
+	public console info(String Str) {
+		if (this.loggingInt != null) {
+			this.loggingInt.info(Str);
+		} else {
+			this.println("[info] " + Str);
+		}
+		return this;
+	}
+	public console warn(String Str) {
+		if (this.loggingInt != null) {
+			this.loggingInt.warn(Str);
+		} else {
+			this.println("[warn] " + Str);
+		}
+		return this;
+	}
+	public console err(String Str) {
+		if (this.loggingInt != null) {
+			this.loggingInt.err(Str);
+		} else {
+			this.println("[error] " + Str);
+		}
 		return this;
 	}
 	
-	public console println(String Text) { this.print(Text + "\n"); return this; }
+	public synchronized console print(String Text) {
+		if (this.loggingInt != null) {
+			this.loggingInt.print(Text);
+		} else {
+			System.out.print(Text);
+			System.out.flush();
+		}
+		return this;
+	}
+	
+	public console println(String Text) {
+		if (this.loggingInt != null) {
+			this.loggingInt.println(Text);
+		} else {
+			this.print(Text + "\n");
+		}
+		return this;
+	}
 	
 	public AussomType _log(Environment env, ArrayList<AussomType> args) {
 		this.log(((AussomTypeInt)args.get(0)).str());
