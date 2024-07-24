@@ -111,33 +111,32 @@ public class console {
 	}
 	
 	public AussomType _log(Environment env, ArrayList<AussomType> args) {
-		this.log(((AussomTypeInt)args.get(0)).str());
+		console.get().log(((AussomTypeInt)args.get(0)).str());
 		return new AussomNull();
 	}
 	
 	public AussomType _info(Environment env, ArrayList<AussomType> args) {
-		this.info(((AussomTypeInt)args.get(0)).str());
+		console.get().info(((AussomTypeInt)args.get(0)).str());
 		return new AussomNull();
 	}
 	
 	public AussomType _warn(Environment env, ArrayList<AussomType> args) {
-		this.warn(((AussomTypeInt)args.get(0)).str());
+		console.get().warn(((AussomTypeInt)args.get(0)).str());
 		return new AussomNull();
 	}
 	
 	public AussomType _err(Environment env, ArrayList<AussomType> args) {
-		this.err(((AussomTypeInt)args.get(0)).str());
+		console.get().err(((AussomTypeInt)args.get(0)).str());
 		return new AussomNull();
 	}
 	
 	public AussomType _print(Environment env, ArrayList<AussomType> args) {
-		this.print(((AussomTypeInt)args.get(0)).str());
+		console.get().print(((AussomTypeInt)args.get(0)).str());
 		return new AussomNull();
 	}
 	
 	public AussomType _println(Environment env, ArrayList<AussomType> args) {
-		AussomType ret = this._print(env, args);
-		System.out.println();
-		return ret;
+		console.get().println(((AussomTypeInt)args.get(0)).str());
+		return new AussomNull();
 	}
 }
