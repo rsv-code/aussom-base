@@ -3,7 +3,7 @@
   
   <groupId>io.github.rsv-code</groupId>
   <artifactId>aussom.base</artifactId>
-  <version>1.0.5</version>
+  <version>1.0.6</version>
   <packaging>jar</packaging>
   
   <name>aussom.base</name>
@@ -175,7 +175,6 @@
 	        </executions>
 	        
 	      </plugin>
-	      
 	      <plugin>
 			  <groupId>org.sonatype.plugins</groupId>
 			  <artifactId>nexus-staging-maven-plugin</artifactId>
