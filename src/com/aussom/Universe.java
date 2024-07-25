@@ -66,7 +66,12 @@ public class Universe {
 		if (!this.initialized) {
 			// Load native class definitions here!
 			eng.parseString("lang.aus", Lang.get().getLangIncludes().get("lang.aus"));
-			this.classes = eng.getClasses();
+			// Need to deep copy otherwise additions in the engine will
+			// be set here as well.
+			for (String cls : eng.getClasses().keySet()) {
+				astClass c = eng.getClassByName(cls);
+				this.classes.put(cls, c);
+			}
 			this.initialized = true;
 		}
 	}

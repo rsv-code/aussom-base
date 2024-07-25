@@ -183,7 +183,7 @@ public class AJson {
 				}
 			}
 			// OBJECT
-			else if (Universe.get().getClassDef(type) != null) {
+			else if (env.getClassByName(type) != null) {
 				if (obj.containsKey("members")) {
 					cobj = AJson.getJsonObject(env, type, obj);
 				} else {
