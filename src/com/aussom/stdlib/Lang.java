@@ -29,7 +29,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import com.aussom.Engine;
-import com.aussom.Main;
 import com.aussom.Util;
 
 public class Lang {
@@ -42,6 +41,9 @@ public class Lang {
 	 * Instance of this JAR file.
 	 */
 	private File jarFile = null;
+
+	protected Map<String, String> langIncludes = new ConcurrentHashMap<String, String>();
+
 	
 	/**
 	 * Default constructor set to private to defeat instantiation. See get to get an 
@@ -59,9 +61,13 @@ public class Lang {
 		if(instance == null) instance = new Lang();
 		return instance;
 	}
-	
-	public Map<String, String> langIncludes = new ConcurrentHashMap<String, String>();
-	
+
+	/**
+	 * Gets the map with language includes.
+	 * @return A Map with the lang includes.
+	 */
+	public Map<String, String> getLangIncludes() { return this.langIncludes; }
+
 	/**
 	 * Initializes the list of lang includes with the basic includes in 
 	 * com.aussom.stdlib.aus.

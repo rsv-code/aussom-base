@@ -150,11 +150,11 @@ public class Engine {
 	 */
 	public void addInclude(String Include) throws Exception {
 		if (this.debug) console.get().info("Engine.addInclude(): Include: " + Include);
-		if (Lang.get().langIncludes.containsKey(Include)) {
+		if (Lang.get().getLangIncludes().containsKey(Include)) {
 			if (!this.includes.contains(Include)) {
 				if (this.debug) console.get().info("Engine.addInclude(): Adding langInclude: " + Include);
 				this.includes.add(Include);
-				this.parseString(Include, Lang.get().langIncludes.get(Include));
+				this.parseString(Include, Lang.get().getLangIncludes().get(Include));
 			}
 		} else {
 			if (this.debug) console.get().info("Engine.addInclude(): Attempting to find in resourceIncludePaths ...");

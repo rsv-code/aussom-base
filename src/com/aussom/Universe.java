@@ -65,7 +65,7 @@ public class Universe {
 	public void init(Engine eng) throws Exception {
 		if (!this.initialized) {
 			// Load native class definitions here!
-			eng.parseString("lang.aus", Lang.get().langIncludes.get("lang.aus"));
+			eng.parseString("lang.aus", Lang.get().getLangIncludes().get("lang.aus"));
 			this.classes = eng.getClasses();
 			this.initialized = true;
 		}

@@ -3,7 +3,7 @@
   
   <groupId>io.github.rsv-code</groupId>
   <artifactId>aussom.base</artifactId>
-  <version>1.0.7</version>
+  <version>1.0.8</version>
   <packaging>jar</packaging>
   
   <name>aussom.base</name>
