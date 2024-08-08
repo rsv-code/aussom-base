@@ -66,6 +66,25 @@ public class console {
 		}
 		return this;
 	}
+
+	public console trc(String Str) {
+		if (this.loggingInt != null) {
+			this.loggingInt.trc(Str);
+		} else {
+			this.println("[trc] " + Str);
+		}
+		return this;
+	}
+
+	public console dbg(String Str) {
+		if (this.loggingInt != null) {
+			this.loggingInt.dbg(Str);
+		} else {
+			this.println("[dbg] " + Str);
+		}
+		return this;
+	}
+
 	public console info(String Str) {
 		if (this.loggingInt != null) {
 			this.loggingInt.info(Str);
@@ -114,7 +133,17 @@ public class console {
 		console.get().log(((AussomTypeInt)args.get(0)).str());
 		return new AussomNull();
 	}
-	
+
+	public AussomType _trc(Environment env, ArrayList<AussomType> args) {
+		console.get().trc(((AussomTypeInt)args.get(0)).str());
+		return new AussomNull();
+	}
+
+	public AussomType _dbg(Environment env, ArrayList<AussomType> args) {
+		console.get().dbg(((AussomTypeInt)args.get(0)).str());
+		return new AussomNull();
+	}
+
 	public AussomType _info(Environment env, ArrayList<AussomType> args) {
 		console.get().info(((AussomTypeInt)args.get(0)).str());
 		return new AussomNull();

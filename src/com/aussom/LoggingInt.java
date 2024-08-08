@@ -26,6 +26,8 @@ import com.aussom.stdlib.console;
  */
 public interface LoggingInt {
     public void log(String Str);
+    public void trc(String Str);
+    public void dbg(String Str);
     public void info(String Str);
     public void warn(String Str);
     public void err(String Str);

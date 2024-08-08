@@ -367,6 +367,8 @@ extern class exception : com.aussom.types.AussomException {
  */
 static extern class c : com.aussom.stdlib.console {
 	// Console functions
+	public trc(Content) { this._trc(Content); return this; }
+	public dbg(Content) { this._dbg(Content); return this; }
 	public log(Content) { this._log(Content); return this; }
 	public info(Content) { this._info(Content); return this; }
 	public warn(Content) { this._warn(Content); return this; }
@@ -375,6 +377,8 @@ static extern class c : com.aussom.stdlib.console {
 	public println(Content) { this._println(Content); return this; }
 	
 	// Chained extern functions
+	private extern _trc(Content);
+	private extern _dbg(Content);
 	private extern _log(Content);
 	private extern _info(Content);
 	private extern _warn(Content);
