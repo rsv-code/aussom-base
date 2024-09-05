@@ -89,6 +89,12 @@ public class Engine {
 	 * Allowed include paths.
 	 */
 	private List<String> includePaths = new ArrayList<String>();
+
+	/**
+	 * Require exclude paths. This allows setting directories
+	 * that are off limits.
+	 */
+	private List<String> excludePaths = new ArrayList<String>();
 	
 	/**
 	 * List of Aussom includes.
@@ -161,10 +167,10 @@ public class Engine {
 			for (String pth : this.resourceIncludePaths) {
 				List<String> resDir = Lang.get().listResourceDirectory(pth);
 				String tinc = pth + Include;
-				
 				for (String fname : resDir) {
 					if (fname.contains(tinc)) {
-						if (this.debug) console.get().info("Engine.addInclude(): Include " + Include + " found in '" + fname + "'");
+						if (this.debug)
+							console.get().info("Engine.addInclude(): Include " + Include + " found in '" + fname + "'");
 						this.includes.add(tinc);
 						this.parseString(Include, Util.loadResource(tinc));
 						return;
@@ -175,14 +181,18 @@ public class Engine {
 			if (this.debug) console.get().info("Engine.addInclude(): Attempting to find in includePaths ...");
 			for (String pth : this.includePaths) {
 				String tinc = pth + Include;
-				File f = new File(tinc);
-				if (f.exists()) {
-					if (!this.includes.contains(tinc)) {
-						if (this.debug) console.get().info("Engine.addInclude(): Include " + Include + " found in '" + pth + "'");
-						this.includes.add(tinc);
-						this.parseFile(tinc);
-						break;
+				if (!this.isPathExcludePath(tinc)) {
+					File f = new File(tinc);
+					if (f.exists()) {
+						if (!this.includes.contains(tinc)) {
+							if (this.debug) console.get().info("Engine.addInclude(): Include " + Include + " found in '" + pth + "'");
+							this.includes.add(tinc);
+							this.parseFile(tinc);
+							break;
+						}
 					}
+				} else {
+					throw new aussomException("Attempting to add include '" + tinc + "' from excluded path.");
 				}
 			}
 			
@@ -208,6 +218,26 @@ public class Engine {
 	 */
 	public List<String> getIncludePaths() {
 		return this.includePaths;
+	}
+
+	/**
+	 * Adds an exclude path to the list of search paths for Aussom includes.
+	 * @param Path is a String with the exclude search path to add.
+	 */
+	public void addExcludePath(String Path) {
+		String tinc = Path;
+		if (!tinc.endsWith("/")) {
+			tinc += "/";
+		}
+		this.excludePaths.add(tinc);
+	}
+
+	/**
+	 * Gets a list of the search exclude paths.
+	 * @return A List of Strings with the include paths.
+	 */
+	public List<String> getExcludePaths() {
+		return this.excludePaths;
 	}
 	
 	/**
@@ -381,6 +411,22 @@ public class Engine {
 		} else {
 			throw new aussomException("Engine.run(): Parse errors were encountered. Not running.");
 		}
+	}
+
+	/**
+	 * Checks to see if the provided test path is within
+	 * one of the exclude paths. If so it returns true and
+	 * if not it returns false.
+	 * @param testPath is a path to test.
+	 * @return A boolean with true if in an exclude path
+	 * and false if not.
+	 */
+	private boolean isPathExcludePath(String testPath) {
+		for (String excludePath : this.excludePaths) {
+			if (testPath.startsWith(excludePath))
+				return true;
+		}
+		return false;
 	}
 	
 	/**
