@@ -490,17 +490,19 @@ public class Engine {
 	 * @throws aussomException
 	 */
 	private void instantiateStaticClass(astClass ac) throws aussomException {
-		if (this.debug)
-			System.out.println("[debug] Instantiating static class: " + ac.getName());
-		AussomType aci = null;
-		Environment tenv = new Environment(this);
-		Members locals = new Members();
-		tenv.setEnvironment((AussomObject)aci, locals, this.mainCallStack);
-		aci = (AussomObject) ac.instantiate(tenv, false, new AussomList());
-		if(!aci.isEx()) {
-			this.staticClasses.put(ac.getName(), aci);
-		} else {
-			throw new aussomException(((AussomException)aci).getStackTrace());
+		if (this.loadExternClasses) {
+			if (this.debug)
+				System.out.println("[debug] Instantiating static class: " + ac.getName());
+			AussomType aci = null;
+			Environment tenv = new Environment(this);
+			Members locals = new Members();
+			tenv.setEnvironment((AussomObject) aci, locals, this.mainCallStack);
+			aci = (AussomObject) ac.instantiate(tenv, false, new AussomList());
+			if (!aci.isEx()) {
+				this.staticClasses.put(ac.getName(), aci);
+			} else {
+				throw new aussomException(((AussomException) aci).getStackTrace());
+			}
 		}
 	}
 	
