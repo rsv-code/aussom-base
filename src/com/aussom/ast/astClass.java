@@ -430,9 +430,10 @@ public class astClass extends astNode implements astNodeInt {
 		return externClassName;
 	}
 
-	public void setExternClassName(String externClass) throws aussomException {
+	public void setExternClassName(String externClass, boolean LoadExtern) throws aussomException {
 		this.externClassName = externClass;
-		this.loadExternClass();
+		if (LoadExtern)
+			this.loadExternClass();
 	}
 	
 	@SuppressWarnings("rawtypes")

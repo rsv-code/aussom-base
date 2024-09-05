@@ -30,7 +30,6 @@ public class sym {
   public static final int INSTANCEOF = 24;
   public static final int STATIC = 8;
   public static final int RPAREN = 29;
-  public static final int AUSSOM_DOC = 39;
   public static final int AND = 61;
   public static final int NOT = 60;
   public static final int LT = 56;
@@ -63,6 +62,7 @@ public class sym {
   public static final int PROTECTED = 6;
   public static final int CALLBACK = 65;
   public static final int ENUM = 3;
+  public static final int AUSSOM_DOC = 39;
   public static final int WHILE = 21;
   public static final int INSERT = 66;
   public static final int MIEQ = 42;

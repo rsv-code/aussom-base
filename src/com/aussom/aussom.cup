@@ -37,12 +37,14 @@ parser code {:
   Lexer lexer;
   Engine eng = null;
   String fileName;
+  boolean loadExternClasses;
 
-  public parser(Lexer lex, Engine Eng, String FileName) {
+  public parser(Lexer lex, Engine Eng, String FileName, boolean LoadExternClasses) {
       super(lex);
       lexer = lex;
       this.eng = Eng;
       this.fileName = FileName;
+      this.loadExternClasses = LoadExternClasses;
   }
 
   public void report_error(String message, Object info)
@@ -314,7 +316,7 @@ classDefExpr ::=
 		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright);
 		((astClass)ac).setStatic((boolean)is);
 		((astClass)ac).setExtern(true);
-		((astClass)ac).setExternClassName(((astInclude)i).getExternClass());
+		((astClass)ac).setExternClassName(((astInclude)i).getExternClass(), this.parser.loadExternClasses);
 		RESULT = ac;
 	:}
 |	isStatic:is EXTERN CLASSDEF IDENT:className COLON externClassRef:i COMMA extendClassList:cl classSection:ac
@@ -323,7 +325,7 @@ classDefExpr ::=
 		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright);
 		((astClass)ac).setStatic((boolean)is);
 		((astClass)ac).setExtern(true);
-		((astClass)ac).setExternClassName(((astInclude)i).getExternClass());
+		((astClass)ac).setExternClassName(((astInclude)i).getExternClass(), this.parser.loadExternClasses);
 		((astClass)ac).setExtendedClasses(cl);
 		RESULT = ac;
 	:}

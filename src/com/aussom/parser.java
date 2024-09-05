@@ -109,15 +109,15 @@ public class parser extends java_cup.runtime.lr_parser {
   protected static final short[][] _action_table = 
     unpackFromStrings(new String[] {
     "\000\u017a\000\020\003\010\004\uffef\005\004\006\012\012" +
-    "\005\013\uffef\051\014\001\002\000\004\050\u0172\001\002" +
+    "\005\013\uffef\051\013\001\002\000\004\050\u0172\001\002" +
     "\000\006\004\uffee\013\uffee\001\002\000\020\002\001\004" +
-    "\uffef\005\004\006\u016e\012\005\013\uffef\051\014\001\002" +
+    "\uffef\005\004\006\u016e\012\005\013\uffef\051\013\001\002" +
     "\000\020\002\ufff8\004\ufff8\005\ufff8\006\ufff8\012\ufff8\013" +
     "\ufff8\051\ufff8\001\002\000\020\002\ufffb\004\ufffb\005\ufffb" +
     "\006\ufffb\012\ufffb\013\ufffb\051\ufffb\001\002\000\020\002" +
     "\uffff\004\uffff\005\uffff\006\uffff\012\uffff\013\uffff\051\uffff" +
-    "\001\002\000\004\050\024\001\002\000\004\002\u016b\001" +
-    "\002\000\012\004\uffef\005\004\012\005\013\uffef\001\002" +
+    "\001\002\000\004\050\024\001\002\000\012\004\uffef\005" +
+    "\004\012\005\013\uffef\001\002\000\004\002\u016a\001\002" +
     "\000\006\004\016\013\017\001\002\000\004\050\u0165\001" +
     "\002\000\004\004\020\001\002\000\004\050\021\001\002" +
     "\000\004\034\022\001\002\000\004\050\024\001\002\000" +
@@ -991,9 +991,9 @@ public class parser extends java_cup.runtime.lr_parser {
     "\002\ufff6\004\ufff6\005\ufff6\006\ufff6\012\ufff6\013\ufff6\051" +
     "\ufff6\001\002\000\004\050\u0161\001\002\000\006\035\u0162" +
     "\040\030\001\002\000\020\002\ufff5\004\ufff5\005\ufff5\006" +
-    "\ufff5\012\ufff5\013\ufff5\051\ufff5\001\002\000\020\002\ufff7" +
-    "\004\ufff7\005\ufff7\006\ufff7\012\ufff7\013\ufff7\051\ufff7\001" +
-    "\002\000\004\002\000\001\002\000\006\033\u016d\105\370" +
+    "\ufff5\012\ufff5\013\ufff5\051\ufff5\001\002\000\004\002\000" +
+    "\001\002\000\020\002\ufff7\004\ufff7\005\ufff7\006\ufff7\012" +
+    "\ufff7\013\ufff7\051\ufff7\001\002\000\006\033\u016d\105\370" +
     "\001\002\000\020\002\ufffd\004\ufffd\005\ufffd\006\ufffd\012" +
     "\ufffd\013\ufffd\051\ufffd\001\002\000\004\050\024\001\002" +
     "\000\020\002\ufffe\004\ufffe\005\ufffe\006\ufffe\012\ufffe\013" +
@@ -1014,11 +1014,11 @@ public class parser extends java_cup.runtime.lr_parser {
   /** <code>reduce_goto</code> table. */
   protected static final short[][] _reduce_table = 
     unpackFromStrings(new String[] {
-    "\000\u017a\000\014\002\012\003\005\005\010\006\006\007" +
+    "\000\u017a\000\014\002\013\003\005\005\010\006\006\007" +
     "\014\001\001\000\002\001\001\000\002\001\001\000\010" +
     "\005\u016e\006\006\007\014\001\001\000\002\001\001\000" +
     "\002\001\001\000\002\001\001\000\006\004\u016b\052\365" +
-    "\001\001\000\002\001\001\000\006\006\u0169\007\014\001" +
+    "\001\001\000\006\006\u016a\007\014\001\001\000\002\001" +
     "\001\000\002\001\001\000\002\001\001\000\002\001\001" +
     "\000\002\001\001\000\002\001\001\000\006\010\022\052" +
     "\024\001\001\000\004\012\026\001\001\000\002\001\001" +
@@ -1377,12 +1377,14 @@ public class parser extends java_cup.runtime.lr_parser {
   Lexer lexer;
   Engine eng = null;
   String fileName;
+  boolean loadExternClasses;
 
-  public parser(Lexer lex, Engine Eng, String FileName) {
+  public parser(Lexer lex, Engine Eng, String FileName, boolean LoadExternClasses) {
       super(lex);
       lexer = lex;
       this.eng = Eng;
       this.fileName = FileName;
+      this.loadExternClasses = LoadExternClasses;
   }
 
   public void report_error(String message, Object info)
@@ -1684,7 +1686,7 @@ class CUP$parser$actions {
 		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright);
 		((astClass)ac).setStatic((boolean)is);
 		((astClass)ac).setExtern(true);
-		((astClass)ac).setExternClassName(((astInclude)i).getExternClass());
+		((astClass)ac).setExternClassName(((astInclude)i).getExternClass(), this.parser.loadExternClasses);
 		RESULT = ac;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("classDefExpr",4, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-6)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -1715,7 +1717,7 @@ class CUP$parser$actions {
 		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright);
 		((astClass)ac).setStatic((boolean)is);
 		((astClass)ac).setExtern(true);
-		((astClass)ac).setExternClassName(((astInclude)i).getExternClass());
+		((astClass)ac).setExternClassName(((astInclude)i).getExternClass(), this.parser.loadExternClasses);
 		((astClass)ac).setExtendedClasses(cl);
 		RESULT = ac;
 	

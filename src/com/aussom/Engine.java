@@ -44,6 +44,14 @@ public class Engine {
 	 * Flag for printing debug statements to standard out.
 	 */
 	private boolean debug = false;
+
+	/**
+	 * This flag is used to when the Engine parses an
+	 * input file if it should load the extern class. Most
+	 * of the time we do but situations where we don't is when
+	 * we are generating docs from source tree.
+	 */
+	private boolean loadExternClasses = true;
 	
 	/**
 	 * Stores the file names of any included Aussom code files.
@@ -199,7 +207,29 @@ public class Engine {
 			if (this.debug) console.get().info("Engine.addInclude(): Include '" + Include + "' not found at all.");
 		}
 	}
-	
+
+	/**
+	 * Gets the load extern classes flag. If set to
+	 * true the parser will load external Java classes
+	 * as it parses, if set to false it won't. This is
+	 * set to false for doc generation.
+	 * @return A boolean with the flag.
+	 */
+	public boolean isLoadExternClasses() {
+		return loadExternClasses;
+	}
+
+	/**
+	 * Sets the load extern classes flag. If set to
+	 * 	 * true the parser will load external Java classes
+	 * 	 * as it parses, if set to false it won't. This is
+	 * 	 * set to false for doc generation.
+	 * @param loadExternClasses is a boolean with the flag.
+	 */
+	public void setLoadExternClasses(boolean loadExternClasses) {
+		this.loadExternClasses = loadExternClasses;
+	}
+
 	/**
 	 * Adds an include path to the list of search paths for Aussom includes.
 	 * @param Path is a String with the search path to add.
@@ -383,7 +413,7 @@ public class Engine {
 	 */
 	public void parseString(String FileName, String Contents) throws Exception {
 		Lexer scanner = new Lexer(new StringReader(Contents));
-		parser p = new parser(scanner, this, FileName);
+		parser p = new parser(scanner, this, FileName, this.loadExternClasses);
 		p.parse();
 		this.fileNames.add(FileName);
 	}
