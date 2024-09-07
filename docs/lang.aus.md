@@ -168,6 +168,8 @@
 
 [21:14] (extern: com.aussom.types.AussomBool) **extends: object** 
 
+Implements bool datatype methods.
+
 #### Methods
 
 - **toInt** ()
@@ -225,6 +227,8 @@
 ## class: string
 
 [240:14] (extern: com.aussom.types.AussomString) **extends: object** 
+
+Implements string datatype methods.
 
 #### Methods
 
@@ -312,6 +316,8 @@
 
 [207:14] (extern: com.aussom.types.AussomDouble) **extends: object** 
 
+Implements double datatype methods.
+
 #### Methods
 
 - **toInt** ()
@@ -349,6 +355,8 @@
 ## class: list
 
 [272:14] (extern: com.aussom.types.AussomList) **extends: object** 
+
+Implements list datatype methods.
 
 #### Methods
 
@@ -427,6 +435,8 @@
 
 [337:14] (extern: com.aussom.types.AussomNull) **extends: object** 
 
+Implements null datatype methods.
+
 #### Methods
 
 - **toJson** ()
@@ -440,6 +450,9 @@
 ## class: Double
 
 [224:21] `static` (extern: com.aussom.stdlib.SDouble) **extends: object** 
+
+Static class Double implements functions the operate on
+double data types.
 
 #### Methods
 
@@ -478,6 +491,8 @@
 ## class: int
 
 [83:14] (extern: com.aussom.types.AussomInt) **extends: object** 
+
+Implements int datatype methods.
 
 #### Methods
 
@@ -578,6 +593,9 @@
 
 [187:21] `static` (extern: com.aussom.stdlib.SInt) **extends: object** 
 
+Static class Int implements functions the operate on
+int data types.
+
 #### Methods
 
 - **maxVal** ()
@@ -641,6 +659,9 @@
 
 [71:21] `static` (extern: com.aussom.stdlib.SBool) **extends: object** 
 
+Static class Bool implements functions the operate on
+bool data types.
+
 #### Methods
 
 - **parse** (`string Val`)
@@ -656,6 +677,8 @@
 ## class: callback
 
 [329:14] (extern: com.aussom.types.AussomCallback) **extends: object** 
+
+Implements callback datatype methods.
 
 #### Methods
 
@@ -923,6 +946,8 @@
 
 [301:14] (extern: com.aussom.types.AussomMap) **extends: object** 
 
+Implements map datatype methods.
+
 #### Methods
 
 - **clear** ()
@@ -982,6 +1007,8 @@
 ## class: object
 
 [321:14] (extern: com.aussom.types.AussomObject) 
+
+Implements object datatype methods.
 
 #### Methods
 

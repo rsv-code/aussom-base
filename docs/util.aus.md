@@ -4,6 +4,8 @@
 
 [20:21] `static` (extern: com.aussom.stdlib.ABase64) **extends: object** 
 
+base64
+
 #### Methods
 
 - **encode** (`object BufferObj`)
@@ -44,6 +46,8 @@
 
 [73:21] `static` (extern: com.aussom.stdlib.AUuid) **extends: object** 
 
+uuid
+
 #### Methods
 
 - **get** ()
@@ -65,6 +69,8 @@
 ## class: hex
 
 [53:21] `static` (extern: com.aussom.stdlib.AHex) **extends: object** 
+
+hex
 
 #### Methods
 
@@ -89,6 +95,8 @@
 ## class: regex
 
 [92:21] `static` (extern: com.aussom.stdlib.ARegex) **extends: object** 
+
+uuid
 
 #### Methods
 

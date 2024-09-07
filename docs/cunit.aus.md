@@ -4,6 +4,8 @@
 
 [22:7] **extends: object** 
 
+The test class implements aussom unit test framework aunit.
+
 #### Members
 - **tests**
 - **passed**
