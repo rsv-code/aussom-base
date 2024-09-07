@@ -1,4 +1,4 @@
-# file: cunit.aus
+# file: aunit.aus
 
 ## class: test
 
