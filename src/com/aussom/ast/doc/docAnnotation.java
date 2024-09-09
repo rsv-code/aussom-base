@@ -46,4 +46,12 @@ public class docAnnotation extends docText {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    public String getCombinedValue() {
+        String ret = this.value;
+        if (this.description != null && !this.description.equals("")) {
+            ret += " " + description;
+        }
+        return ret;
+    }
 }
