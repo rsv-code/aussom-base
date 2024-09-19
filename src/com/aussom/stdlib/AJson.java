@@ -40,9 +40,14 @@ public class AJson {
 		String jstr = ((AussomString)args.get(0)).getValueString();
 		
 		JSONParser parser = new JSONParser();
-		JSONObject jobj = (JSONObject) parser.parse(jstr);
-		
-		return AJson.parseJsonObject(jobj);
+		Object parsed = parser.parse(jstr);
+		if (parsed instanceof JSONArray) {
+			JSONArray jarr = (JSONArray) parsed;
+			return AJson.parseJsonArray(jarr);
+		} else {
+			JSONObject jobj = (JSONObject) parsed;
+			return AJson.parseJsonObject(jobj);
+		}
 	}
 	
 	/**
