@@ -244,6 +244,20 @@ class interpreterTests : test {
 			.add("(# operator) Member list count.", ::operMemberListCount)
 			.add("(# operator) Member map count.", ::operMemberMapCount)
 		;
+
+		// Basic logic tests.
+		this
+			// && oper
+			.add("(&& operator) Both true.", ::operAndTrueTrue)
+			.add("(&& operator) Short circuit.", ::operAndFalseTrue)
+			.add("(&& operator) Right only.", ::operAndTrueFalse)
+			.add("(&& operator) Both false.", ::operAndFalseFalse)
+			// || oper
+			.add("(|| operator) Both true.", ::operOrTrueTrue)
+			.add("(|| operator) Left only.", ::operOrFalseTrue)
+			.add("(|| operator) Short circuit.", ::operOrTrueFalse)
+			.add("(|| operator) Both false.", ::operOrFalseFalse)
+		;
 		
 		// List operations
 		this
@@ -682,7 +696,16 @@ class interpreterTests : test {
 	 public operLocalMapCount() { var = {}; var['char'] = "Tyler"; return this.expect(#var, 1); }
 	 public operMemberListCount() { return this.expect(#this.memList, 3); }
 	 public operMemberMapCount() { return this.expect(#this.memMap, 3); }
-	 
+
+	 public operAndTrueTrue() { return this.expect(true && true, true); }
+	 public operAndFalseTrue() { return this.expect(false && true, false); }
+	 public operAndTrueFalse() { return this.expect(true && false, false); }
+	 public operAndFalseFalse() { return this.expect(false && false, false); }
+	 public operOrTrueTrue() { return this.expect(true || true, true); }
+	 public operOrFalseTrue() { return this.expect(false || true, true); }
+	 public operOrTrueFalse() { return this.expect(true || false, true); }
+	 public operOrFalseFalse() { return this.expect(false || false, false); }
+
 	 /***********************************************************************
 	  * List operations.
 	  *********************************************************************/

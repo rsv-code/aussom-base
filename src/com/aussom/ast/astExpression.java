@@ -239,6 +239,18 @@ public class astExpression extends astNode implements astNodeInt {
 
 		AussomType r_left  = left.eval(env, getRef);
 		if(!r_left.isEx()) {
+
+			// Short circuit evaluation of OR and AND.
+			if (this.eType == expType.AND) {
+				boolean left = this.boolVal(r_left);
+				if (!left)
+					return new AussomBool(false);
+			} else if (this.eType == expType.OR) {
+				boolean left = this.boolVal(r_left);
+				if (left)
+					return new AussomBool(true);
+			}
+
 			AussomType r_right = right.eval(env, getRef);
 			if(!r_right.isEx()) {
 				switch(this.eType) {
@@ -276,10 +288,10 @@ public class astExpression extends astNode implements astNodeInt {
 						ret = evalGreaterThanEquals(env, r_left, r_right);
 						break;
 					} case AND: {
-						ret = evalAnd(env, r_left, r_right);
+						ret = evalAnd(env, r_right);
 						break;
 					} case OR: {
-						ret = evalOr(env, r_left, r_right);
+						ret = evalOr(env, r_right);
 						break;
 					} case INSERT: {
 						ret = evalInsert(env, r_left, r_right);
@@ -585,33 +597,13 @@ public class astExpression extends astNode implements astNodeInt {
 
 		return ret;
 	}
-	
-	private AussomType evalAnd(Environment env, AussomType r_left, AussomType r_right) {
-		if (r_left.isEx()) {
-			return r_left;
-		} else if (r_right.isEx()) {
-			return r_right;
-		} else {
-		  if (this.boolVal(r_left) && this.boolVal(r_right)) {
-			  return new AussomBool(true);
-		  } else {
-			  return new AussomBool(false);
-		  }
-		}
+
+	private AussomType evalAnd(Environment env, AussomType r_right) {
+		return new AussomBool(this.boolVal(r_right));
 	}
 	
-	private AussomType evalOr(Environment env, AussomType r_left, AussomType r_right) {
-		if (r_left.isEx()) {
-			return r_left;
-		} else if (r_right.isEx()) {
-			return r_right;
-		} else {
-		  if (this.boolVal(r_left) || this.boolVal(r_right)) {
-			  return new AussomBool(true);
-		  } else {
-			  return new AussomBool(false);
-		  }
-		}
+	private AussomType evalOr(Environment env, AussomType r_right) {
+		return new AussomBool(this.boolVal(r_right));
 	}
 	
 	private AussomType evalInsert(Environment env, AussomType r_left, AussomType r_right) {
