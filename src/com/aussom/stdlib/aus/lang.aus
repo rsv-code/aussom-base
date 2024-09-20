@@ -303,6 +303,7 @@ extern class map : com.aussom.types.AussomMap {
 	public extern containsKey(string Key);
 	public extern containsVal(Val);
 	public extern get(string Key);
+	public extern getd(string Key, defVal);
 	public extern isEmpty();
 	public extern keySet();
 	public extern put(string Key, Val);

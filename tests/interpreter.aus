@@ -486,6 +486,7 @@ class interpreterTests : test {
 			.add("(lang map) Map contains key.", ::mapContainsKey)
 			.add("(lang map) Map contains value.", ::mapContainsValue)
 			.add("(lang map) Map get.", ::mapGet)
+			.add("(lang map) Map getd default val.", ::mapGetd)
 			.add("(lang map) Map is empty.", ::mapIsEmpty)
 			.add("(lang map) Map key set.", ::mapKeySet)
 			.add("(lang map) Map put.", ::mapPut)
@@ -993,6 +994,7 @@ class interpreterTests : test {
 	public mapContainsKey() { this.tmap['name'] = "Tyler"; return this.expect(this.tmap.containsKey('name'), true); }
 	public mapContainsValue() { val = 'programmer'; this.tmap['occupation'] = val; return this.expect(this.tmap.containsVal(val), true); }
 	public mapGet() { return this.expect(this.tmap.get('occupation'), 'programmer'); }
+	public mapGetd() { return this.expect(this.tmap.getd('hobby', 'soap maker'), 'soap maker'); }
 	public mapIsEmpty() { return this.expect(this.tmap.isEmpty(), false); }
 	public mapKeySet() { return this.expect(#this.tmap.keySet(), 2); }
 	public mapPut() { this.tmap.put('age', 32); return this.expect(this.tmap['age'], 32); }

@@ -135,6 +135,15 @@ public class AussomMap extends AussomObject implements AussomTypeInt, AussomType
 	public AussomType get(Environment env, ArrayList<AussomType> args) {
 		return this.value.get(((AussomString)args.get(0)).getValue());
 	}
+
+	public AussomType getd(Environment env, ArrayList<AussomType> args) {
+		String key = ((AussomString)args.get(0)).getValue();
+		if (this.value.containsKey(key))
+			return this.value.get(key);
+		else {
+			return args.get(1);
+		}
+	}
 	
 	public AussomType isEmpty(Environment env, ArrayList<AussomType> args) {
 		return new AussomBool(this.value.isEmpty());
