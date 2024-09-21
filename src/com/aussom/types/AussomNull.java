@@ -37,6 +37,10 @@ public class AussomNull extends AussomObject implements AussomTypeInt, AussomTyp
 		}
 	}
 
+	public AussomType isBlank(Environment env, ArrayList<AussomType> args) {
+		return new AussomBool(true);
+	}
+
 	@Override
 	public String toString(int Level) {
 		String rstr = "";

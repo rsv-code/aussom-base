@@ -249,6 +249,7 @@ extern class string : com.aussom.types.AussomString {
 	public extern indexOf(string Needle);
 	public extern indexOfStart(string Needle, int StartIndex);
 	public extern isEmpty();
+	public extern isBlank();
 	public extern lastIndexOf(string Needle);
 	public extern lastIndexOfStart(string Needle, int StartIndex);
 	public extern length();
@@ -338,6 +339,7 @@ extern class callback : com.aussom.types.AussomCallback {
 extern class cnull : com.aussom.types.AussomNull {
 	public extern toJson();
 	public extern pack();
+	public extern isBlank();
 }
 
 	    

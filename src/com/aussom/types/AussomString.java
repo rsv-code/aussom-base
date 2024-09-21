@@ -122,6 +122,10 @@ public class AussomString extends AussomObject implements AussomTypeInt, AussomT
 	public AussomType isEmpty(Environment env, ArrayList<AussomType> args) {
 		return new AussomBool(this.value.isEmpty());
 	}
+
+	public AussomType isBlank(Environment env, ArrayList<AussomType> args) {
+		return new AussomBool(this.value.trim().isEmpty());
+	}
 	
 	public AussomType lastIndexOf(Environment env, ArrayList<AussomType> args) {
 		return new AussomInt(this.value.lastIndexOf(((AussomString)args.get(0)).getValue()));
