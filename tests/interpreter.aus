@@ -351,6 +351,11 @@ class interpreterTests : test {
 			.add("(if/else) If/Else statement else return false.", ::ifElseElseReturnFalse)
 			.add("(if/else) If/Else statement else if true.", ::ifElseElseIfTrue)
 		;
+
+		// Loop
+		this
+		    .add("(for/break) Inner and outer for loop with break statement.", ::forLoopInnerOuterBreak)
+		;
 		
 		// lang tests
 		this
@@ -839,6 +844,21 @@ class interpreterTests : test {
 	 	else if(true) { res = true; }
 	 	else { res = false; }
 	 	return this.expect(res, true);
+	 }
+
+	 /***********************************************************************
+	  * loop tests
+	  *********************************************************************/
+	 public forLoopInnerOuterBreak() {
+	    breakSuccess = false;
+	    for (i = 0; i < 5; i++) {
+	        for (j = 0; j < 5; j++) {
+	            break;
+	        }
+	        breakSuccess = true;
+	        break;
+	    }
+	    return this.expect(breakSuccess, true);
 	 }
 	 
 	 /***********************************************************************

@@ -95,8 +95,10 @@ public class astFor extends astNode implements astNodeInt {
 						break;
 				}
 				
-				if(astNode.isBreakReturnEvent(ret))
+				if(astNode.isBreakReturnEvent(ret)) {
+					ret = new AussomNull();
 					break;
+				}
 			}
 		}
 		else if(titems.getType() == cType.cMap) {
@@ -112,8 +114,10 @@ public class astFor extends astNode implements astNodeInt {
 						break;
 				}
 				
-				if(astNode.isBreakReturnEvent(ret))
+				if(astNode.isBreakReturnEvent(ret)) {
+					ret = new AussomNull();
 					break;
+				}
 			}
 		}
 		else {
@@ -139,9 +143,10 @@ public class astFor extends astNode implements astNodeInt {
 					break;
 			}
 			
-			if(astNode.isBreakReturnEvent(ret))
+			if(astNode.isBreakReturnEvent(ret)) {
+				ret = new AussomNull();
 				break;
-			else {
+			} else {
 				// Increment step
 				@SuppressWarnings("unused")
 				AussomType einc = this.exprInc.eval(env, getref);

@@ -69,9 +69,10 @@ public class astWhile extends astNode implements astNodeInt
 				if(astNode.isBreakReturnEvent(ret))
 					break;
 			}
-			if(astNode.isBreakReturnEvent(ret))
+			if(astNode.isBreakReturnEvent(ret)) {
+				ret = new AussomNull();
 				break;
-			else {
+			} else {
 				etemp = this.expr.eval(env, getref);
 				tmp = etemp.evalExpressionBool();
 			}
