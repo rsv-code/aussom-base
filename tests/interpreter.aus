@@ -355,6 +355,7 @@ class interpreterTests : test {
 		// Loop
 		this
 		    .add("(for/break) Inner and outer for loop with break statement.", ::forLoopInnerOuterBreak)
+		    .add("(for/return) Inside return in for loop.", ::forLoopReturn)
 		;
 		
 		// lang tests
@@ -859,6 +860,16 @@ class interpreterTests : test {
 	        break;
 	    }
 	    return this.expect(breakSuccess, true);
+	 }
+	 public forLoopReturn() {
+	    return this.expect(this.forLoopTest(), 2);
+	 }
+	 private forLoopTest() {
+	    for (i = 0; i < 5; i++) {
+	        if (i == 2) {
+	            return i;
+	        }
+	    }
 	 }
 	 
 	 /***********************************************************************

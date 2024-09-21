@@ -220,6 +220,11 @@ public class astNode {
 		if((ret != null)&&((ret.getType() == cType.cReturn)||(ret.getType() == cType.cBreak))) return true;
 		return false;
 	}
+
+	public static boolean isBreakEvent(AussomType ret) {
+		if(ret.getType() == cType.cBreak) return true;
+		return false;
+	}
 	
 	public static boolean isBreakReturnExcept(AussomType ret) {
 		if (astNode.isBreakReturnEvent(ret) || ret.getType() == cType.cException) return true;

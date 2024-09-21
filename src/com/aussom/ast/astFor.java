@@ -96,7 +96,8 @@ public class astFor extends astNode implements astNodeInt {
 				}
 				
 				if(astNode.isBreakReturnEvent(ret)) {
-					ret = new AussomNull();
+					if (astNode.isBreakEvent(ret))
+						ret = new AussomNull();
 					break;
 				}
 			}
@@ -115,7 +116,8 @@ public class astFor extends astNode implements astNodeInt {
 				}
 				
 				if(astNode.isBreakReturnEvent(ret)) {
-					ret = new AussomNull();
+					if (astNode.isBreakEvent(ret))
+						ret = new AussomNull();
 					break;
 				}
 			}
@@ -144,7 +146,8 @@ public class astFor extends astNode implements astNodeInt {
 			}
 			
 			if(astNode.isBreakReturnEvent(ret)) {
-				ret = new AussomNull();
+				if (astNode.isBreakEvent(ret))
+					ret = new AussomNull();
 				break;
 			} else {
 				// Increment step
