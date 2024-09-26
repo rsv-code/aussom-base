@@ -39,11 +39,6 @@ public class Engine {
 	 * The security manager instance for this engine.
 	 */
 	private SecurityManagerInt secman = null;
-	
-	/**
-	 * Flag for printing debug statements to standard out.
-	 */
-	private boolean debug = false;
 
 	/**
 	 * This flag is used to when the Engine parses an
@@ -163,22 +158,21 @@ public class Engine {
 	 * @throws Exception on parse failure.
 	 */
 	public void addInclude(String Include) throws Exception {
-		if (this.debug) console.get().info("Engine.addInclude(): Include: " + Include);
+		console.get().trc("Engine.addInclude(): Include: " + Include);
 		if (Lang.get().getLangIncludes().containsKey(Include)) {
 			if (!this.includes.contains(Include)) {
-				if (this.debug) console.get().info("Engine.addInclude(): Adding langInclude: " + Include);
+				console.get().trc("Engine.addInclude(): Adding langInclude: " + Include);
 				this.includes.add(Include);
 				this.parseString(Include, Lang.get().getLangIncludes().get(Include));
 			}
 		} else {
-			if (this.debug) console.get().info("Engine.addInclude(): Attempting to find in resourceIncludePaths ...");
+			console.get().trc("Engine.addInclude(): Attempting to find in resourceIncludePaths ...");
 			for (String pth : this.resourceIncludePaths) {
 				List<String> resDir = Lang.get().listResourceDirectory(pth);
 				String tinc = pth + Include;
 				for (String fname : resDir) {
 					if (fname.contains(tinc)) {
-						if (this.debug)
-							console.get().info("Engine.addInclude(): Include " + Include + " found in '" + fname + "'");
+						console.get().trc("Engine.addInclude(): Include " + Include + " found in '" + fname + "'");
 						this.includes.add(tinc);
 						this.parseString(Include, Util.loadResource(tinc));
 						return;
@@ -186,14 +180,14 @@ public class Engine {
 				}
 			}
 			
-			if (this.debug) console.get().info("Engine.addInclude(): Attempting to find in includePaths ...");
+			console.get().trc("Engine.addInclude(): Attempting to find in includePaths ...");
 			for (String pth : this.includePaths) {
 				String tinc = pth + Include;
 				if (!this.isPathExcludePath(tinc)) {
 					File f = new File(tinc);
 					if (f.exists()) {
 						if (!this.includes.contains(tinc)) {
-							if (this.debug) console.get().info("Engine.addInclude(): Include " + Include + " found in '" + pth + "'");
+							console.get().trc("Engine.addInclude(): Include " + Include + " found in '" + pth + "'");
 							this.includes.add(tinc);
 							this.parseFile(tinc);
 							break;
@@ -204,7 +198,7 @@ public class Engine {
 				}
 			}
 			
-			if (this.debug) console.get().info("Engine.addInclude(): Include '" + Include + "' not found at all.");
+			console.get().trc("Engine.addInclude(): Include '" + Include + "' not found at all.");
 		}
 	}
 
@@ -362,24 +356,7 @@ public class Engine {
 	public Map<String, astClass> getClasses() {
 		return this.classes;
 	}
-	
-	/**
-	 * Sets the debug flag. If set to true the engine will print various 
-	 * verbose debug statements to standard output.
-	 * @param Debug is a boolean with true for debug and false for not.
-	 */
-	public void setDebug(boolean Debug) {
-		this.debug = Debug;
-	}
-	
-	/**
-	 * Gets the debug flag.
-	 * @return A boolean with true for debug and false for not.
-	 */
-	public boolean getDebug() {
-		return this.debug;
-	}
-	
+
 	/**
 	 * This function loads the native type class definitions 
 	 * in the Engine class set. This is need if you want to 
@@ -427,8 +404,7 @@ public class Engine {
 	 */
 	public int run() throws aussomException {
 		if (!this.hasParseErrors) {
-			if (this.debug)
-				System.out.println("[debug] Running program now ...");
+			console.get().trc("Running program now ...");
 	
 			this.mainCallStack = new CallStack();
 			
@@ -491,8 +467,7 @@ public class Engine {
 	 */
 	private void instantiateStaticClass(astClass ac) throws aussomException {
 		if (this.loadExternClasses) {
-			if (this.debug)
-				System.out.println("[debug] Instantiating static class: " + ac.getName());
+			console.get().trc("Instantiating static class: " + ac.getName());
 			AussomType aci = null;
 			Environment tenv = new Environment(this);
 			Members locals = new Members();
