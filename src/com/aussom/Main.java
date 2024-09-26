@@ -16,6 +16,7 @@
 
 package com.aussom;
 
+import com.aussom.stdlib.Lang;
 import com.aussom.stdlib.console;
 import org.apache.commons.cli.*;
 
@@ -89,6 +90,11 @@ public class Main {
 	}
 
 	public static void runFile(String ScriptFile) throws Exception {
+		// Setup the logger.
+		DefaultLoggingImpl logger = new DefaultLoggingImpl();
+		logger.setLevel(DefaultLoggingImpl.INFO);
+		console.get().register(logger);
+
 		// Create a new Aussom engine.
 		Engine eng = new Engine(new DefaultSecurityManagerImpl());
 
