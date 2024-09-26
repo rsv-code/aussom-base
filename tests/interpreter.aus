@@ -276,6 +276,7 @@ class interpreterTests : test {
 			.add("(list operations) List member append local deref with var.", ::listMemberAppendLocalVarRef)
 			.add("(list operations) List local new list.", ::listLocalNewList)
 			.add("(list operations) List local get by local var.", ::listLocalGetLocalVar)
+			.add("(list operations) Ensure exceptions are propagated up.", ::listPropagateException)
 		;
 		
 		// Map operations
@@ -350,6 +351,13 @@ class interpreterTests : test {
 			.add("(if/else) If/Else statement return true.", ::ifElseIfReturnTrue)
 			.add("(if/else) If/Else statement else return false.", ::ifElseElseReturnFalse)
 			.add("(if/else) If/Else statement else if true.", ::ifElseElseIfTrue)
+		;
+
+		// Switch
+		this
+			.add("(switch) Switch statement case 1.", ::switchCase1)
+			.add("(switch) Switch statement case 2.", ::switchCase2)
+			.add("(switch) Switch statement default case.", ::switchCaseDefault)
 		;
 
 		// Loop
@@ -738,6 +746,16 @@ class interpreterTests : test {
 	 	ind = 1;
 	 	return this.expect(lst[ind], 'two');
 	 }
+	 public listPropagateException() {
+	    excaught = false;
+	    tobj = {};
+	    try {
+	        nlist = ['1', 2, tobj.doesntExist];
+	    } catch (e) {
+	        excaught = true;
+	    }
+	    return this.expect(excaught, true);
+	 }
 	 
 	 /***********************************************************************
 	  * Map operations.
@@ -774,6 +792,16 @@ class interpreterTests : test {
 	 	key = 'name';
 	 	mp[key] = 'Tyler';
 	 	return this.expect(mp[key], 'Tyler');
+	 }
+	 public mapPropagateException() {
+	    excaught = false;
+	    tobj = {};
+	    try {
+	        nmap = { one: '1', two: 2, three: tobj.doesntExist };
+	    } catch (e) {
+	        excaught = true;
+	    }
+	    return this.expect(excaught, true);
 	 }
 	 
 	 
@@ -845,6 +873,54 @@ class interpreterTests : test {
 	 	else if(true) { res = true; }
 	 	else { res = false; }
 	 	return this.expect(res, true);
+	 }
+
+	/***********************************************************************
+	  * switch tests
+	  *********************************************************************/
+	 public switchCase1() {
+        val = "one";
+        ret = "";
+        switch(val) {
+            case "one": {
+                ret = "one";
+            } case "two": {
+                ret = "two";
+            } default: {
+                ret = "def";
+            }
+        }
+        return this.expect(ret, "one");
+	 }
+
+	 public switchCase2() {
+        val = "two";
+        ret = "";
+        switch(val) {
+            case "one": {
+                ret = "one";
+            } case "two": {
+                ret = "two";
+            } default: {
+                ret = "def";
+            }
+        }
+        return this.expect(ret, "two");
+	 }
+
+	 public switchCaseDefault() {
+        val = "";
+        ret = "";
+        switch(val) {
+            case "one": {
+                ret = "one";
+            } case "two": {
+                ret = "two";
+            } default: {
+                ret = "def";
+            }
+        }
+        return this.expect(ret, "def");
 	 }
 
 	 /***********************************************************************

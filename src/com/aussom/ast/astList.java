@@ -63,7 +63,10 @@ public class astList extends astNode implements astNodeInt {
 	public AussomType evalImpl(Environment env, boolean getref) throws aussomException {
 		AussomList cl = new AussomList();
 		for (astNode item : this.items) {
-			cl.add(item.eval(env, getref));
+			AussomType tmp = item.eval(env, getref);
+			if (tmp.isEx())
+				return tmp;
+			cl.add(tmp);
 		}
 		
 		if (this.getChild() != null) {
