@@ -70,6 +70,14 @@ public class astFunctCall extends astNode implements astNodeInt {
 	public AussomType evalImpl(Environment env, boolean getRef) throws aussomException {
 		AussomType ret = new AussomNull();
 
+		// First, check there's a current object we're working
+		// with. If not, they forgot 'this' likely.
+		if (env.getCurObj() == null) {
+			AussomException e = new AussomException(exType.exInternal);
+			e.setException(this.getLineNum(), "MISSING_OBJECT", "The function call '" + getName() + "' has no object. Are you forgetting 'this' or the object before before the function call?", env.getCallStack().getStackTrace());
+			return e;
+		}
+
 		if (this.functionHasAccess(env, this.getName())) {
 		  AussomType cargs;
 		  if(this.args != null) {
