@@ -76,6 +76,12 @@ public class astTryCatch extends astNode implements astNodeInt
 		}
 		
 		if(!except.isNull()){
+			// Set the local object flag. This is needed or else
+			// when the exception object is used in the catch block
+			// it will be see as a regular exception and continue
+			// to be thrown.
+			((AussomException)except).setLocalObject(true);
+
 			AussomType tnode = null;
 			try {
 				tnode = this.initArgs(env, getRef, (AussomException)except);

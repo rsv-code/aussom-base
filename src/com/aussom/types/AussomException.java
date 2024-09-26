@@ -36,6 +36,11 @@ public class AussomException extends AussomObject implements AussomTypeInt {
 	private String text = "";
 	private String details = "";
 	private String stackTrace = "";
+
+	// This flag is needed to differentiate thrown exceptions from
+	// ones being passed aroudn as objects. Throw needs to set this
+	// flag to false and catch needs to set it to true.
+	private boolean isLocalObject = false;
 	
 	public AussomException() {
 		this.setType(cType.cException);
@@ -127,7 +132,15 @@ public class AussomException extends AussomObject implements AussomTypeInt {
 	public String getExceptionTypeString() {
 		return this.et.name();
 	}
-	
+
+	public boolean isLocalObject() {
+		return isLocalObject;
+	}
+
+	public void setLocalObject(boolean localObject) {
+		isLocalObject = localObject;
+	}
+
 	public String stackTraceToString() {
 		String rstr = "line ";
 		rstr += this.lineNumber;

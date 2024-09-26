@@ -34,7 +34,7 @@ public class AussomType {
 	}
 	
 	public boolean isEx() {
-		if (this.type == cType.cException) { return true; }
+		if (this.type == cType.cException && !((AussomException)this).isLocalObject()) { return true; }
 		return false;
 	}
 	
