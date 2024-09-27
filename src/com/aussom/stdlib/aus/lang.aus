@@ -16,7 +16,8 @@
 
 
 /**
- * Implements bool datatype methods.
+ * The bool class implements bool datatype methods. These
+ * functions can be used on any bool value.
  */
 extern class bool : com.aussom.types.AussomBool {
     /**
@@ -65,8 +66,9 @@ extern class bool : com.aussom.types.AussomBool {
 }
 
 /**
- * Static class Bool implements functions the operate on
- * bool data types.
+ * Static class Bool implements functions that operate on
+ * bool data types. For example you can use Bool.parse()
+ * to parse a string value.
  */
 static extern class Bool : com.aussom.stdlib.SBool {
     /**
@@ -78,7 +80,8 @@ static extern class Bool : com.aussom.stdlib.SBool {
 }
 
 /**
- * Implements int datatype methods.
+ * The int class implements int datatype methods. These
+ * functions can be used on any int value.
  */
 extern class int : com.aussom.types.AussomInt {
     /**
@@ -145,92 +148,226 @@ extern class int : com.aussom.types.AussomInt {
 	public extern rotateRight(int Distance);
 
 	/**
-     *
+     * Returns the signum function.
+     * @r An int with the signum function.
      */
 	public extern signum();
 
 	/**
-     *
+     * Returns a string with this value as an
+     * unsigned integer in base 2.
+     * @r A string with the binary value.
      */
 	public extern toBinary();
 
 	/**
-     *
+     * Returns a string with this value as an
+     * unsigned integer in base 16.
+     * @r A string with the base 16 value.
      */
 	public extern toHex();
 
 	/**
-     *
+     * Returns a string with the value as an
+     * unsigned integer in base 8.
+     * @r A string with the base 8 value.
      */
 	public extern toOctal();
 
 	/**
-     *
+     * Parses the provided string with the provided
+     * radix.
+     * @p Str is a string to parse.
+     * @p Radix is the optional radix value to use.
+     * @r An int with the parsed value.
      */
 	public extern parse(string Str, int Radix = null);
 
 	/**
-     *
+     * Converts the value to a JSON encoded string.
+     * @r A JSON encoded string.
      */
 	public extern toJson();
 
 	/**
-     *
+     * Serializes the data into a structure.
+     * @r A packed string.
      */
 	public extern pack();
 }
 
 /**
  * Static class Int implements functions the operate on
- * int data types.
+ * int data types. For instance you can call
+ * Int.maxVal() to get the maximum integer value.
  */
 static extern class Int : com.aussom.stdlib.SInt {
     /**
-     *
+     * Returns the max int value available. This translates
+     * to Javas Long.MAX_VALUE.
      */
 	public extern maxVal();
 
 	/**
-     *
+     * Returns the min int value available. This translates
+     * to Javas Long.IN_VALUE.
      */
 	public extern minVal();
 
 	/**
-     *
+     * Parses the provided string with the provided
+     * radix.
+     * @p Str is a string to parse.
+     * @p Radix is the optional radix value to use.
+     * @r An int with the parsed value.
      */
 	public extern parse(string Str, int Radix = null);
 }
 
 /**
- * Implements double datatype methods.
+ * The int class implements int datatype methods. These
+ * functions can be used on any int value.
  */
 extern class double : com.aussom.types.AussomDouble {
+    /**
+     * Casts the double value to int. This will truncate
+     * any fractional part of the double and converts internall
+     * to a Long int value.
+     * @r An int with the converted value.
+     */
 	public extern toInt();
+
+	/**
+	 * Converts the double value to a boolean value. If the double
+	 * value is 0.0, it's converted to false and otherwise it's
+	 * converted to true.
+	 * @r A bool with the converted value.
+	 */
 	public extern toBool();
+
+	/**
+	 * Converts the double value to a string.
+	 * @r A string with the converted value.
+	 */
 	public extern toString();
+
+	/**
+	 * Compares the provided double value to the current
+	 * value and returns an int with the result. The value
+	 * returned is 0 if the current value is numerically
+	 * equal to Val2. A value less than 0 is returned if
+	 * the current value is less than Val2, and a value
+	 * greater than 0 if the current value is greater than
+	 * Val2.
+	 * @p Val2 is a double with the value to compare.
+	 * @r An in with the comparison result.
+	 */
 	public extern compare(double Val2);
+
+	/**
+	 * Returns a bool with true if infinite and false
+	 * if not.
+	 * @r A bool with true for infinite and false for not.
+	 */
 	public extern isInfinite();
+
+	/**
+	 * Returns the is not a number flag.
+	 * @r A bool with true if NaN, or false if not.
+	 */
 	public extern isNan();
+
+	/**
+	 * Parses the provided string value.
+	 * @r A double value that is the parsed value from the provided string.
+	 */
 	public extern parse(string Val);
+
+	/**
+	 * Returns a hexadecimal string representation
+	 * of the double value.
+	 * @r A string with the hex value.
+	 */
 	public extern toHex();
+
+	/**
+     * Converts the value to a JSON encoded string.
+     * @r A JSON encoded string.
+     */
 	public extern toJson();
+
+	/**
+     * Serializes the data into a structure.
+     * @r A packed string.
+     */
 	public extern pack();
 }
 
 /**
  * Static class Double implements functions the operate on
- * double data types.
+ * double data types. For instance you can call
+ * Double.maxVal() to get the maximum double value.
  */
 static extern class Double : com.aussom.stdlib.SDouble {
+    /**
+     * Gets the maximum exponent value. (Java Double.MAX_EXPONENT)
+     * @r An int with the max exponent size.
+     */
 	public extern maxExp();
+
+	/**
+     * Gets the double maximum value. (Java Double.MAX_VALUE)
+     * @r A double with the maximum value.
+     */
 	public extern maxVal();
+
+	/**
+     * Gets the minimum exponent value. (Java Double.MIN_EXPONENT)
+     * @r An int with the minimum exponent value.
+     */
 	public extern minExp();
+
+	/**
+     * Gets the double minimum normal value. (Java Double.MIN_NORMAL)
+     * @r A double with the minimum normal value.
+     */
 	public extern minNormal();
+
+	/**
+     * Gets the double minimum value. (Java Double.MIN_VALUE)
+     * @r A double with the minumum value.
+     */
 	public extern minVal();
+
+	/**
+     * Returns the not a number (NaN) constant value.
+     * @r A double with the NaN value.
+     */
 	public extern nanVal();
+
+	/**
+     * Gets the negative infinity value.
+     * @r A double with the negative indinity value.
+     */
 	public extern negInfinity();
+
+	/**
+     * Gets the positivie infinity value.
+     * @r A double with the positive indinity value.
+     */
 	public extern posInfinity();
+
+	/**
+     * Gets the number of bits used to represent
+     * a double value.
+     * @r An int with the number of bits.
+     */
 	public extern size();
+
+	/**
+	 * Parses the provided string value.
+	 * @r A double value that is the parsed value from the provided string.
+	 */
 	public extern parse(string Val);
 }
 
@@ -238,32 +375,240 @@ static extern class Double : com.aussom.stdlib.SDouble {
  * Implements string datatype methods.
  */
 extern class string : com.aussom.types.AussomString {
+    /**
+     * Gets the character at the provided index. It returns
+     * the character at the provided index as a new string and
+     * can throw an index out of bounds exception.
+     * @p Index is an int with the index to get the character at.
+     * @r A string with the character at that index.
+     */
 	public extern charAt(int Index);
+
+	/**
+     * This compare function returns an int with the comparison
+     * value. It returns a 0 if the strings are equal. It returns
+     * a negative value if the current value lexicographically precedes
+     * the provided Str value and is posititive if it lexicographically
+     * follows the provided Str value.
+     * @p Str is the string to compare to.
+     * @r An int with the return value.
+     */
 	public extern compare(string Str);
+
+	/**
+     * Compares the provided string to the current one ignoring case.
+     * The comparison is the same as string.compare() but just
+     * ignoring case.
+     * @p Str is the string to compare to.
+     * @r An int with the return value.
+     */
 	public extern compareICase(string Str);
+
+	/**
+     * Concatenates the provided string value to the
+     * current string value and storing it as the
+     * current string value. This function appends the
+     * provided string.
+     * @p Str is the string to concatenate.
+     * @r this string object
+     */
 	public extern concat(string Str);
+
+	/**
+     * Checks to see if the current string value contains
+     * the provided string value.
+     * @p Needle is a string with the value to check.
+     * @r A bool with true if it contains it and false if not.
+     */
 	public extern contains(string Needle);
+
+	/**
+     * Checks to see if the string ends with the
+     * provided string.
+     * @p Suffix is string to check.
+     * @r A bool with true if it ends with the
+     * provided string and false if not.
+     */
 	public extern endsWith(string Suffix);
+
+	/**
+     * Checks to see if the provided string equals
+     * the current string.
+     * @p Str is a string to check.
+     * @r A bool with true if it equal and false if not.
+     */
 	public extern equals(string Str);
+
+	/**
+     * Similar to string.equals() this compares the current
+     * string to the provided one but it ignores case.
+     * @p Str is a string to check.
+     * @r A bool with true if it equal and false if not.
+     */
 	public extern equalsICase(string Str);
+
+	/**
+     * Returns the index within this string of
+     * the first occurrence of the specified substring. If not
+     * found it returns -1.
+     * @p Needle is a string to look for.
+     * @r An int with the begining index or -1 if not found.
+     */
 	public extern indexOf(string Needle);
+
+	/**
+     * Similar to string.indexOf() this function returns the index
+     * within this string of the first occurrence of the specified
+     * found it returns -1. It starts checking in the provided
+     * start index.
+     * @p Needle is a string to look for.
+     * @p StartIndex is a string with the starting index
+     * to check from.
+     * @r An int with the begining index or -1 if not found.
+     */
 	public extern indexOfStart(string Needle, int StartIndex);
+
+	/**
+     * Checks to see if the string is empty. It only
+     * returns true if the string length is 0.
+     * @r A bool with true if empty and false if not.
+     */
 	public extern isEmpty();
+
+	/**
+     * Checks to see if the blank is empty after performing
+     * a string.trim(). So this will return true if the string
+     * has no characters, or is only white space.
+     * @r A bool with true if is blank and false if not.
+     */
 	public extern isBlank();
+
+	/**
+     * Finds the last index of the provided string
+     * and returns -1 if not found.
+     * @p Needle is the string to search for.
+     * @r The last index of the string being searched
+     * for or -1 if not found.
+     */
 	public extern lastIndexOf(string Needle);
+
+	/**
+     * Finds the last index of the provided string
+     * and returns -1 if not found. Note that the function
+     * starts search at the last index and searches forward
+     * so when you provide a start index it will search
+     * backward from that position in the curret string.
+     * @p Needle is the string to search for.
+     * @p StartIndex is an int with the begining index to
+     * start searching backwards from.
+     * @r The last index of the string being searched
+     * for or -1 if not found.
+     */
 	public extern lastIndexOfStart(string Needle, int StartIndex);
+
+	/**
+     * Gets the string length.
+     * @r An int with the string length.
+     */
 	public extern length();
+
+	/**
+     * Checks to see if the provided Java regex expression
+     * matches the current string. It returns true if it
+     * matches and false if not.
+     * @p Regex is a string with a Java regular expression
+     * to match.
+     * @r A boolean with true if it matches and false if not.
+     */
 	public extern matches(string Regex);
+
+	/**
+     * Replaces the string to find with the provided
+     * replacement and returns the new string.
+     * @p Find is a string to find.
+     * @p Replace is a string to replace with.
+     * @r A new string with the replaced string.
+     */
 	public extern replace(string Find, string Replace);
+
+	/**
+     * Replace the first occurance of the search regular expression
+     * with the provided replacement string.
+     * @p Regex is a string with the regular expression to look for.
+     * @p Replace is the string to replace with.
+     * @r A new string with the replaced value.
+     */
 	public extern replaceFirstRegex(string Regex, string Replace);
+
+	/**
+     * Replaces all instance the provied regular expression
+     * matches with the provided replacement string.
+     * @p Regex is a string with the regex pattern.
+     * @p Replace is a string with the replacement string.
+     * @r A new string with the replaced parts.
+     */
 	public extern replaceRegex(string Regex, string Replace);
+
+	/**
+     * Splits the current string by the provided delimiter. If
+     * allow blanks is set to true, it will also return blank
+     * parts between delimiters, otherwise trimmed sections that
+     * are empty won't be included in the results.
+     * @p Delim is a string with the delimier to split on.
+     * @p AllowBlanks is an optional bool with true to return blank
+     * sections and false for not. The default is false.
+     * @r A list with the split values.
+     */
 	public extern split(string Delim, bool AllowBlanks = false);
+
+	/**
+     * Checks if the current string starts with the provided string.
+     * @p Prefix is the string to check if it starts with.
+     * @r A bool with true if it starts with and false if not.
+     */
 	public extern startsWith(string Prefix);
+
+	/**
+     * Substring returns a sub string of the current string
+     * value with the provided index and optional end index.
+     * @p Index is the start index to get the substring from.
+     * @p EndIndex is the optional end index to get the
+     * substring from. Default is null.
+     * @r A string with the sub string value.
+     */
 	public extern substr(int Index, int EndIndex = null);
+
+	/**
+     * Converts the string to lower case.
+     * @r A string with the current string value but all lower case.
+     */
 	public extern toLower();
+
+	/**
+     * Converts the string to upper case.
+     * @r A string with the current string value but all upper case.
+     */
 	public extern toUpper();
+
+	/**
+     * Removes all of the leading and trainig blank characters
+     * from the current string. The blank characters are defined
+     * as any character whose codepoint is less than or equal
+     * to 'U+0020' (the space character).
+     * @r A string with the leading and training whitespace removed.
+     */
 	public extern trim();
+
+	/**
+     * Converts the value to a JSON encoded string.
+     * @r A JSON encoded string.
+     */
 	public extern toJson();
+
+	/**
+     * Serializes the data into a structure.
+     * @r A packed string.
+     */
 	public extern pack();
 }
 
@@ -271,28 +616,180 @@ extern class string : com.aussom.types.AussomString {
  * Implements list datatype methods.
  */
 extern class list : com.aussom.types.AussomList {
+    /**
+     * Adds the provided item to the list.
+     * @p ItemToAdd is any item to add.
+     * @r this object
+     */
 	public extern add(ItemToAdd);
+
+	/**
+     * Adds all the items in the provided list to the
+     * current list.
+     * @p ListToAdd is a list with the items to add.
+     * @r this object
+     */
 	public extern addAll(list ListToAdd);
+
+	/**
+     * Adds all items in the provided list to the current
+     * list at the provided index.
+     * @p ListToAdd is a list of items to add.
+     * @p Index is an int with the index to start adding items at.
+     * @r this object
+     */
 	public extern addAllAt(list ListToAdd, int Index);
+
+	/**
+     * Removes all items from the list.
+     * @r this object
+     */
 	public extern clear();
+
+	/**
+     * Clones the current list and returns a shallow
+     * copy of the current list.
+     * @r A new list with the cloned values.
+     */
 	public extern clone();
+
+	/**
+     * Checks to see if the provided item exists in the current
+     * list. This function only works for primitive types such as
+     * null, bool, int, double, and string.
+     * @p Item is the item to check for.
+     * @r A bool with true if found and false if not.
+     */
 	public extern contains(Item);
+
+	/**
+     * Checks to see if the current list contains the provided
+     * object reference.
+     * @p Item is any item to check for the reference in the list.
+     * @r A bool with true if found and false if not.
+     */
 	public extern containsObjRef(Item);
+
+	/**
+     * Gets the item at the provided index.
+     * @p Index is an int with the index to get the item at.
+     * @r The item found at the provided index.
+     */
 	public extern get(int Index);
+
+	/**
+     * Returns the index of the provided item in the list
+     * and -1 if not found.
+     * @p Item is the item to find in the list.
+     * @r An int with the index of the item or -1 if not found.
+     */
 	public extern indexOf(Item);
+
+	/**
+     * Checks to see if the list is empty.
+     * @r A bool with true if empty and false if not.
+     */
 	public extern isEmpty();
+
+	/**
+     * Removes the provided item from the list.
+     * @p Item is the item to remove from the list.
+     * @r this object
+     */
 	public extern remove(Item);
+
+	/**
+     * Remove the item at the provided index.
+     * @p Index is an int with the index to remove the item at.
+     * @r The item that was removed from the list.
+     */
 	public extern removeAt(int Index);
+
+	/**
+     * Removes all items from the current list with
+     * the provided list.
+     * @p ListToRemove is the list of items to remove from the
+     * current list.
+     * @r A bool with true if the list has changed and false if not.
+     */
 	public extern removeAll(list ListToRemove);
+
+	/**
+     * Retains only those items provided in the list.
+     * @p ListToRetain is a list of items to retain in the
+     * current list.
+     * @r A bool with true if the list has changed and false if not.
+     */
 	public extern retainAll(list ListToRetain);
+
+	/**
+     * Sets the provided item at the provided index.
+     * @p Index is an int with the index to set the item at.
+     * @p Item is the item to set.
+     * @r The previous item that was at the location.
+     */
 	public extern set(int Index, Item);
+
+	/**
+     * Gets the size of the list.
+     * @r An int with the size of the list.
+     */
 	public extern size();
+
+	/**
+     * Produces a sub list with the provided start
+     * and end indexes from the current list.
+     * @p StartIndex is an int with the starting index.
+     * @p EndIndex is an int with the ending index.
+     * @r A new list with the items between start and end indexes.
+     */
 	public extern subList(int StartIndex, int EndIndex);
+
+	/**
+     * Sorts the list descending. This function should work
+     * for any type and uses the compare function to sort the
+     * items.
+     * @r A sorted list.
+     */
 	public extern sort();
+
+	/**
+     * Sorts the list ascending. This function should work
+     * for any type and uses the compare function to sort the
+     * items.
+     * @r A sorted list.
+     */
 	public extern sortAsc();
+
+	/**
+     * Joins the items in the current list with the
+     * provided string.
+     * @p Glue is a string to use to join the items together.
+     * @r A string with the joined parts.
+     */
 	public extern join(string Glue);
+
+	/**
+     * Sorts the list with the provided custom
+     * compare callback. The function definition must
+     * take the two items that are being compared and return
+     * an int with either a negative value, 0, or a positive
+     * value that's used to sort the list.
+     * @p OnCompare is a callback that does the
+     * comparison for sorting.
+     */
 	public extern sortCustom(callback OnCompare);
+
+	/**
+     * Converts the value to a JSON encoded string.
+     * @r A JSON encoded string.
+     */
 	public extern toJson();
+
+	/**
+     * Serializes the data into a structure.
+     * @r A packed string.
+     */
 	public extern pack();
 }
 
@@ -300,20 +797,81 @@ extern class list : com.aussom.types.AussomList {
  * Implements map datatype methods.
  */
 extern class map : com.aussom.types.AussomMap {
+    /**
+     *
+     */
 	public extern clear();
+
+	/**
+     *
+     */
 	public extern containsKey(string Key);
+
+	/**
+     *
+     */
 	public extern containsVal(Val);
+
+	/**
+     *
+     */
 	public extern get(string Key);
+
+	/**
+     *
+     */
 	public extern getd(string Key, defVal);
+
+	/**
+     *
+     */
 	public extern isEmpty();
+
+	/**
+     *
+     */
 	public extern keySet();
+
+	/**
+     *
+     */
 	public extern put(string Key, Val);
+
+	/**
+     *
+     */
 	public extern putAll(map ToAdd);
+
+	/**
+     *
+     */
 	public extern putIfAbsent(string Key, Val);
+
+	/**
+     *
+     */
 	public extern remove(string Key);
+
+	/**
+     *
+     */
 	public extern size();
+
+	/**
+     *
+     */
 	public extern values();
+
+	/**
+     * Converts the value to a JSON encoded string.
+     * @r A JSON encoded string.
+     */
 	public extern toJson();
+
+	/**
+     * Serializes the data into a structure.
+     * @r A packed string.
+     */
 	public extern pack();
 }
 
@@ -321,7 +879,16 @@ extern class map : com.aussom.types.AussomMap {
  * Implements object datatype methods.
  */
 extern class object : com.aussom.types.AussomObject {
+	/**
+     * Converts the value to a JSON encoded string.
+     * @r A JSON encoded string.
+     */
 	public extern toJson();
+
+	/**
+     * Serializes the data into a structure.
+     * @r A packed string.
+     */
 	public extern pack();
 }
 
@@ -337,7 +904,16 @@ extern class callback : com.aussom.types.AussomCallback {
  * Implements null datatype methods.
  */
 extern class cnull : com.aussom.types.AussomNull {
+	/**
+     * Converts the value to a JSON encoded string.
+     * @r A JSON encoded string.
+     */
 	public extern toJson();
+
+	/**
+     * Serializes the data into a structure.
+     * @r A packed string.
+     */
 	public extern pack();
 	public extern isBlank();
 }

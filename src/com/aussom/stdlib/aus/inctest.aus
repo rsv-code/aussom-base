@@ -16,6 +16,7 @@
 
 /**
  * This class only exists to test the resource loading system.
+ * You can disregard it.
  */
 class inctest {
 	public value = "worked";

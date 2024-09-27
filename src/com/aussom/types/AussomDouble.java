@@ -72,7 +72,7 @@ public class AussomDouble extends AussomObject implements AussomTypeInt, AussomT
 	}
 	
 	public AussomType toInt(Environment env, ArrayList<AussomType> args) {
-		return new AussomInt((int)this.value);
+		return new AussomInt((long)this.value);
 	}
 	
 	public AussomType toBool(Environment env, ArrayList<AussomType> args) {
