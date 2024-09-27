@@ -798,67 +798,100 @@ extern class list : com.aussom.types.AussomList {
  */
 extern class map : com.aussom.types.AussomMap {
     /**
-     *
+     * Clears the current map contents.
+     * @r this object
      */
 	public extern clear();
 
 	/**
-     *
+     * Checks to see if the current map contains the
+     * provided key.
+     * @p Key is a strig to check for.
+     * @r A bool with true if found and false if not.
      */
 	public extern containsKey(string Key);
 
 	/**
-     *
+     * Checks to see if the map contains the
+     * provided value. This checks for the object
+     * reference and doesn't do any comparison of values.
+     * @p Val is the value to check for.
+     * @r A bool with true if found and false if not.
      */
 	public extern containsVal(Val);
 
 	/**
-     *
+     * Gets the value with the provided key.
+     * @p Key is a string with the key for the value to get.
+     * @r A value or null if not found.
      */
 	public extern get(string Key);
 
 	/**
-     *
+     * Gets the value with the provided key and returns it.
+     * If not found it returns the provided default value.
+     * @p Key is a string with the key for the value to get.
+     * @p defVal is the default value to return if the
+     * key isn't found.
+     * @r The value of for the provided key or the default
+     * value if not found.
      */
 	public extern getd(string Key, defVal);
 
 	/**
-     *
+     * Checks to see if the current map is empty.
+     * @r A bool with true if empty or false if not.
      */
 	public extern isEmpty();
 
 	/**
-     *
+     * Gets a list of the available keys.
+     * @r A list of strings with the keys.
      */
 	public extern keySet();
 
 	/**
-     *
+     * Puts the provided value with the provided key.
+     * @p Key is a string with the key to set.
+     * @p Val is the value to set.
+     * @r this object
      */
 	public extern put(string Key, Val);
 
 	/**
-     *
+     * Puts all the items from the provided map
+     * into the current map.
+     * @p ToAdd is a map with the keys and values to add.
+     * @r this object
      */
 	public extern putAll(map ToAdd);
 
 	/**
-     *
+     * Puts the key and value pair if they key
+     * doesn't already exist.
+     * @p Key is the key to set.
+     * @p Val is the value to set.
+     * @r this object
      */
 	public extern putIfAbsent(string Key, Val);
 
 	/**
-     *
+     * Removes the key value pair with the provided key.
+     * @p Key is a string with the key to remove.
+     * @r The value of the item that was removed or
+     * null if not found.
      */
 	public extern remove(string Key);
 
 	/**
-     *
+     * Gets the size of the map.
+     * @r An int with the map size.
      */
 	public extern size();
 
 	/**
-     *
+     * Gets a list of the values in the map.
+     * @r A list with the map values.
      */
 	public extern values();
 
