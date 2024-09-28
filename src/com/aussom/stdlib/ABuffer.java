@@ -63,17 +63,17 @@ public class ABuffer {
 		return new AussomInt(this.buff.length);
 	}
 	
-	public AussomType _clear(Environment env, ArrayList<AussomType> args) {
+	public AussomType clear(Environment env, ArrayList<AussomType> args) {
 		synchronized(this) {
 			byte b = 0;
 			Arrays.fill(this.buff, b);
 			this.readCursor = 0;
 			this.writeCursor = 0;
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _writeSeek(Environment env, ArrayList<AussomType> args) {
+	public AussomType writeSeek(Environment env, ArrayList<AussomType> args) {
 		synchronized(this) {
 			int index = (int)((AussomInt)args.get(0)).getValue();
 			if((index >= 0)&&(index < buff.length)) {
@@ -81,11 +81,11 @@ public class ABuffer {
 			} else {
 				return new AussomException("buffer.writeSeek(): Index out of bounds.");
 			}
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _readSeek(Environment env, ArrayList<AussomType> args) {
+	public AussomType readSeek(Environment env, ArrayList<AussomType> args) {
 		synchronized(this) {
 			int index = (int)((AussomInt)args.get(0)).getValue();
 			if((index >= 0)&&(index < buff.length)) {
@@ -93,105 +93,105 @@ public class ABuffer {
 			} else {
 				return new AussomException("buffer.readSeek(): Index out of bounds.");
 			}
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _addString(Environment env, ArrayList<AussomType> args) throws aussomException {
+	public AussomType addString(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
 			String str = ((AussomString)args.get(0)).getValueString();
 			String cset = ((AussomString)args.get(1)).getValueString();
 			this._setStringAt(this.writeCursor, str, cset);
 			this.writeCursor += str.getBytes().length;
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _addByte(Environment env, ArrayList<AussomType> args) throws aussomException {
+	public AussomType addByte(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
 			int index = this.writeCursor;
 			int ival = (int)((AussomInt)args.get(0)).getValue();
 			this.setByte(index, ival); this.writeCursor++;
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _addUByte(Environment env, ArrayList<AussomType> args) throws aussomException {
+	public AussomType addUByte(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
 			int index = this.writeCursor;
 			int ival = (int)((AussomInt)args.get(0)).getValue();
 			this.setUByte(index, ival); this.writeCursor++;
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _addShort(Environment env, ArrayList<AussomType> args) throws aussomException {
+	public AussomType addShort(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
 			int index = this.writeCursor;
 			short ival = (short)((AussomInt)args.get(0)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(1)).getValueString());
 			this.setShort(index, ival, bo); this.writeCursor += 2;
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _addUShort(Environment env, ArrayList<AussomType> args) throws aussomException {
+	public AussomType addUShort(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
 			int index = this.writeCursor;
 			int ival = (short)((AussomInt)args.get(0)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(1)).getValueString());
 			this.setUShort(index, ival, bo); this.writeCursor += 2;
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _addInt(Environment env, ArrayList<AussomType> args) throws aussomException {
+	public AussomType addInt(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
 			int index = this.writeCursor;
 			int ival = (int)((AussomInt)args.get(0)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(1)).getValueString());
 			this.setInt(index, ival, bo); this.writeCursor += 4;
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _addUInt(Environment env, ArrayList<AussomType> args) throws aussomException {
+	public AussomType addUInt(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
 			int index = this.writeCursor;
 			long ival = ((AussomInt)args.get(0)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(1)).getValueString());
 			this.setUInt(index, ival, bo); this.writeCursor += 4;
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _addLong(Environment env, ArrayList<AussomType> args) throws aussomException {
+	public AussomType addLong(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
 			int index = this.writeCursor;
 			long ival = ((AussomInt)args.get(0)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(1)).getValueString());
 			this.setLong(index, ival, bo); this.writeCursor += 8;
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _addFloat(Environment env, ArrayList<AussomType> args) throws aussomException {
+	public AussomType addFloat(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
 			int index = this.writeCursor;
 			double tval = ((AussomDouble)args.get(0)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(1)).getValueString());
 			this.setFloat(index, tval, bo); this.writeCursor += 4;
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _addDouble(Environment env, ArrayList<AussomType> args) throws aussomException {
+	public AussomType addDouble(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
 			int index = this.writeCursor;
 			double tval = ((AussomDouble)args.get(0)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(1)).getValueString());
 			this.setDouble(index, tval, bo); this.writeCursor += 8;
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
@@ -323,91 +323,91 @@ public class ABuffer {
 		}
 	}
 	
-	public AussomType _setByte(Environment env, ArrayList<AussomType> args) throws aussomException {
+	public AussomType setByte(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
 			int index = (int)((AussomInt)args.get(0)).getValue();
 			int ival = (int)((AussomInt)args.get(1)).getValue();
 			this.setByte(index, ival);
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _setUByte(Environment env, ArrayList<AussomType> args) throws aussomException {
+	public AussomType setUByte(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
 			int index = (int)((AussomInt)args.get(0)).getValue();
 			int ival = (int)((AussomInt)args.get(1)).getValue();
 			this.setUByte(index, ival);
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _setShort(Environment env, ArrayList<AussomType> args) throws aussomException {
+	public AussomType setShort(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
 			int index = (int)((AussomInt)args.get(0)).getValue();
 			short ival = (short)((AussomInt)args.get(1)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(2)).getValueString());
 			this.setShort(index, ival, bo);
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _setUShort(Environment env, ArrayList<AussomType> args) throws aussomException {
+	public AussomType setUShort(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
 			int index = (int)((AussomInt)args.get(0)).getValue();
 			int ival = (short)((AussomInt)args.get(1)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(2)).getValueString());
 			this.setUShort(index, ival, bo);
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _setInt(Environment env, ArrayList<AussomType> args) throws aussomException {
+	public AussomType setInt(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
 			int index = (int)((AussomInt)args.get(0)).getValue();
 			int ival = (int)((AussomInt)args.get(1)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(2)).getValueString());
 			this.setInt(index, ival, bo);
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _setUInt(Environment env, ArrayList<AussomType> args) throws aussomException {
+	public AussomType setUInt(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
 			int index = (int)((AussomInt)args.get(0)).getValue();
 			long ival = ((AussomInt)args.get(1)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(2)).getValueString());
 			this.setUInt(index, ival, bo);
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _setLong(Environment env, ArrayList<AussomType> args) throws aussomException {
+	public AussomType setLong(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
 			int index = (int)((AussomInt)args.get(0)).getValue();
 			long ival = ((AussomInt)args.get(1)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(2)).getValueString());
 			this.setLong(index, ival, bo);
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _setFloat(Environment env, ArrayList<AussomType> args) throws aussomException {
+	public AussomType setFloat(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
 			int index = (int)((AussomInt)args.get(0)).getValue();
 			double tval = ((AussomDouble)args.get(1)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(2)).getValueString());
 			this.setFloat(index, tval, bo);
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _setDouble(Environment env, ArrayList<AussomType> args) throws aussomException {
+	public AussomType setDouble(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
 			int index = (int)((AussomInt)args.get(0)).getValue();
 			double tval = ((AussomDouble)args.get(1)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(2)).getValueString());
 			this.setDouble(index, tval, bo);
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
@@ -594,7 +594,7 @@ public class ABuffer {
 		}
 	}
 	
-	public AussomType _copyFrom(Environment env, ArrayList<AussomType> args) {
+	public AussomType copyFrom(Environment env, ArrayList<AussomType> args) {
 		synchronized(this) {
 			int dindex = (int)((AussomInt)args.get(0)).getValue();
 			AussomObject obj = (AussomObject)args.get(1);
@@ -618,11 +618,11 @@ public class ABuffer {
 				return new AussomException("buffer.copyFrom(): Destination buffer overflow.");
 			}
 			
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	
-	public AussomType _copyTo(Environment env, ArrayList<AussomType> args) {
+	public AussomType copyTo(Environment env, ArrayList<AussomType> args) {
 		synchronized(this) {
 			int sindex = (int)((AussomInt)args.get(0)).getValue();
 			AussomObject obj = (AussomObject)args.get(1);
@@ -646,7 +646,7 @@ public class ABuffer {
 				return new AussomException("buffer.copyTo(): Destination buffer overflow.");
 			}
 			
-			return new AussomNull();
+			return env.getClassInstance();
 		}
 	}
 	

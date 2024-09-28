@@ -129,43 +129,43 @@ public class console {
 		return this;
 	}
 	
-	public AussomType _log(Environment env, ArrayList<AussomType> args) {
+	public AussomType log(Environment env, ArrayList<AussomType> args) {
 		console.get().log(((AussomTypeInt)args.get(0)).str());
-		return new AussomNull();
+		return env.getClassInstance();
 	}
 
-	public AussomType _trc(Environment env, ArrayList<AussomType> args) {
+	public AussomType trc(Environment env, ArrayList<AussomType> args) {
 		console.get().trc(((AussomTypeInt)args.get(0)).str());
-		return new AussomNull();
+		return env.getClassInstance();
 	}
 
-	public AussomType _dbg(Environment env, ArrayList<AussomType> args) {
+	public AussomType dbg(Environment env, ArrayList<AussomType> args) {
 		console.get().dbg(((AussomTypeInt)args.get(0)).str());
-		return new AussomNull();
+		return env.getClassInstance();
 	}
 
-	public AussomType _info(Environment env, ArrayList<AussomType> args) {
+	public AussomType info(Environment env, ArrayList<AussomType> args) {
 		console.get().info(((AussomTypeInt)args.get(0)).str());
-		return new AussomNull();
+		return env.getClassInstance();
 	}
 	
-	public AussomType _warn(Environment env, ArrayList<AussomType> args) {
+	public AussomType warn(Environment env, ArrayList<AussomType> args) {
 		console.get().warn(((AussomTypeInt)args.get(0)).str());
-		return new AussomNull();
+		return env.getClassInstance();
 	}
 	
-	public AussomType _err(Environment env, ArrayList<AussomType> args) {
+	public AussomType err(Environment env, ArrayList<AussomType> args) {
 		console.get().err(((AussomTypeInt)args.get(0)).str());
-		return new AussomNull();
+		return env.getClassInstance();
 	}
 	
-	public AussomType _print(Environment env, ArrayList<AussomType> args) {
+	public AussomType print(Environment env, ArrayList<AussomType> args) {
 		console.get().print(((AussomTypeInt)args.get(0)).str());
-		return new AussomNull();
+		return env.getClassInstance();
 	}
 	
-	public AussomType _println(Environment env, ArrayList<AussomType> args) {
+	public AussomType println(Environment env, ArrayList<AussomType> args) {
 		console.get().println(((AussomTypeInt)args.get(0)).str());
-		return new AussomNull();
+		return env.getClassInstance();
 	}
 }

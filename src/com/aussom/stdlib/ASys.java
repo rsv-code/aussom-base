@@ -231,9 +231,8 @@ public class ASys {
 		return new AussomInt(System.currentTimeMillis());
 	}
 	
-	public static AussomType _sleep(Environment env, ArrayList<AussomType> args) throws InterruptedException {
-		AussomType ret = new AussomNull();
+	public static AussomType sleep(Environment env, ArrayList<AussomType> args) throws InterruptedException {
 		Thread.sleep(((AussomInt)args.get(0)).getValue());
-		return ret;
+		return env.getClassInstance();
 	}
 }

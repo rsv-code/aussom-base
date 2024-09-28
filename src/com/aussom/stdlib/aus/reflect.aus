@@ -23,7 +23,6 @@
  * the runtime that may not be granted.
  */
 static extern class reflect : com.aussom.stdlib.AReflect {
-	// Reflection functions.
 	/**
 	 * Evaluates the provided Aussom code string. Using this function
 	 * requires 'reflect.eval.string' security manager permission.
@@ -32,7 +31,7 @@ static extern class reflect : com.aussom.stdlib.AReflect {
 	 * name of the code.
 	 * @r This object.
 	 */
-	public evalStr(string CodeStr, string Name = "evalStr") { this._evalStr(CodeStr, Name); return this; }
+	public extern evalStr(string CodeStr, string Name = "evalStr");
 
 	/**
 	 * Evaluates the provided Aussom code file. Using this function
@@ -40,7 +39,7 @@ static extern class reflect : com.aussom.stdlib.AReflect {
 	 * @p FileName is a string with the file name to evaluate.
 	 * @r This object.
 	 */
-	public evalFile(string FileName) { this._evalFile(FileName); return this; }
+	public extern evalFile(string FileName);
 
 	/**
 	 * Includes the module with the provided module name. This is
@@ -51,9 +50,8 @@ static extern class reflect : com.aussom.stdlib.AReflect {
 	 * @p ModuleName is a string with the module name to include.
 	 * @r This object.
 	 */
-	public includeModule(string ModuleName) { this._includeModule(ModuleName); return this; }
-	
-	// Not Chained
+	public extern includeModule(string ModuleName);
+
 	/**
 	 * Gets a list of the loaded Aussom modules.
 	 * @r A list of strings with the module names loaded.
@@ -107,11 +105,6 @@ static extern class reflect : com.aussom.stdlib.AReflect {
 	 * @r The value of the result of the invoked function.
 	 */
 	public extern invoke(object Object, string MethodName, ...);
-	
-	// Chained extern functions
-	private extern _evalStr(string CodeStr, string Name = "evalStr");
-	private extern _evalFile(string FileName);
-	private extern _includeModule(string ModuleName);
 }
 
 /**

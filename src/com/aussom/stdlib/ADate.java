@@ -49,7 +49,7 @@ public class ADate extends Date {
 		if(!args.get(0).isNull()) {
 			this.setTime(((AussomInt)args.get(0)).getValue());
 		}
-		return new AussomNull();
+		return env.getClassInstance();
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -72,26 +72,26 @@ public class ADate extends Date {
 	}
 	
 	@SuppressWarnings("deprecation")
-	public AussomType _setHours(Environment env, ArrayList<AussomType> args) {
+	public AussomType setHours(Environment env, ArrayList<AussomType> args) {
 		this.setHours((int)((AussomInt)args.get(0)).getValue());
-		return new AussomNull();
+		return env.getClassInstance();
 	}
 	
 	@SuppressWarnings("deprecation")
-	public AussomType _setMinutes(Environment env, ArrayList<AussomType> args) {
+	public AussomType setMinutes(Environment env, ArrayList<AussomType> args) {
 		this.setMinutes((int)((AussomInt)args.get(0)).getValue());
-		return new AussomNull();
+		return env.getClassInstance();
 	}
 	
 	@SuppressWarnings("deprecation")
-	public AussomType _setSeconds(Environment env, ArrayList<AussomType> args) {
+	public AussomType setSeconds(Environment env, ArrayList<AussomType> args) {
 		this.setSeconds((int)((AussomInt)args.get(0)).getValue());
-		return new AussomNull();
+		return env.getClassInstance();
 	}
 	
-	public AussomType _setTime(Environment env, ArrayList<AussomType> args) {
+	public AussomType setTime(Environment env, ArrayList<AussomType> args) {
 		this.setTime(((AussomInt)args.get(0)).getValue());
-		return new AussomNull();
+		return env.getClassInstance();
 	}
 	
 	public AussomType toString(Environment env, ArrayList<AussomType> args) {
@@ -103,7 +103,7 @@ public class ADate extends Date {
 		try {
 			Date td = sdf.parse(((AussomString)args.get(0)).getValueString());
 			this.setTime(td.getTime());
-			return new AussomNull();
+			return env.getClassInstance();
 		} catch (ParseException e) {
 			return new AussomException("Date.parse(): Parse exception. (" + e.getMessage() + ")");
 		}

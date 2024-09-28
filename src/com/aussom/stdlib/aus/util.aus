@@ -15,7 +15,8 @@
  */
 
 /**
- * base64
+ * The static base64 class provides functions for base64
+ * encoding and decoding.
  */
 static extern class base64 : com.aussom.stdlib.ABase64 {
     /**
@@ -48,7 +49,8 @@ static extern class base64 : com.aussom.stdlib.ABase64 {
 }
 
 /**
- * hex
+ * The static hex class provides functions for hex
+ * encoding and decoding.
  */
 static extern class hex : com.aussom.stdlib.AHex
 {
@@ -68,7 +70,8 @@ static extern class hex : com.aussom.stdlib.AHex
 }
 
 /**
- * uuid
+ * The static uuid class provides universal ID
+ * creation functionality.
  */
 static extern class uuid : com.aussom.stdlib.AUuid
 {
@@ -87,30 +90,41 @@ static extern class uuid : com.aussom.stdlib.AUuid
 }
 
 /**
- * uuid
+ * The static regex class provides various regular
+ * expression functionality. Aussom uses Java
+ * regular expressions.
  */
 static extern class regex : com.aussom.stdlib.ARegex
 {
 	/**
 	 * Returns a list of string matches.
+	 * @p RegexStr is a string with the regular expression.
+	 * @p Haystack is a string to search.
+	 * @r A list of strings with the match results.
 	 */
 	public extern match(string RegexStr, string Haystack);
 
 	/**
-	 * Returns a string with the match, or null if no matches found.
+	 * Returns a string with the match,
+	 * or null if no matches found.
+	 * @p RegexStr is a string with the regular expression.
+	 * @p Haysack is a string to search.
+	 * @r A string with the first match if found or null if not.
 	 */
-	public matchFirst(string RegexStr, string Haystack)
-	{
+	public matchFirst(string RegexStr, string Haystack) {
 		matches = regex.match(RegexStr, Haystack);
 		if(#matches > 0) { return matches[0]; }
 		else { return null; }
 	}
 
 	/**
-	 * Returns a string with the match, or null if no matches found.
+	 * Returns a string with the match,
+	 * or null if no matches found.
+	 * @p RegexStr is a string with the regular expression.
+	 * @p Haysack is a string to search.
+	 * @r A string with the last match if found or null if not.
 	 */
-	public matchLast(string RegexStr, string Haystack)
-	{
+	public matchLast(string RegexStr, string Haystack) {
 		matches = regex.match(RegexStr, Haystack);
 		count = #matches;
 		if(#matches > 0) { return matches[(count - 1)]; }
@@ -119,11 +133,19 @@ static extern class regex : com.aussom.stdlib.ARegex
 
 	/**
 	 * Replaces all occurrences with replacement string.
+	 * @p RegexStr is a string with the regular expression.
+	 * @p ReplaceStr is a string with the value to replace.
+	 * @p Haysack is a string to search.
+	 * @r A string that's been replaced.
 	 */
 	public extern replace(string RegexStr, string ReplaceStr, string Haystack);
 
 	/**
 	 * Replaces first occurrence with replacement string.
+	 * @p RegexStr is a string with the regular expression.
+	 * @p ReplaceStr is a string with the value to replace.
+	 * @p Haysack is a string to search.
+	 * @r A string that's been replaced.
 	 */
 	public extern replaceFirst(string RegexStr, string ReplaceStr, string Haystack);
 }

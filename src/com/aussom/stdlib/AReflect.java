@@ -30,13 +30,13 @@ import com.aussom.types.AussomObject;
 import com.aussom.types.AussomString;
 
 public class AReflect {
-	public static AussomType _evalStr(Environment env, ArrayList<AussomType> args) {
+	public static AussomType evalStr(Environment env, ArrayList<AussomType> args) {
 		if ((Boolean)env.getEngine().getSecurityManager().getProperty("reflect.eval.string")) {
 			String code = ((AussomString)args.get(0)).getValue();
 			String name = ((AussomString)args.get(1)).getValue();
 			try {
 				env.getEngine().parseString(name, code);
-				return new AussomNull();
+				return env.getClassInstance();
 			} catch (aussomException e) {
 				return new AussomException(e.getMessage());
 			} catch (Exception e) {
@@ -47,7 +47,7 @@ public class AReflect {
 		}
 	}
 	
-	public static AussomType _evalFile(Environment env, ArrayList<AussomType> args) {
+	public static AussomType evalFile(Environment env, ArrayList<AussomType> args) {
 		if ((Boolean)env.getEngine().getSecurityManager().getProperty("reflect.eval.file")) {
 			String FileName = ((AussomString)args.get(0)).getValue();
 			try {
@@ -63,7 +63,7 @@ public class AReflect {
 	
 	
 	
-	public static AussomType _includeModule(Environment env, ArrayList<AussomType> args) {
+	public static AussomType includeModule(Environment env, ArrayList<AussomType> args) {
 		if ((Boolean)env.getEngine().getSecurityManager().getProperty("reflect.include.module")) {
 			String incFile = ((AussomString)args.get(0)).getValue().replace(".", System.getProperty("file.separator")) + ".aus";
 			try {
@@ -71,7 +71,7 @@ public class AReflect {
 			} catch (Exception e) {
 				return new AussomException(e.getMessage());
 			}
-			return new AussomNull();
+			return env.getClassInstance();
 		} else {
 			return new AussomException("reflect.includeModule(): Security exception, action 'reflect.include.module' not permitted.");
 		}

@@ -14,29 +14,126 @@
  * limitations under the License.
  */
 
-/*
- * sys.aus
+/**
+ * This static class provides a variety of system
+ * functions.
  */
 static extern class sys : com.aussom.stdlib.ASys {
+    /**
+     * Gets all of the system information in a single string.
+     * @r A string with all the system info.
+     */
 	public extern getSysInfo();
+
+	/**
+     * Gets the name and path to the Aussom assembly.
+     * @r A string with the result.
+     */
 	public extern getAssembly();
+
+	/**
+     * Gets the path of the Aussom assembly.
+     * @r A string with the result.
+     */
 	public extern getAssemblyPath();
+
+	/**
+     * Gets the current path.
+     * @r A string with the result.
+     */
 	public extern getCurrentPath();
+
 	//public extern getMainFilePath();
+
+	/**
+     * Get the home path.
+     * @r A string with the result.
+     */
 	public extern getHomePath();
+
+	/**
+     * Gets the current user name.
+     * @r A string with the result.
+     */
 	public extern getUserName();
+
+	/**
+     * Gets the operating system arch.
+     * @r A string with the result.
+     */
 	public extern getOsArch();
+
+	/**
+     * Gets the operating system name.
+     * @r A string with the result.
+     */
 	public extern getOsName();
+
+	/**
+     * Gets the operating system version.
+     * @r A string with the result.
+     */
 	public extern getOsVersion();
+
+	/**
+     * Gets the Java version.
+     * @r A string with the result.
+     */
 	public extern getJavaVersion();
+
+	/**
+     * Gets the Java vendor.
+     * @r A string with the result.
+     */
 	public extern getJavaVendor();
+
+	/**
+     * Get the Java vendor URL.
+     * @r A string with the result.
+     */
 	public extern getJavaVendorUrl();
+
+	/**
+     * Gets the Java class path.
+     * @r A string with the result.
+     */
 	public extern getJavaClassPath();
+
+	/**
+     * Gets the system file separator.
+     * @r A string with the result.
+     */
 	public extern getFileSeparator();
+
+	/**
+     * Gets the system line separator.
+     * @r A string with the result.
+     */
 	public extern getLineSeparator();
+
+	/**
+     * Gets the Aussom version.
+     * @r A string with the result.
+     */
 	public extern getAussomVersion();
+
+	/**
+     * Gets the Java home value.
+     * @r A string with the result.
+     */
 	public extern getJavaHome();
+
+	/**
+     * Gets the current time in milliseconds since epoch.
+     * @r An int with the number of milliseconds.
+     */
 	public extern getMills();
-	public sleep(int mills) { this._sleep(mills); return this; }
-	private extern _sleep(int mills);
+
+	/**
+     * Causes the current thread to sleep the number of
+     * seconds provided.
+     * @p mills is an int with the number of milliseconds to wait.
+     * @r this object
+     */
+	public extern sleep(int mills);
 }
