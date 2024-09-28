@@ -94,20 +94,11 @@ the runtime that may not be granted.
 	- **@r** `The` value of the result of the invoked function.
 
 
-- **\_evalStr** (`string CodeStr, string Name = "evalStr"`)
-
-
-- **\_evalFile** (`string FileName`)
-
-
-- **\_includeModule** (`string ModuleName`)
-
-
 
 
 ## class: rclass
 
-[122:14] (extern: com.aussom.stdlib.AClass) **extends: object** 
+[115:14] (extern: com.aussom.stdlib.AClass) **extends: object** 
 
 The rclass object is an object that is returned
 when calling reflect.getClassDef(). It provides a way

@@ -2,9 +2,10 @@
 
 ## class: base64
 
-[20:21] `static` (extern: com.aussom.stdlib.ABase64) **extends: object** 
+[21:21] `static` (extern: com.aussom.stdlib.ABase64) **extends: object** 
 
-base64
+The static base64 class provides functions for base64
+encoding and decoding.
 
 #### Methods
 
@@ -44,9 +45,10 @@ base64
 
 ## class: uuid
 
-[73:21] `static` (extern: com.aussom.stdlib.AUuid) **extends: object** 
+[76:21] `static` (extern: com.aussom.stdlib.AUuid) **extends: object** 
 
-uuid
+The static uuid class provides universal ID
+creation functionality.
 
 #### Methods
 
@@ -68,9 +70,10 @@ uuid
 
 ## class: hex
 
-[53:21] `static` (extern: com.aussom.stdlib.AHex) **extends: object** 
+[55:21] `static` (extern: com.aussom.stdlib.AHex) **extends: object** 
 
-hex
+The static hex class provides functions for hex
+encoding and decoding.
 
 #### Methods
 
@@ -94,9 +97,11 @@ hex
 
 ## class: regex
 
-[92:21] `static` (extern: com.aussom.stdlib.ARegex) **extends: object** 
+[97:21] `static` (extern: com.aussom.stdlib.ARegex) **extends: object** 
 
-uuid
+The static regex class provides various regular
+expression functionality. Aussom uses Java
+regular expressions.
 
 #### Methods
 
@@ -104,30 +109,47 @@ uuid
 
 	> Returns a list of string matches.
 
+	- **@p** `RegexStr` is a string with the regular expression.
+	- **@p** `Haystack` is a string to search.
+	- **@r** `A` list of strings with the match results.
 
 
 - **matchFirst** (`string RegexStr, string Haystack`)
 
 	> Returns a string with the match, or null if no matches found.
 
+	- **@p** `RegexStr` is a string with the regular expression.
+	- **@p** `Haysack` is a string to search.
+	- **@r** `A` string with the first match if found or null if not.
 
 
 - **matchLast** (`string RegexStr, string Haystack`)
 
 	> Returns a string with the match, or null if no matches found.
 
+	- **@p** `RegexStr` is a string with the regular expression.
+	- **@p** `Haysack` is a string to search.
+	- **@r** `A` string with the last match if found or null if not.
 
 
 - **replace** (`string RegexStr, string ReplaceStr, string Haystack`)
 
 	> Replaces all occurrences with replacement string.
 
+	- **@p** `RegexStr` is a string with the regular expression.
+	- **@p** `ReplaceStr` is a string with the value to replace.
+	- **@p** `Haysack` is a string to search.
+	- **@r** `A` string that's been replaced.
 
 
 - **replaceFirst** (`string RegexStr, string ReplaceStr, string Haystack`)
 
 	> Replaces first occurrence with replacement string.
 
+	- **@p** `RegexStr` is a string with the regular expression.
+	- **@p** `ReplaceStr` is a string with the value to replace.
+	- **@p** `Haysack` is a string to search.
+	- **@r** `A` string that's been replaced.
 
 
 

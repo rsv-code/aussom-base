@@ -2,9 +2,11 @@
 
 ## class: test
 
-[22:7] **extends: object** 
+[24:7] **extends: object** 
 
-The test class implements aussom unit test framework aunit.
+The aunit (Aussom Unit) test class implements Aussom
+unit test framework. It can be used from the CLI but also
+from within an application such as Hogan.
 
 #### Members
 - **tests**
