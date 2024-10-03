@@ -16,6 +16,7 @@
 
 package com.aussom.types;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -26,7 +27,7 @@ import com.aussom.ast.aussomException;
 import com.aussom.stdlib.console;
 import com.aussom.types.AussomListComparator.SortOrder;
 
-public class AussomList extends AussomObject implements AussomTypeInt, AussomTypeObjectInt {
+public class AussomList extends AussomObject implements AussomTypeInt, AussomTypeObjectInt, Serializable {
 	private ArrayList<AussomType> value = new ArrayList<AussomType>();
 	
 	public AussomList() {

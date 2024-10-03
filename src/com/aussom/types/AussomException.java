@@ -16,6 +16,7 @@
 
 package com.aussom.types;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import com.aussom.Environment;
@@ -23,7 +24,7 @@ import com.aussom.Universe;
 import com.aussom.ast.aussomException;
 import com.aussom.stdlib.console;
 
-public class AussomException extends AussomObject implements AussomTypeInt {
+public class AussomException extends AussomObject implements AussomTypeInt, Serializable {
 	public enum exType {
 		exUndef,
 		exInternal,

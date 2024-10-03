@@ -16,6 +16,7 @@
 
 package com.aussom.types;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,7 +26,7 @@ import com.aussom.Util;
 import com.aussom.ast.aussomException;
 import com.aussom.stdlib.console;
 
-public class AussomMap extends AussomObject implements AussomTypeInt, AussomTypeObjectInt {
+public class AussomMap extends AussomObject implements AussomTypeInt, AussomTypeObjectInt, Serializable {
 	private ConcurrentHashMap<String, AussomType> value = new ConcurrentHashMap<String, AussomType>();
 	
 	public AussomMap() {

@@ -16,6 +16,7 @@
 
 package com.aussom.types;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import org.json.simple.JSONValue;
@@ -26,7 +27,7 @@ import com.aussom.Util;
 import com.aussom.ast.aussomException;
 import com.aussom.stdlib.console;
 
-public class AussomString extends AussomObject implements AussomTypeInt, AussomTypeObjectInt {
+public class AussomString extends AussomObject implements AussomTypeInt, AussomTypeObjectInt, Serializable {
 	private String value = "";
 	
 	public AussomString() {

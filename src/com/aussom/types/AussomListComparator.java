@@ -16,12 +16,13 @@
 
 package com.aussom.types;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 import com.aussom.ast.aussomException;
 
 @SuppressWarnings("rawtypes")
-public class AussomListComparator implements Comparator {
+public class AussomListComparator implements Comparator, Serializable {
 	public enum SortOrder { ASCENDING, DESCENDING, CUSTOM }
 	
 	private SortOrder order = SortOrder.DESCENDING;

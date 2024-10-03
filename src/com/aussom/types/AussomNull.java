@@ -16,6 +16,7 @@
 
 package com.aussom.types;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import com.aussom.Environment;
@@ -24,7 +25,7 @@ import com.aussom.Util;
 import com.aussom.ast.aussomException;
 import com.aussom.stdlib.console;
 
-public class AussomNull extends AussomObject implements AussomTypeInt, AussomTypeObjectInt {
+public class AussomNull extends AussomObject implements AussomTypeInt, AussomTypeObjectInt, Serializable {
 	public AussomNull() {
 		this.setType(cType.cNull);
 		

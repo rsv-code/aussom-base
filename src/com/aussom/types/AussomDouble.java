@@ -16,6 +16,7 @@
 
 package com.aussom.types;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import com.aussom.Environment;
@@ -24,7 +25,7 @@ import com.aussom.Util;
 import com.aussom.ast.aussomException;
 import com.aussom.stdlib.console;
 
-public class AussomDouble extends AussomObject implements AussomTypeInt, AussomTypeObjectInt {
+public class AussomDouble extends AussomObject implements AussomTypeInt, AussomTypeObjectInt, Serializable {
 	private double value = 0.0;
 	
 	public AussomDouble() {
