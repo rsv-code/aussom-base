@@ -16,16 +16,15 @@
 
 package com.aussom.types;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-
 import com.aussom.Environment;
 import com.aussom.Universe;
 import com.aussom.Util;
 import com.aussom.ast.aussomException;
 import com.aussom.stdlib.console;
 
-public class AussomNull extends AussomObject implements AussomTypeInt, AussomTypeObjectInt, Serializable {
+import java.util.ArrayList;
+
+public class AussomNull extends AussomObject implements AussomTypeInt, AussomTypeObjectInt {
 	public AussomNull() {
 		this.setType(cType.cNull);
 		
@@ -36,6 +35,11 @@ public class AussomNull extends AussomObject implements AussomTypeInt, AussomTyp
 		} catch (aussomException e) {
 			console.get().err("AussomNull(): Unexpected exception getting class definition: " + e.getMessage());
 		}
+	}
+
+	@Override
+	public AussomType clone() {
+		return new AussomNull();
 	}
 
 	public AussomType isBlank(Environment env, ArrayList<AussomType> args) {

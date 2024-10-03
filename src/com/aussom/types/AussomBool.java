@@ -16,16 +16,15 @@
 
 package com.aussom.types;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-
 import com.aussom.Environment;
 import com.aussom.Universe;
 import com.aussom.Util;
 import com.aussom.ast.aussomException;
 import com.aussom.stdlib.console;
 
-public class AussomBool extends AussomObject implements AussomTypeInt, AussomTypeObjectInt, Serializable {
+import java.util.ArrayList;
+
+public class AussomBool extends AussomObject implements AussomTypeInt, AussomTypeObjectInt, AussomClonable {
 	private boolean value = false;
 	
 	public AussomBool() {
@@ -38,6 +37,13 @@ public class AussomBool extends AussomObject implements AussomTypeInt, AussomTyp
 		} catch (aussomException e) {
 			console.get().err("AussomBool(): Unexpected exception getting class definition: " + e.getMessage());
 		}
+	}
+
+	@Override
+	public AussomType clone() {
+		AussomBool n = new AussomBool();
+		n.setValue(this.value);
+		return n;
 	}
 	
 	public AussomBool(boolean Value) {

@@ -18,8 +18,9 @@ package com.aussom.types;
 
 import com.aussom.Environment;
 import com.aussom.ast.aussomException;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-public class AussomType {
+public class AussomType implements AussomClonable {
 	
 	private cType type = cType.cUndef;
 	
@@ -259,5 +260,10 @@ public class AussomType {
 				throw new aussomException("Unexpected result from condition of type '" + this.type.name() + "'.");
 		}
 		return ret;
+	}
+
+	@Override
+	public AussomType clone() {
+		throw new NotImplementedException();
 	}
 }

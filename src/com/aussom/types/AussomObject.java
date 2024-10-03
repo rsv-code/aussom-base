@@ -16,9 +16,6 @@
 
 package com.aussom.types;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-
 import com.aussom.Environment;
 import com.aussom.Universe;
 import com.aussom.Util;
@@ -26,12 +23,14 @@ import com.aussom.ast.astClass;
 import com.aussom.ast.aussomException;
 import com.aussom.stdlib.console;
 
-public class AussomObject extends AussomType implements AussomTypeInt, AussomTypeObjectInt, Serializable {
+import java.util.ArrayList;
+
+public class AussomObject extends AussomType implements AussomTypeInt, AussomTypeObjectInt {
 	private astClass classDef;
 	private Members members = new Members();
 	
 	private Object externObject = null;
-	
+
 	public AussomObject() {
 		this(true);
 	}
@@ -48,6 +47,16 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 				console.get().err("AussomObject(): Unexpected exception getting class definition: " + e.getMessage());
 			}
 		}
+	}
+
+	@Override
+	public AussomType clone() {
+		AussomObject n = new AussomObject();
+		n.setClassDef(this.classDef);
+		for (String name : this.members.getMap().keySet()) {
+			n.members.getMap().put(name, this.members.get(name).clone());
+		}
+		return n;
 	}
 
 	public astClass getClassDef() {

@@ -16,10 +16,6 @@
 
 package com.aussom.types;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-
 import com.aussom.Environment;
 import com.aussom.Universe;
 import com.aussom.Util;
@@ -27,7 +23,10 @@ import com.aussom.ast.aussomException;
 import com.aussom.stdlib.console;
 import com.aussom.types.AussomListComparator.SortOrder;
 
-public class AussomList extends AussomObject implements AussomTypeInt, AussomTypeObjectInt, Serializable {
+import java.util.ArrayList;
+import java.util.Collections;
+
+public class AussomList extends AussomObject implements AussomTypeInt, AussomTypeObjectInt {
 	private ArrayList<AussomType> value = new ArrayList<AussomType>();
 	
 	public AussomList() {
@@ -50,6 +49,15 @@ public class AussomList extends AussomObject implements AussomTypeInt, AussomTyp
 				console.get().err("AussomList(): Unexpected exception getting class definition: " + e.getMessage());
 			}
 		}
+	}
+
+	@Override
+	public AussomType clone() {
+		AussomList n = new AussomList();
+		for (AussomType at : this.value) {
+			n.add(at.clone());
+		}
+		return n;
 	}
 	
 	public AussomList(ArrayList<AussomType> Value) {

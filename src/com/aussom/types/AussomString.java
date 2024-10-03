@@ -16,18 +16,16 @@
 
 package com.aussom.types;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-
-import org.json.simple.JSONValue;
-
 import com.aussom.Environment;
 import com.aussom.Universe;
 import com.aussom.Util;
 import com.aussom.ast.aussomException;
 import com.aussom.stdlib.console;
+import org.json.simple.JSONValue;
 
-public class AussomString extends AussomObject implements AussomTypeInt, AussomTypeObjectInt, Serializable {
+import java.util.ArrayList;
+
+public class AussomString extends AussomObject implements AussomTypeInt, AussomTypeObjectInt {
 	private String value = "";
 	
 	public AussomString() {
@@ -40,6 +38,13 @@ public class AussomString extends AussomObject implements AussomTypeInt, AussomT
 		} catch (aussomException e) {
 			console.get().err("AussomString(): Unexpected exception getting class definition: " + e.getMessage());
 		}
+	}
+
+	@Override
+	public AussomType clone() {
+		AussomString n = new AussomString();
+		n.setValue(this.value);
+		return n;
 	}
 	
 	public AussomString(String Value) {
