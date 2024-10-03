@@ -16,9 +16,10 @@
 
 package com.aussom.types;
 
+import java.io.Serializable;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Members {
+public class Members implements Serializable {
 	private ConcurrentHashMap<String, AussomType> impa = new ConcurrentHashMap<String, AussomType>();
 	
 	public void add(String Key, AussomType Value) {
