@@ -295,6 +295,7 @@ class interpreterTests : test {
 			.add("(map operations) Map local set object ref and assign string.", ::mapLocalObjRefAssignString)
 			.add("(map operations) Map local new map.", ::mapLocalNewMap)
 			.add("(map operations) Map local set/get by local var.", ::mapLocalSetGetLocalVar)
+			.add("(map operations) Ensure exceptions are propagated up.", ::mapPropagateException)
 		;
 		
 		// Instance ofoperator

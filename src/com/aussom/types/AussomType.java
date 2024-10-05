@@ -18,7 +18,6 @@ package com.aussom.types;
 
 import com.aussom.Environment;
 import com.aussom.ast.aussomException;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class AussomType implements AussomClonable {
 	
@@ -264,6 +263,6 @@ public class AussomType implements AussomClonable {
 
 	@Override
 	public AussomType clone() {
-		throw new NotImplementedException();
+		return new AussomException("AussomType.clone(): Not implemented for type '" + this.type.name() + "'!");
 	}
 }

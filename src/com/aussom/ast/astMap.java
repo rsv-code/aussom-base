@@ -79,9 +79,14 @@ public class astMap extends astNode implements astNodeInt {
 				kstr = key.getName();
 			} else {
 				AussomType kval = key.eval(env, getref);
+				if (kval.isEx())
+					return kval;
 				kstr = ((AussomTypeInt)kval).str();
 			}
-			cm.put(kstr, tn.eval(env, getref));
+			AussomType tnval = tn.eval(env, getref);
+			if (tnval.isEx())
+					return tnval;
+			cm.put(kstr, tnval);
 		}
 		
 		if (this.getChild() != null) {
