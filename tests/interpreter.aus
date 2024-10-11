@@ -243,6 +243,22 @@ class interpreterTests : test {
 			.add("(# operator) Local map count.", ::operLocalMapCount)
 			.add("(# operator) Member list count.", ::operMemberListCount)
 			.add("(# operator) Member map count.", ::operMemberMapCount)
+			// > oper
+			.add("(> operator) Greater than bool vals.", ::operGreaterThanBool)
+			.add("(> operator) Greater than int vals.", ::operGreaterThanInt)
+			.add("(> operator) Greater than double vals.", ::operGreaterThanDouble)
+			// < oper
+			.add("(< operator) Less than bool vals.", ::operLessThanBool)
+			.add("(< operator) Less than int vals.", ::operLessThanInt)
+			.add("(< operator) Less than double vals.", ::operLessThanDouble)
+			// >= oper
+			.add("(>= operator) Greater than equal to bool vals.", ::operGreaterThanEqualToBool)
+			.add("(>= operator) Greater than equal to int vals.", ::operGreaterThanEqualToInt)
+			.add("(>= operator) Greater than equal to double vals.", ::operGreaterThanEqualToDouble)
+			// <= oper
+			.add("(<= operator) Less than equal to bool vals.", ::operLessThanEqualToBool)
+			.add("(<= operator) Less than equal to int vals.", ::operLessThanEqualToInt)
+			.add("(<= operator) Less than equal to double vals.", ::operLessThanEqualToDouble)
 		;
 
 		// Basic logic tests.
@@ -712,6 +728,22 @@ class interpreterTests : test {
 	 public operLocalMapCount() { var = {}; var['char'] = "Tyler"; return this.expect(#var, 1); }
 	 public operMemberListCount() { return this.expect(#this.memList, 3); }
 	 public operMemberMapCount() { return this.expect(#this.memMap, 3); }
+     // Greater than >
+     public operGreaterThanBool() { return this.expect(true > false, true); }
+     public operGreaterThanInt() { return this.expect(256 > 1, true); }
+     public operGreaterThanDouble() { return this.expect(3.14157 > 1.2345, true); }
+     // Less than <
+     public operLessThanBool() { return this.expect(true < false, false); }
+     public operLessThanInt() { return this.expect(256 < 1, false); }
+     public operLessThanDouble() { return this.expect(3.14157 < 1.2345, false); }
+     // Greater than equal >=
+     public operGreaterThanEqualToBool() { return this.expect(true >= false, true); }
+     public operGreaterThanEqualToInt() { return this.expect(256 >= 1, true); }
+     public operGreaterThanEqualToDouble() { return this.expect(3.14157 >= 1.2345, true); }
+     // Less than equal <=
+     public operLessThanEqualToBool() { return this.expect(true <= false, false); }
+     public operLessThanEqualToInt() { return this.expect(256 <= 1, false); }
+     public operLessThanEqualToDouble() { return this.expect(3.14157 <= 1.2345, false); }
 
 	 public operAndTrueTrue() { return this.expect(true && true, true); }
 	 public operAndFalseTrue() { return this.expect(false && true, false); }

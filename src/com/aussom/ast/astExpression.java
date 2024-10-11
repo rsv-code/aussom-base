@@ -504,16 +504,16 @@ public class astExpression extends astNode implements astNodeInt {
 		AussomType ret = new AussomNull();
 
 		if (this.isNumber(r_left) && this.isNumber(r_right)) {
-		  if (this.isInt(r_left) && this.isInt(r_right)) {
-			if ((int)((AussomInt)r_left).getValue() < (int)((AussomInt)r_right).getValue()) ret = new AussomBool(true);
-			else ret = new AussomBool(false);
-		  } else if (this.isInt(r_left)) {
-			if ((double)((AussomInt)r_left).getValue() < ((AussomDouble)r_right).getValue()) ret = new AussomBool(true);
-			else ret = new AussomBool(false);
-		  } else {
-			if (((AussomDouble)r_left).getValue() < (double)((AussomInt)r_right).getValue()) ret = new AussomBool(true);
-			else ret = new AussomBool(false);
-		  }
+			// If both are int
+			if (this.isInt(r_left) && this.isInt(r_right)) {
+				if (this.getValueInt(r_left) < this.getValueInt(r_right)) ret = new AussomBool(true);
+				else ret = new AussomBool(false);
+			}
+			// Else cast them to double and compare.
+			else {
+				if (this.getValueDouble(r_left) < this.getValueDouble(r_right)) ret = new AussomBool(true);
+				else ret = new AussomBool(false);
+			}
 		}
 		else {
 		  AussomException e = new AussomException(exType.exRuntime);
@@ -528,16 +528,16 @@ public class astExpression extends astNode implements astNodeInt {
 		AussomType ret = new AussomNull();
 
 		if (this.isNumber(r_left) && this.isNumber(r_right)) {
-		  if (this.isInt(r_left) && this.isInt(r_right)) {
-			if ((int)((AussomInt)r_left).getValue() > (int)((AussomInt)r_right).getValue()) ret = new AussomBool(true);
-			else ret = new AussomBool(false);
-		  } else if (this.isInt(r_left)) {
-			if ((double)((AussomInt)r_left).getValue() > ((AussomDouble)r_right).getValue()) ret = new AussomBool(true);
-			else ret = new AussomBool(false);
-		  } else {
-			if (((AussomDouble)r_left).getValue() > (double)((AussomInt)r_right).getValue()) ret = new AussomBool(true);
-			else ret = new AussomBool(false);
-		  }
+			// If both are int
+			if (this.isInt(r_left) && this.isInt(r_right)) {
+				if (this.getValueInt(r_left) > this.getValueInt(r_right)) ret = new AussomBool(true);
+				else ret = new AussomBool(false);
+			}
+			// Else cast them to double and compare.
+			else {
+				if (this.getValueDouble(r_left) > this.getValueDouble(r_right)) ret = new AussomBool(true);
+				else ret = new AussomBool(false);
+			}
 		}
 		else {
 		  AussomException e = new AussomException(exType.exRuntime);
@@ -552,16 +552,16 @@ public class astExpression extends astNode implements astNodeInt {
 		AussomType ret = new AussomNull();
 
 		if (this.isNumber(r_left) && this.isNumber(r_right)) {
-		  if (this.isInt(r_left) && this.isInt(r_right)) {
-			if ((int)((AussomInt)r_left).getValue() <= (int)((AussomInt)r_right).getValue()) ret = new AussomBool(true);
-			else ret = new AussomBool(false);
-		  } else if (this.isInt(r_left)) {
-			if ((double)((AussomInt)r_left).getValue() <= ((AussomDouble)r_right).getValue()) ret = new AussomBool(true);
-			else ret = new AussomBool(false);
-		  } else {
-			if (((AussomDouble)r_left).getValue() <= (double)((AussomInt)r_right).getValue()) ret = new AussomBool(true);
-			else ret = new AussomBool(false);
-		  }
+			// If both are int
+			if (this.isInt(r_left) && this.isInt(r_right)) {
+				if (this.getValueInt(r_left) <= this.getValueInt(r_right)) ret = new AussomBool(true);
+				else ret = new AussomBool(false);
+			}
+			// Else cast them to double and compare.
+			else {
+				if (this.getValueDouble(r_left) <= this.getValueDouble(r_right)) ret = new AussomBool(true);
+				else ret = new AussomBool(false);
+			}
 		} else {
 		  AussomException e = new AussomException(exType.exRuntime);
 		  e.setException(getLineNum(), "INVALID_COMPARISON", "astExpression.evalLessThanEquals(): Less than equals comparison of non-number.", env.getCallStack().getStackTrace());
@@ -575,19 +575,16 @@ public class astExpression extends astNode implements astNodeInt {
 		AussomType ret = new AussomNull();
 
 		if (this.isNumber(r_left) && this.isNumber(r_right)) {
-		  if (this.isInt(r_left) && this.isInt(r_right)) {
-			if ((int)((AussomInt)r_left).getValue() >= (int)((AussomInt)r_right).getValue()) ret = new AussomBool(true);
-			else ret = new AussomBool(false);
-		  } else if (this.isInt(r_left)) {
-			if ((double)((AussomInt)r_left).getValue() >= ((AussomDouble)r_right).getValue()) ret = new AussomBool(true);
-			else ret = new AussomBool(false);
-		  } else {
-			if (((AussomDouble)r_left).getValue() >= (double)((AussomInt)r_right).getValue()) {
-				ret = new AussomBool(true);
-			} else {
-				ret = new AussomBool(false);
+			// If both are int
+			if (this.isInt(r_left) && this.isInt(r_right)) {
+				if (this.getValueInt(r_left) >= this.getValueInt(r_right)) ret = new AussomBool(true);
+				else ret = new AussomBool(false);
 			}
-		  }
+			// Else cast them to double and compare.
+			else {
+				if (this.getValueDouble(r_left) >= this.getValueDouble(r_right)) ret = new AussomBool(true);
+				else ret = new AussomBool(false);
+			}
 		}
 		else {
 		  AussomException e = new AussomException(exType.exRuntime);
@@ -929,6 +926,17 @@ public class astExpression extends astNode implements astNodeInt {
 			return 1;
 		}
 		return 0;
+	}
+
+	private double getValueDouble(AussomType Item) {
+		if (Item.getType() == cType.cDouble) {
+			return (double) ((AussomDouble)Item).getValue();
+		} else if (Item.getType() == cType.cInt) {
+			return (double) ((AussomInt)Item).getValue();
+		} else if (((AussomBool)Item).getValue()) {
+			return 1.0;
+		}
+		return 0.0;
 	}
 	
 	private boolean boolVal(AussomType Item) {
