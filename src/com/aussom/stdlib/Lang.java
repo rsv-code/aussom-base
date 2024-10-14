@@ -16,10 +16,14 @@
 
 package com.aussom.stdlib;
 
+import java.io.Console;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -73,9 +77,14 @@ public class Lang {
 	 * com.aussom.stdlib.aus.
 	 */
 	private void init() {
-		this.jarFile =  new File(getClass().getProtectionDomain().getCodeSource().getLocation().getPath());
-		
-		langIncludes.put("lang.aus", Util.loadResource("/com/aussom/stdlib/aus/lang.aus"));
+		String jarFileUrl = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+        try {
+            this.jarFile =  new File(URLDecoder.decode(jarFileUrl, StandardCharsets.UTF_8.name()));
+        } catch (UnsupportedEncodingException e) {
+            console.get().err("Lang.init(): Attempting to get JAR file '" + this.jarFile + "' but URLDecoder.decode() threw exception: " + e.getMessage());
+        }
+
+        langIncludes.put("lang.aus", Util.loadResource("/com/aussom/stdlib/aus/lang.aus"));
 		langIncludes.put("sys.aus", Util.loadResource("/com/aussom/stdlib/aus/sys.aus"));
 		langIncludes.put("reflect.aus", Util.loadResource("/com/aussom/stdlib/aus/reflect.aus"));
 		langIncludes.put("aunit.aus", Util.loadResource("/com/aussom/stdlib/aus/aunit.aus"));
@@ -98,13 +107,18 @@ public class Lang {
 		    }
 		    jar.close();
 		} else {
-		    URL url = Engine.class.getResource(Path);
-		    if (url != null) {
-	            File entries = new File(url.toURI());
-	            for (File entry : entries.listFiles()) {
-	                ret.add(entry.getPath());
-	            }
-		    }
+			try {
+				URL url = Engine.class.getResource(Path);
+				if (url != null) {
+					File entries = new File(url.toURI());
+					for (File entry : entries.listFiles()) {
+						ret.add(entry.getPath());
+					}
+				}
+			} catch (Exception e) {
+				console.get().err("Lang.listResourceDirectory(): The Jar file '" + this.jarFile.getPath() + "' is not a file and path '" + Path + "' threw exception: " + e.getMessage());
+				throw e;
+			}
 		}
 		
 		return ret;
