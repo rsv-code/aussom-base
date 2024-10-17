@@ -179,7 +179,7 @@ public class astClass extends astNode implements astNodeInt {
 		ci.setClassDef(this);
 		
 		// Instantiated inherited classes.
-		this.instantiateInheritedClasses(env, ci);
+		this.instantiateInheritedClasses(env, ci, this.extendedClasses);
 		
 		// Instantiate members.
 		this.instantiateMembers(env, ci);
@@ -276,9 +276,12 @@ public class astClass extends astNode implements astNodeInt {
 		return ret;
 	}
 	
-	private void instantiateInheritedClasses(Environment env, AussomObject cobj) throws aussomException {
-		for(String className : this.extendedClasses) {
+	private void instantiateInheritedClasses(Environment env, AussomObject cobj, ArrayList<String> extClasses) throws aussomException {
+		for(String className : extClasses) {
 			astClass ac = env.getClassByName(className);
+
+			if (ac.getExtendedClasses().size() > 0)
+				this.instantiateInheritedClasses(env, cobj, ac.getExtendedClasses());
 			
 			if(ac != null) {
 				if(ac.getExtern()) {
