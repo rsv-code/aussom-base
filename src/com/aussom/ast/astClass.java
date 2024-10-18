@@ -55,6 +55,10 @@ public class astClass extends astNode implements astNodeInt {
 	
 	// List of extended class names.
 	private ArrayList<String> extendedClasses = new ArrayList<String>();
+
+	// Includes the direct extended classes along with classes
+	// that those extend and so forth.
+	private List<String> allExtendedClasses = new ArrayList<>();
 	
 	// Constructor definition.
 	private astFunctDef constructor = null;
@@ -280,6 +284,9 @@ public class astClass extends astNode implements astNodeInt {
 		for(String className : extClasses) {
 			astClass ac = env.getClassByName(className);
 
+			if (!this.allExtendedClasses.contains(ac.getName()))
+				this.allExtendedClasses.add(ac.getName());
+
 			if (ac.getExtendedClasses().size() > 0)
 				this.instantiateInheritedClasses(env, cobj, ac.getExtendedClasses());
 			
@@ -456,6 +463,10 @@ public class astClass extends astNode implements astNodeInt {
 
 	public void setExtendedClasses(ArrayList<String> extendedClasses) {
 		this.extendedClasses = extendedClasses;
+		for (String cls : this.extendedClasses) {
+			if (!this.allExtendedClasses.contains(cls))
+				this.allExtendedClasses.add(cls);
+		}
 	}
 
 	public astFunctDef getConstructor() {
@@ -469,7 +480,7 @@ public class astClass extends astNode implements astNodeInt {
 	public boolean instanceOf(String Name) {
 		if (this.getName().equals(Name)) {
 			return true;
-		} else if (this.extendedClasses.contains(Name)) {
+		} else if (this.allExtendedClasses.contains(Name)) {
 			return true;
 		} else if (this.getName().equals("cnull") && Name.equals("null")) {
 			return true;
