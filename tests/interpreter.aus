@@ -611,6 +611,7 @@ class interpreterTests : test {
 		// resource loading tests
 		this
 			.add("(lang resource include) Include inctest object.", ::resNewInctest)
+			.add("(lang resource include) Include module that doesn't exist.", ::resIncludeDoesntExist)
 			.add("(lang class aussomdoc) Get class aussomdoc.", ::langClassAussomdoc)
 		;
 
@@ -1301,6 +1302,15 @@ class interpreterTests : test {
 	 * resource loading tests
 	 *********************************************************************/
 	public resNewInctest() { tobj = new inctest(); return this.expect(tobj instanceof 'inctest', true); }
+	public resIncludeDoesntExist() {
+	    exthrown = false;
+	    try {
+    	    include doesntExist;
+    	} catch (e) {
+    	    exthrown = true;
+    	}
+    	return this.expect(exthrown, true);
+	}
 	public langClassAussomdoc() {
 	    tobj = lang.getClassAussomdoc("user");
 	    return this.expect(tobj.className == "user", true);

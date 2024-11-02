@@ -158,8 +158,10 @@ public class Engine {
 	 * @throws Exception on parse failure.
 	 */
 	public void addInclude(String Include) throws Exception {
+		boolean found = false;
 		console.get().trc("Engine.addInclude(): Include: " + Include);
 		if (Lang.get().getLangIncludes().containsKey(Include)) {
+			found = true;
 			if (!this.includes.contains(Include)) {
 				console.get().trc("Engine.addInclude(): Adding langInclude: " + Include);
 				this.includes.add(Include);
@@ -172,33 +174,42 @@ public class Engine {
 				String tinc = pth + Include;
 				for (String fname : resDir) {
 					if (fname.contains(tinc)) {
-						console.get().trc("Engine.addInclude(): Include " + Include + " found in '" + fname + "'");
-						this.includes.add(tinc);
-						this.parseString(Include, Util.loadResource(tinc));
-						return;
-					}
-				}
-			}
-			
-			console.get().trc("Engine.addInclude(): Attempting to find in includePaths ...");
-			for (String pth : this.includePaths) {
-				String tinc = pth + Include;
-				if (!this.isPathExcludePath(tinc)) {
-					File f = new File(tinc);
-					if (f.exists()) {
-						if (!this.includes.contains(tinc)) {
-							console.get().trc("Engine.addInclude(): Include " + Include + " found in '" + pth + "'");
+						found = true;
+						if (!this.includes.contains(Include)) {
+							console.get().trc("Engine.addInclude(): Include " + Include + " found in '" + fname + "'");
 							this.includes.add(tinc);
-							this.parseFile(tinc);
-							break;
+							this.parseString(Include, Util.loadResource(tinc));
+							return;
 						}
 					}
-				} else {
-					throw new aussomException("Attempting to add include '" + tinc + "' from excluded path.");
 				}
 			}
-			
-			console.get().trc("Engine.addInclude(): Include '" + Include + "' not found at all.");
+
+			if (!found) {
+				console.get().trc("Engine.addInclude(): Attempting to find in includePaths ...");
+				for (String pth : this.includePaths) {
+					String tinc = pth + Include;
+					if (!this.isPathExcludePath(tinc)) {
+						File f = new File(tinc);
+						if (f.exists()) {
+							found = true;
+							if (!this.includes.contains(tinc)) {
+								console.get().trc("Engine.addInclude(): Include " + Include + " found in '" + pth + "'");
+								this.includes.add(tinc);
+								this.parseFile(tinc);
+								break;
+							}
+						}
+					} else {
+						throw new aussomException("Attempting to add include '" + tinc + "' from excluded path.");
+					}
+				}
+
+				if (!found) {
+					console.get().trc("Engine.addInclude(): Include '" + Include + "' not found at all.");
+					throw new aussomException("Engine.addInclude(): Couldn't find requested include module '" + Include + "'.");
+				}
+			}
 		}
 	}
 
