@@ -91,12 +91,12 @@ public class astFor extends astNode implements astNodeInt {
 				
 				for(astNode inst : this.instructions.getStatements()) {
 					ret = inst.eval(env, getref);
-					if(astNode.isBreakReturnEvent(ret))
+					if(astNode.isBreakReturnExcept(ret))
 						break;
 				}
 				
-				if(astNode.isBreakReturnEvent(ret)) {
-					if (astNode.isBreakEvent(ret))
+				if(astNode.isBreakReturnExcept(ret)) {
+					if (!ret.isEx() && astNode.isBreakEvent(ret))
 						ret = new AussomNull();
 					break;
 				}
@@ -111,12 +111,12 @@ public class astFor extends astNode implements astNodeInt {
 				
 				for(astNode inst : this.instructions.getStatements()) {
 					ret = inst.eval(env, getref);
-					if(astNode.isBreakReturnEvent(ret))
+					if(astNode.isBreakReturnExcept(ret))
 						break;
 				}
 				
-				if(astNode.isBreakReturnEvent(ret)) {
-					if (astNode.isBreakEvent(ret))
+				if(astNode.isBreakReturnExcept(ret)) {
+					if (!ret.isEx() && astNode.isBreakEvent(ret))
 						ret = new AussomNull();
 					break;
 				}
@@ -141,12 +141,12 @@ public class astFor extends astNode implements astNodeInt {
 		while(cond.getValue()) {
 			for(astNode inst : this.instructions.getStatements()) {
 				ret = inst.eval(env, getref);
-				if(astNode.isBreakReturnEvent(ret))
+				if(astNode.isBreakReturnExcept(ret))
 					break;
 			}
 			
-			if(astNode.isBreakReturnEvent(ret)) {
-				if (astNode.isBreakEvent(ret))
+			if(astNode.isBreakReturnExcept(ret)) {
+				if (!ret.isEx() && astNode.isBreakEvent(ret))
 					ret = new AussomNull();
 				break;
 			} else {

@@ -259,12 +259,7 @@ public class astClass extends astNode implements astNodeInt {
 			if(fdef.getExtern()) {
 				AussomType tmp = ((astFunctDef)this.functDefs.get(functName)).initArgs(tenv, args);
 				if(!tmp.isEx()) {
-					//ret = env.getClassInstance().externMod.call(functName, args);
-					
 					ret = fdef.callExtern(tenv, args);
-					/*
-					 * Check ret for exception now.
-					 */
 				 } else {
 					 ret = tmp;
 				 }

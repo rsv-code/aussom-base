@@ -354,6 +354,11 @@ class interpreterTests : test {
 			.add("(object access) Member access for member variable cont private.", ::objectAccessMemVarContPri)
 			.add("(object access) Method access for member variable cont public.", ::objectMethAccessMemVarContPub)
 			.add("(object access) Method access for member variable cont private.", ::objectMethAccessMemVarContPri)
+			.add("(object access) Method access for local variable by index.", ::objectAccessLocalVarIndex)
+			.add("(object access) Method access for local variable by index expression.", ::objectAccessLocalVarIndexExp)
+			.add("(object access) Method access for member variable by index.", ::objectAccessMemVarIndex)
+			.add("(object access) Method access for member variable by index expression.", ::objectAccessMemVarIndexExp)
+
 		;
 		
 		// Enum operations
@@ -879,7 +884,12 @@ class interpreterTests : test {
 	 public objectAccessMemVarContPri() { ex = false; try { t = this.obj.c.pri; } catch(e) { ex = true; } return this.expect(ex, true); }
 	 public objectMethAccessMemVarContPub() { ex = false; try { t = this.obj.c.pubMeth(); } catch(e) { ex = true; } return this.expect(ex, false); }
 	 public objectMethAccessMemVarContPri() { ex = false; try { t = this.obj.c.priMeth(); } catch(e) { ex = true; } return this.expect(ex, true); }
-	 
+	 public objectAccessLocalVarIndex() { l = new atest(); ex = false; try { t = l['pub']; }  catch(e) { ex = true; } return this.expect(ex, false); }
+	 public objectAccessLocalVarIndexExp() { l = new atest(); fname = 'pub'; ex = false; try { t = l[fname]; }  catch(e) { ex = true; } return this.expect(ex, false); }
+     public objectAccessMemVarIndex() { this.obj = new cont(); ex = false; try { t = this.obj.c['pub']; }  catch(e) { ex = true; } return this.expect(ex, false); }
+	 public objectAccessMemVarIndexExp() { this.obj = new cont(); fname = 'pub'; ex = false; try { t = this.obj.c[fname]; }  catch(e) { ex = true; } return this.expect(ex, false); }
+
+
 	 /***********************************************************************
       * enum tests
       *********************************************************************/

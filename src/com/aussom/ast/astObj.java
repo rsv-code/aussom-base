@@ -17,17 +17,8 @@
 package com.aussom.ast;
 
 import com.aussom.Environment;
-import com.aussom.types.AussomException;
+import com.aussom.types.*;
 import com.aussom.types.AussomException.exType;
-import com.aussom.types.AussomInt;
-import com.aussom.types.AussomList;
-import com.aussom.types.AussomMap;
-import com.aussom.types.AussomNull;
-import com.aussom.types.AussomObject;
-import com.aussom.types.AussomRef;
-import com.aussom.types.AussomType;
-import com.aussom.types.AussomTypeInt;
-import com.aussom.types.cType;
 
 public class astObj  extends astNode implements astNodeInt {
 	private astNode index = null;
@@ -217,7 +208,7 @@ public class astObj  extends astNode implements astNodeInt {
 			  }
 			} else {
 			  AussomException e = new AussomException(exType.exRuntime);
-			  e.setException(this.getLineNum(), "INDEX_NOT_FOUND", "aObj.callObj(): Provided index isn't an iteger value.", env.getCallStack().getStackTrace());
+			  e.setException(this.getLineNum(), "INDEX_NOT_FOUND", "aObj.callObj(): Provided index isn't an integer value.", env.getCallStack().getStackTrace());
 			  return e;
 			}
 		  } else {
@@ -225,7 +216,39 @@ public class astObj  extends astNode implements astNodeInt {
 			e.setException(this.getLineNum(), "INDEX_NOT_FOUND", "aObj.callObj(): List found but no index found.", env.getCallStack().getStackTrace());
 			return e;
 		  }
-		} else {
+		}
+
+		// Object index likely found.
+		else if (env.getCurObj() instanceof AussomObject && this.getName().equals("") && this.index != null) {
+			Environment ienv = env.clone(null);
+			AussomType ctindex = this.index.eval(ienv, false);
+			if (ctindex.isEx()) {
+				return ctindex;
+			}
+			if (ctindex.getType() == cType.cString) {
+				String ind = ((AussomString)ctindex).getValue();
+				AussomObject ao = (AussomObject) env.getCurObj();
+				if (ao.getMembers().contains(ind)) {
+					// We found it!
+					if (this.getChild() != null) {
+						Environment tenv = env.clone(((AussomMap)env.getCurObj()).getValue().get(ind));
+						ret = this.getChild().eval(tenv, getRef);
+					} else {
+						ret = ((AussomObject)env.getCurObj()).getMembers().get(ind);
+					}
+				} else {
+					AussomException e = new AussomException(exType.exRuntime);
+					e.setException(this.getLineNum(), "NO_MEMBER_FOUND", "aObj.callObj(): Object doesn't have member '" + ind + "'.", env.getCallStack().getStackTrace());
+					return e;
+				}
+			} else {
+				AussomException e = new AussomException(exType.exRuntime);
+				e.setException(this.getLineNum(), "INDEX_NOT_FOUND", "aObj.callObj(): Provided index isn't a string value.", env.getCallStack().getStackTrace());
+				return e;
+			}
+		}
+
+		else {
 		  AussomException e = new AussomException(exType.exInternal);
 		  e.setException(this.getLineNum(), "NOT_IMPLEMENTED", "aObj.callObj(): Unmatched object type for '" + this.getName() + "'.", env.getCallStack().getStackTrace());
 		  return e;
