@@ -65,7 +65,7 @@ public class AReflect {
 	
 	public static AussomType includeModule(Environment env, ArrayList<AussomType> args) {
 		if ((Boolean)env.getEngine().getSecurityManager().getProperty("reflect.include.module")) {
-			String incFile = ((AussomString)args.get(0)).getValue().replace(".", System.getProperty("file.separator")) + ".aus";
+			String incFile = ((AussomString)args.get(0)).getValue().replace(".", "/") + ".aus";
 			try {
 				env.getEngine().parseFile(incFile);
 			} catch (Exception e) {
@@ -94,7 +94,7 @@ public class AReflect {
 	}
 	
 	public static AussomType isModuleLoaded(Environment env, ArrayList<AussomType> args) {
-		String incFile = ((AussomString)args.get(0)).getValue().replace(".", System.getProperty("file.separator")) + ".aus";
+		String incFile = ((AussomString)args.get(0)).getValue().replace(".", "/") + ".aus";
 		return new AussomBool(env.getEngine().getIncludes().contains(incFile));
 	}
 	

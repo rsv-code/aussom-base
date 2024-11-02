@@ -894,7 +894,8 @@ public class astExpression extends astNode implements astNodeInt {
 	private AussomType evalInclude(Environment env, AussomType r_left) {
 		if (r_left instanceof AussomString) {
 			try {
-				env.getEngine().addInclude(((AussomString)r_left).getValue());
+				astInclude ai = new astInclude(((AussomString)r_left).getValue());
+				env.getEngine().addInclude(ai.getPath());
 			} catch (Exception ex) {
 				AussomException e = new AussomException(exType.exRuntime);
 				e.setException(getLineNum(), "INCLUDE_FAILED", "astExpression.evalInclude(): Failed to include '" + ((AussomString)r_left).getValue() + "'. " + ex.getMessage(), env.getCallStack().getStackTrace());

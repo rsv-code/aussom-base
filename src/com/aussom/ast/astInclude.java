@@ -16,6 +16,7 @@
 
 package com.aussom.ast;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -49,7 +50,7 @@ public class astInclude extends astNode implements astNodeInt {
 		for(int i = 0; i < this.incList.size(); i++) {
 			path += incList.get(i);
 			if(i < (this.incList.size() -1))
-				path += System.getProperty("file.separator");
+				path += "/";
 		}
 		if(!path.equals(""))
 			path += this.ext;

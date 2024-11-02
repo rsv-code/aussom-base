@@ -189,14 +189,16 @@ public class Engine {
 				console.get().trc("Engine.addInclude(): Attempting to find in includePaths ...");
 				for (String pth : this.includePaths) {
 					String tinc = pth + Include;
+					// This could be different than tinc because of Windoz ...
+					String localIncPath = tinc.replace("/", System.getProperty("file.separator"));
 					if (!this.isPathExcludePath(tinc)) {
-						File f = new File(tinc);
+						File f = new File(localIncPath);
 						if (f.exists()) {
 							found = true;
 							if (!this.includes.contains(tinc)) {
 								console.get().trc("Engine.addInclude(): Include " + Include + " found in '" + pth + "'");
 								this.includes.add(tinc);
-								this.parseFile(tinc);
+								this.parseFile(localIncPath);
 								break;
 							}
 						}
