@@ -106,6 +106,9 @@ public class astExpression extends astNode implements astNodeInt {
 				case ASSIGNMENT: {
 					ret = this.assignment(env, getRef);
 					break;
+				} case SET: {
+					ret = this.set(env, getRef);
+					break;
 				} case ADD: {
 					ret = this.oper(env, getRef);
 					break;
@@ -181,7 +184,7 @@ public class astExpression extends astNode implements astNodeInt {
 				} case NOT: {
 					ret = this.operLeft(env, getRef);
 					break;
-				} case NULLSC: {
+				} case MISSNULL: {
 					ret = this.operLeft(env, getRef);
 					break;
 				} case COUNT: {
@@ -198,7 +201,7 @@ public class astExpression extends astNode implements astNodeInt {
 				}
 			}
 		}
-		
+
 		// If child is defined, evaluate it as well.
 		if (!ret.isEx() && this.getChild() != null) {
 		  Environment tenv = env;
@@ -207,10 +210,10 @@ public class astExpression extends astNode implements astNodeInt {
 		  }
 		  ret = this.getChild().eval(tenv, getRef);
 		}
-		
+
 		return ret;
 	}
-	
+
 	private AussomType assignment(Environment env, boolean getRef) throws aussomException {
 		AussomType ret = new AussomNull();
 		
@@ -235,7 +238,44 @@ public class astExpression extends astNode implements astNodeInt {
 		}
 		return ret;
 	}
-	
+
+	private AussomType set(Environment env, boolean getRef) throws aussomException {
+		AussomType ret = new AussomNull();
+
+		AussomType lres = this.left.eval(env, false);
+		if (!lres.isEx()) {
+			if (lres instanceof AussomObject) {
+				AussomObject ao = (AussomObject)lres;
+
+				AussomType rres = this.right.eval(env, false);
+				if (!rres.isEx()) {
+					if (rres instanceof AussomMap) {
+						AussomMap am = (AussomMap)rres;
+						AussomType tret = this.setSet(ao, am, env, getRef);
+						if (tret.isEx()) {
+							return tret;
+						}
+						ret = lres;
+					} else {
+						AussomException e = new AussomException(exType.exRuntime);
+						e.setException(this.getLineNum(), "INIT_NOT_POSSIBLE", "astExpression.init(): Right side of init expression returned invalid type '" + lres.getType().name() + "', expecting 'map'.", env.getCallStack().getStackTrace());
+						return e;
+					}
+				} else {
+					return rres;
+				}
+			} else {
+				AussomException e = new AussomException(exType.exRuntime);
+				e.setException(this.getLineNum(), "INIT_NOT_POSSIBLE", "astExpression.init(): Left side of init expression returned invalid type '" + lres.getType().name() + "', expecting 'object'.", env.getCallStack().getStackTrace());
+				return e;
+			}
+		} else {
+			return lres;
+		}
+
+		return ret;
+	}
+
 	private AussomType oper(Environment env, boolean getRef) throws aussomException {
 		AussomType ret = new AussomNull();
 
@@ -847,7 +887,7 @@ public class astExpression extends astNode implements astNodeInt {
 	private AussomType operLeft(Environment env, boolean getRef) throws aussomException {
 		AussomType ret = new AussomNull();
 
-		if (this.eType == expType.NULLSC) {
+		if (this.eType == expType.MISSNULL) {
 			ret = evalMissingNull(env, getRef);
 		} else {
 			AussomType r_left  = left.eval(env, getRef);
@@ -985,5 +1025,40 @@ public class astExpression extends astNode implements astNodeInt {
 		else if (Item.getType() == cType.cList) return true;
 		else if (Item.getType() == cType.cMap) return true;
 		else return false;
+	}
+
+	public AussomType setSet(AussomObject ao, AussomMap mp, Environment env, boolean getRef) throws aussomException {
+		AussomType ret = new AussomNull();
+		for (String key : mp.getValue().keySet()) {
+			if (ao.getMembers().contains(key) && ao.getClassDef().getMember(key).getAccessType() == AccessType.aPublic) {
+				ao.getMembers().getMap().put(key, mp.getValue().get(key));
+			} else {
+				boolean ffound = false;
+				for (String fname : ao.getClassDef().getFuncts().keySet()) {
+					// Find setter.
+					if (key.length() > 1 && fname.equals("set" + key.substring(0, 1).toUpperCase() + key.substring(1))) {
+						astFunctDef def = (astFunctDef) ao.getClassDef().getFunct(fname);
+						if (def.getAccessType() == AccessType.aPublic) {
+							AussomList args = new AussomList();
+							args.add(mp.getValue().get(key));
+							Environment tenv = env.clone(ao);
+							tenv.setClassInstance(ao);
+							AussomType tret = def.call(tenv, getRef, args, ao.getClassDef().getFileName());
+							if (tret.isEx()) {
+								return tret;
+							}
+							ffound = true;
+							break;
+						}
+					}
+				}
+				if (!ffound) {
+					AussomException e = new AussomException(exType.exRuntime);
+					e.setException(this.getLineNum(), "INIT_VAL_NOT_FOUND", "astExpression.init(): The provided init value '" + key + "' not found in object '" + ao.getClassDef().getName() + "'.", env.getCallStack().getStackTrace());
+					return e;
+				}
+			}
+		}
+		return ret;
 	}
 }

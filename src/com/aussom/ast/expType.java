@@ -31,7 +31,7 @@ public enum expType {
 	LTEQ,
 	GTEQ,
 	NOT,
-	NULLSC,
+	MISSNULL,
 	AND,
 	OR,
 	COUNT,
@@ -43,5 +43,6 @@ public enum expType {
 	PLPL,
 	MIMI,
 	INSTANCEOF,
-	INCLUDE
+	INCLUDE,
+	SET
 }

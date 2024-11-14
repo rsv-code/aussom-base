@@ -20,6 +20,7 @@ import com.aussom.Environment;
 import com.aussom.Universe;
 import com.aussom.Util;
 import com.aussom.ast.astClass;
+import com.aussom.ast.astFunctDef;
 import com.aussom.ast.aussomException;
 import com.aussom.stdlib.console;
 
@@ -82,7 +83,7 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 	public Members getMembers() {
 		return this.members;
 	}
-	
+
 	@Override
 	public String toString(int Level) {
 		String rstr = "";

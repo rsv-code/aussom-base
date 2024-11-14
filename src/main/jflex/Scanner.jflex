@@ -96,6 +96,7 @@ new_line 		= \r\n;
 <YYINITIAL> "break"					{ return symbol(sym.BREAK); }
 <YYINITIAL> "for"					{ return symbol(sym.FOR); }
 <YYINITIAL> "instanceof"			{ return symbol(sym.INSTANCEOF); }
+<YYINITIAL> ":="			        { return symbol(sym.SET); }
 
 <YYINITIAL> ";"						{ return symbol(sym.SEMI); }
 <YYINITIAL> ":"						{ return symbol(sym.COLON); }

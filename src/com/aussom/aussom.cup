@@ -101,6 +101,7 @@ terminal				WHILE;
 terminal				BREAK;
 terminal				FOR;
 terminal				INSTANCEOF;
+terminal                SET;
 
 terminal				SEMI;
 terminal				COLON;
@@ -725,6 +726,14 @@ expression ::=
 		ni.setArgs(nl);
 		RESULT = ni;
 	:}
+|   expression:el SET expNewMap:nm
+    {:
+        astExpression e = new astExpression(el);
+		e.setParserInfo(this.parser.fileName, elleft, elright);
+		e.setRight(nm);
+		e.seteType(expType.SET);
+		RESULT = e;
+    :}
 |	expNewList:nl
 	{:
 		RESULT = nl;

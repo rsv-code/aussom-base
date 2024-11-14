@@ -8,74 +8,75 @@ package com.aussom;
 /** CUP generated class containing symbol constants. */
 public class sym {
   /* terminals */
-  public static final int DI = 51;
-  public static final int GTEQ = 60;
-  public static final int LBRACKET = 30;
-  public static final int PL = 48;
-  public static final int DIEQ = 44;
-  public static final int LTEQ = 59;
-  public static final int MI = 49;
-  public static final int UMINUS = 53;
-  public static final int PLPL = 46;
-  public static final int MODULUSEQ = 45;
+  public static final int DI = 52;
+  public static final int GTEQ = 61;
+  public static final int LBRACKET = 31;
+  public static final int PL = 49;
+  public static final int DIEQ = 45;
+  public static final int LTEQ = 60;
+  public static final int MI = 50;
+  public static final int UMINUS = 54;
+  public static final int PLPL = 47;
+  public static final int MODULUSEQ = 46;
   public static final int CASE = 19;
-  public static final int DOUBLE = 36;
-  public static final int LPAREN = 28;
+  public static final int DOUBLE = 37;
+  public static final int LPAREN = 29;
   public static final int PRIVATE = 7;
-  public static final int SEMI = 25;
+  public static final int SEMI = 26;
   public static final int CLASSDEF = 2;
-  public static final int INT = 35;
+  public static final int INT = 36;
   public static final int FOR = 23;
-  public static final int MIMI = 47;
+  public static final int MIMI = 48;
   public static final int INSTANCEOF = 24;
   public static final int STATIC = 8;
-  public static final int RPAREN = 29;
-  public static final int AND = 62;
-  public static final int NOT = 61;
-  public static final int LT = 57;
-  public static final int ETCETERA = 65;
-  public static final int OR = 63;
-  public static final int BOOL = 34;
-  public static final int COMMA = 27;
+  public static final int RPAREN = 30;
+  public static final int AND = 63;
+  public static final int NOT = 62;
+  public static final int LT = 58;
+  public static final int ETCETERA = 66;
+  public static final int OR = 64;
+  public static final int BOOL = 35;
+  public static final int COMMA = 28;
   public static final int THROW = 13;
-  public static final int MUEQ = 43;
+  public static final int MUEQ = 44;
   public static final int EXTERN = 9;
   public static final int IF = 16;
-  public static final int DOT = 68;
+  public static final int DOT = 69;
   public static final int EOF = 0;
   public static final int RETURN = 10;
-  public static final int RBRACKET = 31;
+  public static final int RBRACKET = 32;
   public static final int NEW = 14;
   public static final int error = 1;
   public static final int INCLUDE = 4;
-  public static final int EQEQ = 55;
+  public static final int EQEQ = 56;
   public static final int NULL = 15;
   public static final int TRY = 11;
-  public static final int NULLSC = 54;
-  public static final int IDENT = 38;
+  public static final int IDENT = 39;
   public static final int BREAK = 22;
-  public static final int EQ = 40;
+  public static final int EQ = 41;
   public static final int SWITCH = 18;
-  public static final int PLEQ = 41;
-  public static final int COLON = 26;
-  public static final int LBRACE = 32;
+  public static final int PLEQ = 42;
+  public static final int COLON = 27;
+  public static final int LBRACE = 33;
   public static final int ELSE = 17;
   public static final int PROTECTED = 6;
-  public static final int CALLBACK = 66;
+  public static final int CALLBACK = 67;
   public static final int ENUM = 3;
-  public static final int AUSSOM_DOC = 39;
+  public static final int AUSSOM_DOC = 40;
   public static final int WHILE = 21;
-  public static final int INSERT = 67;
-  public static final int MIEQ = 42;
+  public static final int INSERT = 68;
+  public static final int MIEQ = 43;
   public static final int DEFAULT = 20;
   public static final int PUBLIC = 5;
-  public static final int RBRACE = 33;
-  public static final int MODULUS = 52;
-  public static final int STRING = 37;
-  public static final int COUNT = 64;
-  public static final int GT = 58;
-  public static final int MU = 50;
-  public static final int NOTEQ = 56;
+  public static final int RBRACE = 34;
+  public static final int MODULUS = 53;
+  public static final int STRING = 38;
+  public static final int MISSNULL = 55;
+  public static final int COUNT = 65;
+  public static final int GT = 59;
+  public static final int MU = 51;
+  public static final int NOTEQ = 57;
+  public static final int SET = 25;
   public static final int CATCH = 12;
   public static final String[] terminalNames = new String[] {
   "EOF",
@@ -103,6 +104,7 @@ public class sym {
   "BREAK",
   "FOR",
   "INSTANCEOF",
+  "SET",
   "SEMI",
   "COLON",
   "COMMA",
@@ -132,7 +134,7 @@ public class sym {
   "DI",
   "MODULUS",
   "UMINUS",
-  "NULLSC",
+  "MISSNULL",
   "EQEQ",
   "NOTEQ",
   "LT",

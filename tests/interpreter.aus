@@ -73,6 +73,17 @@ class user {
 	public getName() { return this.firstName + " " + this.lastName; }
 }
 
+class car {
+    private make = "";
+
+    public setMake(string Make) {
+        this.make = Make;
+        return this;
+    }
+
+    public getMake() { return this.make; }
+}
+
 class atest {
 	public pub = 'Pub';
 	pri = 'Pri';
@@ -118,6 +129,8 @@ class interpreterTests : test {
 	private dt = null;
 	private buff = null;
 	private cb = null;
+
+	private cr = null;
 
 	// Util members
 	private testStr = "On a long enough timeline, the survival rate for everyone drops to zero.";
@@ -339,6 +352,10 @@ class interpreterTests : test {
 			.add("(object operations) Member object set sub member.", ::objectMemberSetSubMember)
 			.add("(object operations) Local object call sub member.", ::objectLocalCallSubMember)
 			.add("(object operations) Member object call sub member.", ::objectMemberCallSubMember)
+			.add("(object operations) Local object set block.", ::objectLocalSetBlock)
+			.add("(object operations) Member object set block.", ::objectMemberSetBlock)
+			.add("(object operations) Local object set block function.", ::objectLocalSetBlockFunction)
+			.add("(object operations) Member object set block function.", ::objectMemberSetBlockFunction)
 			// access pub/pri
 			.add("(object access) Member access for local variable public.", ::objectAccessLocVarPub)
 			.add("(object access) Member access for local variable private.", ::objectAccessLocVarPri)
@@ -899,6 +916,33 @@ class interpreterTests : test {
 	 public objectMemberSetSubMember() { this.memObj.emailAddress.address = "one@two.com"; return this.expect(this.memObj.emailAddress.address, "one@two.com"); }
 	 public objectLocalCallSubMember() { me = new user(); me.emailAddress.setAddress("one@two.com"); return this.expect(me.emailAddress.getAddress(), "one@two.com"); }
 	 public objectMemberCallSubMember() { this.memObj.emailAddress.setAddress("one@two.com"); return this.expect(this.memObj.emailAddress.getAddress(), "one@two.com"); }
+	 public objectLocalSetBlock() {
+	    me = new user() := {
+	        firstName: "Tyler",
+	        lastName: "Durden"
+	    };
+	    return this.expect(me.firstName, "Tyler");
+	 }
+	 public objectMemberSetBlock() {
+	    this.memObj = new user() := {
+	        firstName: "Tyler",
+	        lastName: "Durden"
+	    };
+	    return this.expect(this.memObj.firstName, "Tyler");
+	 }
+	 public objectLocalSetBlockFunction() {
+	    cr = new car() := {
+	        make: "Nissan"
+	    };
+	    return this.expect(cr.getMake(), "Nissan");
+	 }
+	 public objectMemberSetBlockFunction() {
+	    this.cr = new car() := {
+	        make: "Nissan"
+	    };
+	    return this.expect(this.cr.getMake(), "Nissan");
+	 }
+
 	 // access public/private
 	 public objectAccessLocVarPub() { l = new atest(); ex = false; try { t = l.pub; } catch(e) { ex = true; } return this.expect(ex, false); }
 	 public objectAccessLocVarPri() { l = new atest(); ex = false; try { t = l.pri; } catch(e) { ex = true; } return this.expect(ex, true); }
