@@ -181,6 +181,9 @@ public class astExpression extends astNode implements astNodeInt {
 				} case NOT: {
 					ret = this.operLeft(env, getRef);
 					break;
+				} case NULLSC: {
+					ret = this.operLeft(env, getRef);
+					break;
 				} case COUNT: {
 					ret = this.operLeft(env, getRef);
 					break;
@@ -846,28 +849,31 @@ public class astExpression extends astNode implements astNodeInt {
 	{
 		AussomType ret = new AussomNull();
 
-		AussomType r_left  = left.eval(env, getRef);
-		if(!r_left.isEx()) {
-			switch(this.eType) {
-				case NOT: {
-					ret = evalNot(env, r_left);
-					break;
-				} case COUNT: {
-					ret = evalCount(env, r_left);
-					break;
-				} case INCLUDE: {
-					ret = evalInclude(env, r_left);
-					break;
-				} default: {
-					AussomException e = new AussomException(exType.exInternal);
-					e.setException(this.getLineNum(), "UNDEFINED_EXPRESSION", "Undefined oper left expression '" + this.eType.name() + "' found. (aExp::call)", "Undefined oper left expression '" + this.eType.name() + "' found. (aExp::call)", env.getCallStack().getStackTrace());
-					ret = e;
-					break;
+		if (this.eType == expType.NULLSC) {
+			ret = evalMissingNull(env, getRef);
+		} else {
+			AussomType r_left  = left.eval(env, getRef);
+			if(!r_left.isEx()) {
+				switch(this.eType) {
+					case NOT: {
+						ret = evalNot(env, r_left);
+						break;
+					} case COUNT: {
+						ret = evalCount(env, r_left);
+						break;
+					} case INCLUDE: {
+						ret = evalInclude(env, r_left);
+						break;
+					} default: {
+						AussomException e = new AussomException(exType.exInternal);
+						e.setException(this.getLineNum(), "UNDEFINED_EXPRESSION", "Undefined oper left expression '" + this.eType.name() + "' found. (aExp::call)", "Undefined oper left expression '" + this.eType.name() + "' found. (aExp::call)", env.getCallStack().getStackTrace());
+						ret = e;
+						break;
+					}
 				}
+			} else {
+				ret = r_left;
 			}
-		}
-		else {
-			ret = r_left;
 		}
 
 		return ret;
@@ -876,7 +882,28 @@ public class astExpression extends astNode implements astNodeInt {
 	private AussomType evalNot(Environment env, AussomType r_left) {
 		return new AussomBool(!this.boolVal(r_left));
 	}
-	
+
+	private AussomType evalMissingNull(Environment env, boolean getRef) throws aussomException {
+		AussomType ret = new AussomNull();
+
+		AussomType r_left  = left.eval(env, getRef);
+		if(
+			r_left.isEx() &&
+			(
+					((AussomException)r_left).getId().equals("NO_MEMBER_FOUND")
+					|| ((AussomException)r_left).getId().equals("MAP_MISSING_KEY")
+					|| ((AussomException)r_left).getId().equals("INDEX_NOT_FOUND")
+					|| ((AussomException)r_left).getId().equals("INDEX_OUT_OF_BOUNDS")
+			)
+		) {
+			ret = new AussomNull();
+		} else {
+			ret = r_left;
+		}
+
+		return ret;
+	}
+
 	private AussomType evalCount(Environment env, AussomType r_left) {
 		if (r_left.getType() == cType.cList) {
 		  return new AussomInt(((AussomList)r_left).getValue().size());

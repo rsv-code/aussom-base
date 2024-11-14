@@ -120,6 +120,7 @@ new_line 		= \r\n;
 <YYINITIAL> "*"						{ return symbol(sym.MU); }
 <YYINITIAL> "/"						{ return symbol(sym.DI); }
 <YYINITIAL> "%"						{ return symbol(sym.MODULUS); }
+<YYINITIAL> "?"						{ return symbol(sym.MISSNULL); }
 
 <YYINITIAL> "=="					{ return symbol(sym.EQEQ); }
 <YYINITIAL> "!="					{ return symbol(sym.NOTEQ); }

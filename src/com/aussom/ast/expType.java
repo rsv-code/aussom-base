@@ -31,6 +31,7 @@ public enum expType {
 	LTEQ,
 	GTEQ,
 	NOT,
+	NULLSC,
 	AND,
 	OR,
 	COUNT,

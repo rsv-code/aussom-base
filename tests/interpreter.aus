@@ -367,6 +367,14 @@ class interpreterTests : test {
 			.add("(enum operations) Assign local variable enum reference.", ::enumAssignLocalReference)
 			.add("(enum operations) Assign member variable enum reference.", ::enumAssignMemberReference)
 		;
+
+		// Missing-Null Operator
+		this
+		    .add("(? operator) Dereference with missing-null.", ::dereferenceMissingNull)
+		    .add("(? operator) Dereference index expression with missing-null.", ::dereferenceMissingNullIndexExp)
+		    .add("(? operator) Dereference index expression with missing-null no exception in expression.", ::dereferenceMissingNullIndexExpNoExcept)
+		    .add("(? operator) Dereference index expression with missing-null exception in expression.", ::dereferenceMissingNullIndexExpExcept)
+		;
 		
 		// If/Else
 		this
@@ -897,7 +905,37 @@ class interpreterTests : test {
 	 public enumReference() { return this.expect(numName.one, 'one'); }
 	 public enumAssignLocalReference() { tmp = numName.two; return this.expect(tmp, 'two'); }
 	 public enumAssignMemberReference() { this.en = numName.three; return this.expect(this.en, 'three'); }
-	 
+
+	 /***********************************************************************
+      * missing-null tests
+      *********************************************************************/
+	 public dereferenceMissingNull() { val = 'test'; ret = ?val.doesnt.exist; return this.expect(ret, null); }
+	 public dereferenceMissingNullIndexExp() { val = 'test'; ret = ?val["doesnt"].exist; return this.expect(ret, null); }
+     public dereferenceMissingNullIndexExpNoExcept() {
+        ex = true;
+        val = {
+            name: "Hogan"
+        };
+        try {
+            ?val[val.doesnt.exist];
+        } catch (e) {
+            ex = false;
+        }
+        return this.expect(ex, true);
+     }
+     public dereferenceMissingNullIndexExpExcept() {
+        ex = false;
+        val = {
+            name: "Hogan"
+        };
+        try {
+            ?val[10/0];
+        } catch (e) {
+            ex = true;
+        }
+        return this.expect(ex, true);
+     }
+
 	 /***********************************************************************
 	  * if/else tests
 	  *********************************************************************/

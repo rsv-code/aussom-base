@@ -159,7 +159,11 @@ public class astObj  extends astNode implements astNodeInt {
 			String key = this.getName();
 			if (this.getIndex() != null) {
 				Environment tenv = env.clone(((AussomMap)env.getCurObj()).getValue().get(key));
-				key = ((AussomTypeInt)this.getIndex().eval(tenv, false)).str();
+				AussomType indRet = this.getIndex().eval(tenv, false);
+				if (indRet.isEx()) {
+					return indRet;
+				}
+				key = ((AussomTypeInt)indRet).str();
 			}
 			
 			if (getRef) {
@@ -250,7 +254,7 @@ public class astObj  extends astNode implements astNodeInt {
 
 		else {
 		  AussomException e = new AussomException(exType.exInternal);
-		  e.setException(this.getLineNum(), "NOT_IMPLEMENTED", "aObj.callObj(): Unmatched object type for '" + this.getName() + "'.", env.getCallStack().getStackTrace());
+		  e.setException(this.getLineNum(), "NO_MEMBER_FOUND", "aObj.callObj(): Unmatched object type for '" + this.getName() + "'.", env.getCallStack().getStackTrace());
 		  return e;
 		}
 		
