@@ -200,14 +200,13 @@ public class astExpression extends astNode implements astNodeInt {
 		}
 		
 		// If child is defined, evaluate it as well.
-		if (this.getChild() != null) {
+		if (!ret.isEx() && this.getChild() != null) {
 		  Environment tenv = env;
 		  if (ret instanceof AussomObject || ret.getType() == cType.cMap || ret.getType() == cType.cList) {
 			tenv = env.clone(ret);
 		  }
 		  ret = this.getChild().eval(tenv, getRef);
 		}
-
 		
 		return ret;
 	}
@@ -845,8 +844,7 @@ public class astExpression extends astNode implements astNodeInt {
 		}
 	}
 	
-	private AussomType operLeft(Environment env, boolean getRef) throws aussomException
-	{
+	private AussomType operLeft(Environment env, boolean getRef) throws aussomException {
 		AussomType ret = new AussomNull();
 
 		if (this.eType == expType.NULLSC) {

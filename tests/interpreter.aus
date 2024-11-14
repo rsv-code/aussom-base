@@ -241,8 +241,10 @@ class interpreterTests : test {
 			// # oper
 			.add("(# operator) Local list count.", ::operLocalListCount)
 			.add("(# operator) Local map count.", ::operLocalMapCount)
+			.add("(# operator) Local map count exception.", ::operLocalMapCountException)
 			.add("(# operator) Member list count.", ::operMemberListCount)
 			.add("(# operator) Member map count.", ::operMemberMapCount)
+			.add("(# operator) Member map count exception.", ::operMemberMapCountException)
 			// > oper
 			.add("(> operator) Greater than bool vals.", ::operGreaterThanBool)
 			.add("(> operator) Greater than int vals.", ::operGreaterThanInt)
@@ -740,8 +742,29 @@ class interpreterTests : test {
 	 // Count #
 	 public operLocalListCount() { var = []; var @= "Tyler"; return this.expect(#var - 1, 0); }
 	 public operLocalMapCount() { var = {}; var['char'] = "Tyler"; return this.expect(#var, 1); }
+	 public operLocalMapCountException() {
+	    thrown = false;
+	    var = {};
+	    try {
+	        // this.pages doesn't exist, this should throw an exception.
+	        val = (#var.pages / 3).toInt();
+	    } catch (e) {
+            thrown = true;
+	    }
+	    return this.expect(thrown, true);
+	 }
 	 public operMemberListCount() { return this.expect(#this.memList, 3); }
 	 public operMemberMapCount() { return this.expect(#this.memMap, 3); }
+	 public operMemberMapCountException() {
+	    thrown = false;
+	    try {
+	        // this.pages doesn't exist, this should throw an exception.
+	        val = (#this.pages / 3).toInt();
+	    } catch (e) {
+            thrown = true;
+	    }
+	    return this.expect(thrown, true);
+	 }
      // Greater than >
      public operGreaterThanBool() { return this.expect(true > false, true); }
      public operGreaterThanInt() { return this.expect(256 > 1, true); }
