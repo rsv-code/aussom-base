@@ -217,6 +217,7 @@ non terminal astNode								expThrow;
 
 precedence right THROW;
 precedence right EQ;
+precedence right SET;
 precedence right MIEQ, PLEQ, DIEQ, MODULUSEQ, MUEQ, INSERT;
 precedence right AND, OR;
 precedence right EQEQ, NOTEQ, LT, GT, LTEQ, GTEQ;
@@ -726,14 +727,6 @@ expression ::=
 		ni.setArgs(nl);
 		RESULT = ni;
 	:}
-|   expression:el SET expNewMap:nm
-    {:
-        astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, elleft, elright);
-		e.setRight(nm);
-		e.seteType(expType.SET);
-		RESULT = e;
-    :}
 |	expNewList:nl
 	{:
 		RESULT = nl;
@@ -892,7 +885,15 @@ operExp ::=
 		e.setRight(er);
 		e.seteType(expType.MODULUS);
 		RESULT = e;
-	:}	
+	:}
+|   expression:el SET expression:er
+    {:
+        astExpression e = new astExpression(el);
+		e.setParserInfo(this.parser.fileName, elleft, elright);
+		e.setRight(er);
+		e.seteType(expType.SET);
+		RESULT = e;
+    :}
 |	expression:el EQ expression:er
 	{:
 		astExpression e = new astExpression(el);

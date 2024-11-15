@@ -356,6 +356,10 @@ class interpreterTests : test {
 			.add("(object operations) Member object set block.", ::objectMemberSetBlock)
 			.add("(object operations) Local object set block function.", ::objectLocalSetBlockFunction)
 			.add("(object operations) Member object set block function.", ::objectMemberSetBlockFunction)
+			.add("(object operations) Local object set block as variable.", ::objectLocalSetBlockAsVariable)
+			.add("(object operations) Member object set block as variable.", ::objectMemberSetBlockAsVariable)
+			.add("(object operations) Local object set block exception.", ::objectLocalSetBlockException)
+
 			// access pub/pri
 			.add("(object access) Member access for local variable public.", ::objectAccessLocVarPub)
 			.add("(object access) Member access for local variable private.", ::objectAccessLocVarPri)
@@ -941,6 +945,31 @@ class interpreterTests : test {
 	        make: "Nissan"
 	    };
 	    return this.expect(this.cr.getMake(), "Nissan");
+	 }
+	 public objectLocalSetBlockAsVariable() {
+	    mpVal = {
+	        make: "Nissan"
+	    };
+	    cr = new car() := mpVal;
+	    return this.expect(cr.getMake(), "Nissan");
+	 }
+	 public objectMemberSetBlockAsVariable() {
+	    mpVal = {
+	        make: "Nissan"
+	    };
+	    this.cr = new car() := mpVal;
+	    return this.expect(this.cr.getMake(), "Nissan");
+	 }
+
+	 public objectLocalSetBlockException() {
+	    try {
+            me = new user() := [
+                "Robert"
+            ];
+            return false;
+        } catch (e) {
+            return true;
+        }
 	 }
 
 	 // access public/private
