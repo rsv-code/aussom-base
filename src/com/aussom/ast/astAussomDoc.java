@@ -159,7 +159,7 @@ public class astAussomDoc extends astNode implements astNodeInt {
      * Gets a list of annotations for this doc node.
      * @return A List of docAnnotation objects.
      */
-    public List<docAnnotation> getAnnotations() {
+    public List<docAnnotation> getDocAnnotations() {
         List<docAnnotation> ret = new ArrayList<>();
         for (docText dt : this.docList) {
             if (dt.getType() == docType.ANNOTATION) {

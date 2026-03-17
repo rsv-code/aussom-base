@@ -21,6 +21,9 @@ import com.aussom.types.AussomMap;
 import com.aussom.types.AussomType;
 import com.aussom.types.cType;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class astNode {
 	private String name = "";
 	private astNodeType type = astNodeType.UNDEF;
@@ -36,6 +39,8 @@ public class astNode {
 	private astNode child = null;
 
 	protected astAussomDoc docNode = null;
+
+	protected List<astAnnotation> annotations = new ArrayList<astAnnotation>();
 	
 	public void setPrimType(cType PrimType) {
 		this.primativeType = PrimType;
@@ -124,6 +129,18 @@ public class astNode {
 
 	public void setDocNode(astAussomDoc docNode) {
 		this.docNode = docNode;
+	}
+
+	public void addAnnotations(List<astAnnotation> Annotations) {
+		this.annotations.addAll(Annotations);
+	}
+
+	public List<astAnnotation> getAnnotations() {
+		return this.annotations;
+	}
+
+	public void setAnnotations(List<astAnnotation> Annotations) {
+		this.annotations = Annotations;
 	}
 
 	public AussomType eval(Environment env) throws aussomException {

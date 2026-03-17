@@ -138,6 +138,7 @@ new_line 		= \r\n;
 <YYINITIAL> "::"					{ return symbol(sym.CALLBACK); }
 <YYINITIAL> "#"						{ return symbol(sym.COUNT); }
 <YYINITIAL> "@="					{ return symbol(sym.INSERT); }
+<YYINITIAL> "@"					    { return symbol(sym.AT); }
 
 <YYINITIAL> "."						{ return symbol(sym.DOT); }
 

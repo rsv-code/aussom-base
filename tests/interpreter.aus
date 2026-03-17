@@ -102,6 +102,7 @@ class dog {
 	public dog(string Breed) { this.breed = Breed; }
 }
 
+@UnitTest
 class interpreterTests : test {
 	// public member used for testing
 	public member = null;
@@ -110,6 +111,7 @@ class interpreterTests : test {
 	obj = null;
 	
 	// Members used for definition testing.
+	@Mock
 	public mem;
 	public memNull = null;
 	public memBool = false;
@@ -151,6 +153,7 @@ class interpreterTests : test {
 	 * Test constructor. We set the test name here and do 
 	 * any initialization we need for the test here.
 	 */
+	@Test(name = "Interpreter Tests")
 	public interpreterTests() {
 		this.setName("Aussom Interpreter");
 		

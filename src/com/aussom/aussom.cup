@@ -102,6 +102,7 @@ terminal				BREAK;
 terminal				FOR;
 terminal				INSTANCEOF;
 terminal                SET;
+terminal                AT;
 
 terminal				SEMI;
 terminal				COLON;
@@ -153,6 +154,10 @@ non terminal astNode								externClassRef;
 non terminal AccessType								AccessType;
 non terminal astNode								classSection;
 non terminal astNode								classBlocks;
+non terminal ArrayList<astAnnotation>               annotationList;
+non terminal astAnnotation                          annotation;
+non terminal ArrayList<astAnnotationArg>            annotationArgList;
+non terminal astAnnotationArg                       annotationArg;
 non terminal astNode								enumBlocks;
 non terminal astNode								enumRec;
 non terminal ArrayList<String>						extendClassList;
@@ -295,6 +300,74 @@ classBlock ::=
         exp.setDocNode(ad);
         RESULT = exp;
     :}
+|   AUSSOM_DOC:doc annotationList:annList classDefExpr:exp
+    {:
+        // Set doc node.
+        astAussomDoc ad = new astAussomDoc(doc);
+        ad.setParserInfo(this.parser.fileName, docleft, docright);
+        exp.setDocNode(ad);
+        exp.addAnnotations(annList);
+        RESULT = exp;
+    :}
+|   annotationList:annList classDefExpr:exp
+    {:
+        // Set doc node.
+        exp.setParserInfo(this.parser.fileName, annListleft, annListright);
+        exp.addAnnotations(annList);
+        RESULT = exp;
+    :}
+;
+
+annotationList ::=
+    annotation:a
+    {:
+        ArrayList<astAnnotation> al = new ArrayList<astAnnotation>();
+        al.add(a);
+        RESULT = al;
+    :}
+|	annotationList:annList annotation:a
+    {:
+        annList.add(a);
+        RESULT = annList;
+    :}
+;
+
+annotation ::=
+    AT IDENT:annotationName
+    {:
+        astAnnotation aa = new astAnnotation(annotationName);
+        aa.setParserInfo(this.parser.fileName, annotationNameleft, annotationNameright);
+        RESULT = aa;
+    :}
+|   AT IDENT:annotationName LPAREN annotationArgList:al RPAREN
+    {:
+        astAnnotation aa = new astAnnotation(annotationName, al);
+        aa.setParserInfo(this.parser.fileName, annotationNameleft, annotationNameright);
+        RESULT = aa;
+    :}
+;
+
+annotationArgList ::=
+    annotationArg:a
+    {:
+        ArrayList<astAnnotationArg> al = new ArrayList<astAnnotationArg>();
+        al.add(a);
+        RESULT = al;
+    :}
+|	annotationArgList:argList annotationArg:a
+    {:
+        argList.add(a);
+        RESULT = argList;
+    :}
+;
+
+annotationArg ::=
+    IDENT:argName EQ STRING:s
+    {:
+        astAnnotationArg annArg = new astAnnotationArg(argName, s);
+        annArg.setParserInfo(this.parser.fileName, argNameleft, argNameright);
+        RESULT = annArg;
+    :}
 ;
 
 classDefExpr ::=
@@ -429,6 +502,20 @@ memberDefinitionBlock ::=
         md.setDocNode(ad);
         RESULT = md;
     :}
+|   annotationList:annList memberDefinition:md
+    {:
+        md.addAnnotations(annList);
+        RESULT = md;
+    :}
+|   AUSSOM_DOC:doc annotationList:annList memberDefinition:md
+    {:
+        // Set doc node.
+        astAussomDoc ad = new astAussomDoc(doc);
+        ad.setParserInfo(this.parser.fileName, docleft, docright);
+        md.setDocNode(ad);
+        md.addAnnotations(annList);
+        RESULT = md;
+    :}
 ;
 
 memberDefinition ::=
@@ -526,6 +613,20 @@ functionDefinitionBlock ::=
         astAussomDoc ad = new astAussomDoc(doc);
         ad.setParserInfo(this.parser.fileName, docleft, docright);
         fd.setDocNode(ad);
+        RESULT = fd;
+    :}
+|   annotationList:annList functionDefinition:fd
+    {:
+        fd.addAnnotations(annList);
+        RESULT = fd;
+    :}
+|   AUSSOM_DOC:doc annotationList:annList functionDefinition:fd
+    {:
+        // Set doc node.
+        astAussomDoc ad = new astAussomDoc(doc);
+        ad.setParserInfo(this.parser.fileName, docleft, docright);
+        fd.setDocNode(ad);
+        fd.addAnnotations(annList);
         RESULT = fd;
     :}
 ;
