@@ -1,4 +1,4 @@
-![alt tag](https://gitlab.com/cupofcode/aussom-base/-/raw/main/doc/img/logo.png?ref_type=heads)
+![alt tag](doc/img/logo.png)
 
 This is a base interpreter implementation of Aussom language. You can run the interpreter from the command line, but 
 this package was built to be embedded and provides only the most common language and standard library functionality.
