@@ -102,7 +102,7 @@ class dog {
 	public dog(string Breed) { this.breed = Breed; }
 }
 
-@UnitTest
+@Test(name = "Interpreter Tests")
 class interpreterTests : test {
 	// public member used for testing
 	public member = null;
@@ -153,20 +153,20 @@ class interpreterTests : test {
 	 * Test constructor. We set the test name here and do 
 	 * any initialization we need for the test here.
 	 */
-	@Test(name = "Interpreter Tests")
+	@Test(name = "Interpreter Tests", skip = "true")
 	public interpreterTests() {
 		this.setName("Aussom Interpreter");
 		
 		// Local variable assignment tests
-		this
-			.add("(local assignment) Assign variable null.", ::assignLocalNull)
-			.add("(local assignment) Assign variable bool.", ::assignLocalBool)
-			.add("(local assignment) Assign variable int.", ::assignLocalInt)
-			.add("(local assignment) Assign variable double.", ::assignLocalDouble)
-			.add("(local assignment) Assign variable string.", ::assignLocalString)
-			.add("(local assignment) Assign variable list.", ::assignLocalList)
-			.add("(local assignment) Assign variable map.", ::assignLocalMap)
-		;
+		//this
+			//.add("(local assignment) Assign variable null.", ::assignLocalNull)
+			//.add("(local assignment) Assign variable bool.", ::assignLocalBool)
+			//.add("(local assignment) Assign variable int.", ::assignLocalInt)
+			//.add("(local assignment) Assign variable double.", ::assignLocalDouble)
+			//.add("(local assignment) Assign variable string.", ::assignLocalString)
+			//.add("(local assignment) Assign variable list.", ::assignLocalList)
+			//.add("(local assignment) Assign variable map.", ::assignLocalMap)
+		//;
 		
 		// Member variable assignment tests
 		this
@@ -667,12 +667,25 @@ class interpreterTests : test {
 	/***********************************************************************
 	 * Local variable assignments.
 	 *********************************************************************/
+	@Test(name = "(local assignment) Assign variable null.")
 	public assignLocalNull() { var = null; return this.expectNull(var); }
+
+	@Test(name = "(local assignment) Assign variable bool.")
 	public assignLocalBool() { var = true; return this.expect(var, true); }
+
+    @Test(name = "(local assignment) Assign variable int.")
 	public assignLocalInt() { var = 1; return this.expect(var, 1); }
+
+    @Test(name = "(local assignment) Assign variable double.")
 	public assignLocalDouble() { var = 12345.6789; return this.expect(var, 12345.6789); }
+
+    @Test(name = "(local assignment) Assign variable string.")
 	public assignLocalString() { var = "hello world"; return this.expect(var, "hello world"); }
+
+    @Test(name = "(local assignment) Assign variable list.")
 	public assignLocalList() { var = []; return this.expectList(var); }
+
+    @Test(name = "(local assignment) Assign variable map.")
 	public assignLocalMap() { var = {}; return this.expectMap(var); }
 	
 	/***********************************************************************

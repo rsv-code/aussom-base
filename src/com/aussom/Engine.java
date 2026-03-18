@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.aussom.ast.*;
 import com.aussom.stdlib.Lang;
+import com.aussom.stdlib.UnitTestRunner;
 import com.aussom.stdlib.console;
 import com.aussom.types.*;
 
@@ -305,7 +306,30 @@ public class Engine {
 	public List<String> getIncludes() {
 		return this.includes;
 	}
-	
+
+	/**
+	 * Resets the main callstack.
+	 */
+	public void newMainCallstack() {
+		this.mainCallStack = new CallStack();
+	}
+
+	/**
+	 * Gets the current main callstack.
+	 * @return A CallStack object.
+	 */
+	public CallStack getMainCallStack() {
+		return this.mainCallStack;
+	}
+
+	/**
+	 * Gets the hasParseErrors flag.
+	 * @return A boolean with true for has parse errors and false for not.
+	 */
+	public boolean hasParseErrors() {
+		return this.hasParseErrors;
+	}
+
 	public void addClass(astNode TCls) throws aussomException {
 		astClass Cls = (astClass)TCls;
 		this.classes.put(Cls.getName(),  Cls);
@@ -325,7 +349,23 @@ public class Engine {
 	public astClass getClassByName(String Name) {
 		return this.classes.get(Name);
 	}
-	
+
+	/**
+	 * Gets the astClass object with the provided filename and path
+	 * and returns null if not found.
+	 * @param FileNameAndPath is a string with the full filename and path.
+	 * @return An astClass object or null if not found.
+	 */
+	public List<astClass> getClassByFileNameAndPath(String FileNameAndPath) {
+		List<astClass> ret = new ArrayList<astClass>();
+		for (astClass cls : this.classes.values()) {
+			if (cls.getFileName().equals(FileNameAndPath)) {
+				ret.add(cls);
+			}
+		}
+		return ret;
+	}
+
 	/**
 	 * Checks to see if a class definition with the provided name exists in the engine.
 	 * Note that this doesn't include static classes.

@@ -16,13 +16,7 @@
 
 package com.aussom;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 
 /**
@@ -128,5 +122,17 @@ public class Util {
 	    }
 		
 		return ret;
+	}
+
+	/**
+	 * Converts a Java stacktrace to string.
+	 * @param e is the Java Exception to convert.
+	 * @return A string with the stacktrace.
+	 */
+	public static String stackTraceToString(Exception e) {
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		e.printStackTrace(pw);
+		return pw.toString();
 	}
 }

@@ -3,6 +3,8 @@ package com.aussom.ast;
 import com.aussom.Environment;
 import com.aussom.types.AussomType;
 
+import javax.management.DescriptorKey;
+
 /**
  * Holds the annotation key value pair.
  */
@@ -22,6 +24,18 @@ public class astAnnotationArg extends astNode implements astNodeInt {
     }
     public void setKey(String key) {
         this.key = key;
+    }
+
+    public String getValue() {
+        return value;
+    }
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return this.toString(0);
     }
 
     @Override

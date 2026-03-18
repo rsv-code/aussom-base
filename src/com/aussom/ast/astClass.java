@@ -24,6 +24,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.aussom.CallStack;
 import com.aussom.Engine;
 import com.aussom.Environment;
+import com.aussom.stdlib.UnitTest;
+import com.aussom.stdlib.UnitTestClass;
+import com.aussom.stdlib.console;
 import com.aussom.types.AussomBool;
 import com.aussom.types.AussomDouble;
 import com.aussom.types.AussomException;
@@ -125,7 +128,52 @@ public class astClass extends astNode implements astNodeInt {
 	public astNode getFunct(String Name) {
 		return this.functDefs.get(Name);
 	}
-	
+
+	public boolean containsTests() {
+		for (String functName : this.functDefs.keySet()) {
+			astNode funct = this.functDefs.get(functName);
+			for (astAnnotation ann : funct.getAnnotations()) {
+				if (ann.getAnnotationName().equals("Test")) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public UnitTestClass getTestClass() {
+		astAnnotation classAnnotation = this.getAnnotation("Test");
+		String classUnitTestName = "";
+		if (classAnnotation != null) {
+			List<astAnnotationArg> classArgs = classAnnotation.getAnnotationArgsByName("name");
+			if (classArgs.size() > 0) {
+				classUnitTestName = classArgs.get(0).getValue();
+			}
+		}
+		UnitTestClass testClass = new UnitTestClass(this.getName(), classUnitTestName);
+
+		for (String functName : this.functDefs.keySet()) {
+			astNode funct = this.functDefs.get(functName);
+			for (astAnnotation ann : funct.getAnnotations()) {
+				if (ann.getAnnotationName().equals("Test")) {
+					String functUnitTestName = "";
+					List<astAnnotationArg> functArgs = ann.getAnnotationArgsByName("name");
+					if (functArgs.size() > 0) {
+						functUnitTestName = functArgs.get(0).getValue();
+					}
+					UnitTest test = new UnitTest(functUnitTestName, functName);
+					String skipVal = ann.getAnnotationArgValueByName("skip");
+					if (skipVal != null && skipVal.equals("true")) {
+						test.setSkip(true);
+					}
+					testClass.addTest(test);
+				}
+			}
+		}
+
+		return testClass;
+	}
+
 	public void init(Environment env) throws aussomException {
 		if (!this.initRan) {
 			this.initRan = true;

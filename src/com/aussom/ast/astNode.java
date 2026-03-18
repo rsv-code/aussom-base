@@ -143,6 +143,15 @@ public class astNode {
 		this.annotations = Annotations;
 	}
 
+	public astAnnotation getAnnotation(String annotationName) {
+		for (astAnnotation annotation : this.annotations) {
+			if (annotation.getName().equals(annotationName)) {
+				return annotation;
+			}
+		}
+		return null;
+	}
+
 	public AussomType eval(Environment env) throws aussomException {
 		return this.eval(env, false);
 	}

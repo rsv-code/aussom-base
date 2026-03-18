@@ -17,6 +17,7 @@
 package com.aussom;
 
 import com.aussom.stdlib.Lang;
+import com.aussom.stdlib.UnitTestRunner;
 import com.aussom.stdlib.console;
 import org.apache.commons.cli.*;
 
@@ -48,6 +49,10 @@ public class Main {
 		Option doc = new Option("d", "doc", false, "generate aussomdoc for file");
 		options.addOption(doc);
 
+		// Aussomdoc option
+		Option test = new Option("t", "test", false, "run tests for file");
+		options.addOption(test);
+
 		try {
 			// parse the command line arguments
 			CommandLine line = parser.parse(options, args);
@@ -68,6 +73,20 @@ public class Main {
 					printHelp(options);
 				}
 
+			} else if (line.hasOption("test")) {
+				List<String> pargs = line.getArgList();
+				if (pargs.size() == 0) {
+					console.get().err("Expecting aussom script file, but no arguments found.\n");
+					printHelp(options);
+				} else if (pargs.size() > 1) {
+					console.get().err("Too many arguments provided, expecting just one script file.\n");
+					printHelp(options);
+				} else {
+					// We nailed it, let's run the file
+					String ScriptFile = pargs.get(0);
+					console.get().info("Running tests for file '" + ScriptFile + "'.");
+					runTest(ScriptFile);
+				}
 			} else {
 				List<String> pargs = line.getArgList();
 				if (pargs.size() == 0) {
@@ -112,6 +131,27 @@ public class Main {
 
 		// Attempt to run the code.
 		int result = eng.run();
+
+		// Exit with the code now.
+		System.exit(result);
+	}
+
+	public static void runTest(String ScriptFile) throws Exception {
+		DefaultLoggingImpl logger = new DefaultLoggingImpl();
+		logger.setLevel(DefaultLoggingImpl.INFO);
+		console.get().register(logger);
+
+		// Create a new Aussom engine.
+		UnitTestRunner testRunner = new UnitTestRunner(new DefaultSecurityManagerImpl(), ScriptFile, "Run unit tests");
+
+		// Add resource include path.
+		testRunner.addResourceIncludePath("/com/aussom/stdlib/aus/");
+
+		// Parse the provided file name.
+		testRunner.parseFile(ScriptFile);
+
+		// Attempt to run the code.
+		int result = testRunner.runTest(ScriptFile);
 
 		// Exit with the code now.
 		System.exit(result);

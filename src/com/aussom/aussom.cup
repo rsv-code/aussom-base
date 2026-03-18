@@ -354,7 +354,7 @@ annotationArgList ::=
         al.add(a);
         RESULT = al;
     :}
-|	annotationArgList:argList annotationArg:a
+|	annotationArgList:argList COMMA annotationArg:a
     {:
         argList.add(a);
         RESULT = argList;
