@@ -145,7 +145,7 @@ public class astNode {
 
 	public astAnnotation getAnnotation(String annotationName) {
 		for (astAnnotation annotation : this.annotations) {
-			if (annotation.getName().equals(annotationName)) {
+			if (annotation.getAnnotationName().equals(annotationName)) {
 				return annotation;
 			}
 		}
