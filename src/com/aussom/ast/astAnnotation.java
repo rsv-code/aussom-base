@@ -56,7 +56,7 @@ public class astAnnotation extends astNode implements astNodeInt {
 
     public String getAnnotationArgValueByName(String annotationName) {
         for (astAnnotationArg arg : this.args) {
-            if (arg.getName().equals(annotationName)) {
+            if (arg.getKey().equals(annotationName)) {
                 return arg.getValue();
             }
         }

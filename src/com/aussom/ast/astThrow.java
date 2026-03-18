@@ -49,6 +49,8 @@ public class astThrow extends astNode implements astNodeInt
 	public AussomType evalImpl(Environment env, boolean getref) throws aussomException {
 		AussomType ret = this.expression.eval(env, getref);
 		AussomException ae = new AussomException(((AussomTypeInt)ret).str());
+		ae.setLineNumber(this.getLineNum());
+		ae.setStackTrace(env.stackTraceToString());
 		ae.setLocalObject(false);
 		return ae;
 	}

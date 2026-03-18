@@ -152,7 +152,7 @@ public class astClass extends astNode implements astNodeInt {
 		}
 		UnitTestClass testClass = new UnitTestClass(this.getName(), classUnitTestName);
 
-		for (String functName : this.functDefs.keySet()) {
+		for (String functName : this.functList) {
 			astNode funct = this.functDefs.get(functName);
 			for (astAnnotation ann : funct.getAnnotations()) {
 				if (ann.getAnnotationName().equals("Test")) {

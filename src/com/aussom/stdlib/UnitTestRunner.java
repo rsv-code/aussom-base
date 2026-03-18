@@ -146,25 +146,29 @@ public class UnitTestRunner extends Engine {
                     astAnnotation functAnn = af.getAnnotation("Test");
 
                     String testLogStr = test.getTestDisplayString();
-                    if (functAnn != null
-                            && functAnn.getAnnotationArgValueByName("skip") != null
-                            && functAnn.getAnnotationArgValueByName("skip").equals("true")) {
+                    if (test.getSkip()) {
                         result.skipped++;
                         testLogStr += "SKIPPED";
                     } else {
-                        int tret = this.runFunction(testClass, tenv, cls, test.getFunctionName());
-                        if (tret != 0) {
+                        int tret = 0;
+
+                        try {
+                            tret = this.runFunction(testClass, tenv, cls, test.getFunctionName());
+
+                            if (tret != 0) {
+                                result.failed++;
+                                testLogStr += "FAILED";
+                            } else {
+                                result.passed++;
+                                testLogStr += "PASSED";
+                            }
+                        } catch (aussomException e) {
                             result.failed++;
-                            testLogStr += "FAILED";
-                        } else {
-                            result.passed++;
-                            testLogStr += "PASSED";
+                            testLogStr += "FAILED\n" + e.getMessage();
                         }
                     }
                     console.get().info(testLogStr);
                 }
-            } catch(aussomException ae) {
-                console.get().err(ae.getAussomStackTrace());
             } catch (Exception e) {
                 console.get().err(Util.stackTraceToString(e));
             }
@@ -191,8 +195,7 @@ public class UnitTestRunner extends Engine {
         ret = cls.call(tenv, false, functName, margs);
         if(ret.isEx()) {
             AussomException ex = (AussomException) ret;
-            System.err.println(((AussomTypeInt) ex).str());
-            return 1;
+            throw new aussomException(ex.stackTraceToString());
         } else if (ret instanceof AussomInt) {
             return (int)((AussomInt)ret).getNumericInt();
         }
