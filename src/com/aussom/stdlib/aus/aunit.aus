@@ -45,7 +45,7 @@ static class test {
      * @p Item is the item to check.
      * @r A bool with true if the item is a string and throws an exception if not.
      */
-    public expectString(Item) { if(lang.type(Item) == "string") { return true; }
+    public expectString(Item) { if(Item instanceof "string") { return true; }
     throw "expectString(): Expecting string but found '" + lang.type(Item) + "' instead."; }
 
     /**
@@ -53,7 +53,7 @@ static class test {
      * @p Item is the item to check.
      * @r A bool with true if the item is a bool and throws an exception if not.
      */
-    public expectBool(Item) { if(lang.type(Item) == "bool") { return true; }
+    public expectBool(Item) { if(Item instanceof "bool") { return true; }
     throw "expectBool(): Expecting bool but found '" + lang.type(Item) + "' instead."; }
 
     /**
@@ -61,7 +61,7 @@ static class test {
      * @p Item is the item to check.
      * @r A bool with true if the item is a int and throws an exception if not.
      */
-    public expectInt(Item) { if(lang.type(Item) == "int") { return true; }
+    public expectInt(Item) { if(Item instanceof "int") { return true; }
     throw "expectInt(): Expecting int but found '" + lang.type(Item) + "' instead."; }
 
     /**
@@ -69,7 +69,7 @@ static class test {
      * @p Item is the item to check.
      * @r A bool with true if the item is a double and throws an exception if not.
      */
-    public expectDouble(Item) { if(lang.type(Item) == "double") { return true; }
+    public expectDouble(Item) { if(Item instanceof "double") { return true; }
     throw "expectDouble(): Expecting double but found '" + lang.type(Item) + "' instead."; }
 
     /**
@@ -77,7 +77,7 @@ static class test {
      * @p Item is the item to check.
      * @r A bool with true if the item is a type of number and throws an exception if not.
      */
-    public expectNumber(Item) { if((lang.type(Item) == "int")||(lang.type(Item) == "double")) { return true; }
+    public expectNumber(Item) { if((Item instanceof "int")||(Item instanceof "double")) { return true; }
     throw "expectNumber(): Expecting number type but found '" + lang.type(Item) + "' instead."; }
 
     /**
@@ -85,7 +85,7 @@ static class test {
      * @p Item is the item to check.
      * @r A bool with true if the item is a list and throws an exception if not.
      */
-    public expectList(Item) { if(lang.type(Item) == "list") { return true; }
+    public expectList(Item) { if(Item instanceof "list") { return true; }
     throw "expectList(): Expecting list but found '" + lang.type(Item) + "' instead."; }
 
     /**
@@ -93,7 +93,7 @@ static class test {
      * @p Item is the item to check.
      * @r A bool with true if the item is a map and throws an exception if not.
      */
-    public expectMap(Item) { if(lang.type(Item) == "map") { return true; }
+    public expectMap(Item) { if(Item instanceof "map") { return true; }
     throw "expectMap(): Expecting map but found '" + lang.type(Item) + "' instead."; }
 
     /**
@@ -101,7 +101,7 @@ static class test {
      * @p Item is the item to check.
      * @r A bool with true if the item is an object and throws an exception if not.
      */
-    public expectObject(Item, string ClassName) { if(lang.type(Item) == ClassName) { return true; }
+    public expectObject(Item, string ClassName) { if(Item instanceof ClassName) { return true; }
     throw "expectObject(): Expecting object of type '" + ClassName + "' but found '" + lang.type(Item) + "' instead."; }
 
     /**
@@ -109,6 +109,6 @@ static class test {
      * @p Item is the item to check.
      * @r A bool with true if the item is a callback and throws an exception if not.
      */
-    public expectCallback(Item) { if(lang.type(Item) == "callback") { return true; }
+    public expectCallback(Item) { if(Item instanceof "callback") { return true; }
     throw "expectCallback(): Expecting callback but found '" + lang.type(Item) + "' instead."; }
 }
