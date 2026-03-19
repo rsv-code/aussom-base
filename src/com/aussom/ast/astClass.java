@@ -27,18 +27,8 @@ import com.aussom.Environment;
 import com.aussom.stdlib.UnitTest;
 import com.aussom.stdlib.UnitTestClass;
 import com.aussom.stdlib.console;
-import com.aussom.types.AussomBool;
-import com.aussom.types.AussomDouble;
-import com.aussom.types.AussomException;
+import com.aussom.types.*;
 import com.aussom.types.AussomException.exType;
-import com.aussom.types.AussomInt;
-import com.aussom.types.AussomList;
-import com.aussom.types.AussomMap;
-import com.aussom.types.AussomNull;
-import com.aussom.types.AussomObject;
-import com.aussom.types.AussomString;
-import com.aussom.types.AussomType;
-import com.aussom.types.Members;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -290,7 +280,7 @@ public class astClass extends astNode implements astNodeInt {
 	}
 	
 	public AussomType call (Environment env, boolean getRef, String functName, AussomList args) throws aussomException {
-		AussomType ret = new AussomNull();
+		AussomType ret = null;
 		
 		if (this.functDefs.containsKey(functName)) {
 			astFunctDef fdef = (astFunctDef) this.functDefs.get(functName);
@@ -298,28 +288,77 @@ public class astClass extends astNode implements astNodeInt {
 			Members locals = new Members();
 			Environment tenv = new Environment(env.getEngine());
 			AussomObject ci = env.getClassInstance();
-			
-			
+
+			// Set cobj
+			AussomObject cobj = null;
 			if (env.getCurObj() != null && env.getCurObj() instanceof AussomObject) {
-				ci = (AussomObject) env.getCurObj();
+				cobj = (AussomObject) env.getCurObj();
 			}
-			tenv.setEnvironment(ci, locals, env.getCallStack());
-			if(fdef.getExtern()) {
-				AussomType tmp = ((astFunctDef)this.functDefs.get(functName)).initArgs(tenv, args);
-				if(!tmp.isEx()) {
-					ret = fdef.callExtern(tenv, args);
-				 } else {
-					 ret = tmp;
-				 }
-			} else {
-				ret = ((astFunctDef)this.functDefs.get(functName)).call(tenv, getRef, args, this.getFileName());
+
+			// Look for mock set first.
+			// TODO: Implement security manager check.
+			if (cobj != null && cobj.getMock().isMockSet() && cobj.getMock().hasFunctionMock(functName)) {
+				ret = this.processMock(env, cobj, functName, args);
+			}
+
+			if (ret == null) {
+				if (cobj != null) {
+					ci = cobj;
+				}
+				tenv.setEnvironment(ci, locals, env.getCallStack());
+				if (fdef.getExtern()) {
+					AussomType tmp = ((astFunctDef) this.functDefs.get(functName)).initArgs(tenv, args);
+					if (!tmp.isEx()) {
+						ret = fdef.callExtern(tenv, args);
+					} else {
+						ret = tmp;
+					}
+				} else {
+					ret = ((astFunctDef) this.functDefs.get(functName)).call(tenv, getRef, args, this.getFileName());
+				}
 			}
 		} else {
 			AussomException ce = new AussomException(exType.exRuntime);
 			ce.setException(this.getLineNum(), "FUNCT_NOT_FOUND", "Object '" + this.getName() + "' doesn't have function '" + functName + "'.", env.getCallStack().getStackTrace());
 			ret = ce;
 		}
-		
+
+		if (ret == null) {
+			ret = new AussomNull();
+		}
+
+		return ret;
+	}
+
+	private AussomType processMock(Environment env, AussomObject cobj, String functName, AussomList args) throws aussomException {
+		AussomType ret = null;
+
+		MockFunction simpleMock = cobj.getMock().getSimpleMock(functName);
+		if (simpleMock != null) {
+			ret = simpleMock.getReturnValue();
+		} else {
+			boolean found = false;
+
+			// When Mocks found.
+			List<MockFunction> mocks = cobj.getMock().getMockFunctions(functName);
+			for (MockFunction mock : mocks) {
+				AussomList fargs = new AussomList();
+				fargs.getValue().add(cobj);
+				fargs.getValue().add(args);
+				AussomType at = mock.getCondition().call(env, fargs);
+				if (at.isEx()) {
+					ret = at;
+					break;
+				} else {
+					if (at.getNumericBool() == true) {
+						found = true;
+						ret = mock.getReturnValue();
+						break;
+					}
+				}
+			}
+		}
+
 		return ret;
 	}
 	

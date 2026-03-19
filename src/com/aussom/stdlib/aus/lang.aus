@@ -923,6 +923,49 @@ extern class object : com.aussom.types.AussomObject {
      * @r A packed string.
      */
 	public extern pack();
+
+	/**
+	 * Sets a mock on the object for the specified function
+	 * name. When the function is invoked the provided
+	 * return value is returned instead of calling the
+	 * original function.
+	 * @p FunctionName is a string with the function to mock.
+     * @p ReturnVal is the return value to return.
+     * @r this object
+	 */
+	public extern mock(string FunctionName, ReturnVal);
+
+	/**
+     * Sets a mock on the object for the specified function
+     * name with the provided callback to provide the condition.
+     * When the function is invoked the provided
+     * return value is returned instead of calling the
+     * original function. This only occurs when the condition
+     * provided in Condition is executed and a 1 or true is returned.
+     * @p FunctionName is a string with the function to mock.
+     * @p ReturnVal is the return value to return.
+     * @p Condition is a callback with the condition code.
+     * @r this object
+     */
+    public extern mockWhen(string FunctionName, callback Condition, ReturnVal);
+
+    /**
+     * Sets the spy flag on the object. This will record the arguements provided
+     * and the return value of each function call for the provided function name.
+     * @p FunctionName is a string with the function to spy.
+     * @r this object
+     */
+    public extern spy(string FunctionName);
+
+    /**
+     * Retuns a list of maps with each map contining the following:
+     * - timestamp: The seconds since epoch that the function was called.
+     * - arguments: A list of the arguments provided to the function.
+     * - returnValue: The value returned from the function.
+     * @p FunctionName is a string with the spy records to get.
+     * @r A list of spy records.
+     */
+    public extern getSpyResults(string FunctionName);
 }
 
 /**

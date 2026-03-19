@@ -25,12 +25,18 @@ import com.aussom.ast.aussomException;
 import com.aussom.stdlib.console;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class AussomObject extends AussomType implements AussomTypeInt, AussomTypeObjectInt {
 	private astClass classDef;
 	private Members members = new Members();
 	
 	private Object externObject = null;
+
+	// Mock object for testing/mocking.
+	private Mock mock = new Mock();
+
+	public AussomObject(astClass classDef) {}
 
 	public AussomObject() {
 		this(true);
@@ -201,5 +207,49 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 		parts.add("\"members\":{" + Util.join(mparts, ",") + "}");
 		
 		return new AussomString("{" + Util.join(parts, ",") + "}");
+	}
+
+	public Mock getMock() {
+		return mock;
+	}
+
+	public AussomType mock(Environment env, ArrayList<AussomType> args) {
+		String functionName = ((AussomString)args.get(0)).getValue();
+		AussomObject returnObject = ((AussomObject)args.get(1));
+		this.mock.setFunctionMock(functionName, returnObject);
+		return env.getClassInstance();
+	}
+
+	public AussomType mockWhen(Environment env, ArrayList<AussomType> args) {
+		String functionName = ((AussomString)args.get(0)).getValue();
+		AussomCallback callback = (AussomCallback)args.get(1);
+		AussomObject returnObject = (AussomObject)args.get(2);
+		this.mock.setWhenFunctionMock(functionName, callback, returnObject);
+		return env.getClassInstance();
+	}
+
+	public AussomType spy(Environment env, ArrayList<AussomType> args) {
+		String functionName = ((AussomString)args.get(0)).getValue();
+		this.mock.setSpy(functionName);
+		return env.getClassInstance();
+	}
+
+	public AussomType getSpyResults(Environment env, ArrayList<AussomType> args) {
+		String functionName = ((AussomString)args.get(0)).getValue();
+
+		AussomList ret = new  AussomList();
+		List<MockFunctionSpyRecord> spyRecordList = this.mock.getSpyResults(functionName);
+		for (MockFunctionSpyRecord spyRecord : spyRecordList) {
+			AussomMap rec = new AussomMap();
+			rec.getValue().put("timestamp", new AussomInt(spyRecord.getTimestamp()));
+			AussomList recArgs = new AussomList();
+			for (AussomObject arg : spyRecord.getCallArgs()) {
+				recArgs.getValue().add(arg);
+			}
+			rec.getValue().put("arguments", recArgs);
+			rec.getValue().put("returnValue",  spyRecord.getReturnValue());
+		}
+
+		return ret;
 	}
 }

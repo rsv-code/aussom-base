@@ -1690,4 +1690,49 @@ class interpreterTests {
 		res = regex.replaceFirst("t.", "th", this.testStr);
 		return test.expect(res, "On a long enough thmeline, the survival rate for everyone drops to zero.");
 	}
+
+	/***********************************************************************
+     * mock tests
+     *********************************************************************/
+    @Test(name = "(mock) Simple function mock test.")
+    public simpleMockTest() {
+        // Create a new user object.
+        u = new user();
+        u.firstName = "Austin";
+
+        // Set the simple mock. (funName, retObj)
+        u.mock("getName", "Avery");
+
+        // Expect/Assert that the mocked function will return the value we provided.
+        test.expect(u.getName(), "Avery");
+    }
+
+    @Test(name = "(mock) Mock when test 1.")
+    public mockWhenTest1() {
+        // Create a new user object.
+        u = new user();
+        u.firstName = "Tyler";
+        u.lastName = "Durden";
+
+        // Set the mock when. (funName, callback, retObj) When the result
+        // of the callback is true, it will set to the provided value.
+        u.mockWhen("getName", ::onMock1Test, "Bob Durden");
+        test.expect(u.getName(), "Bob Durden");
+
+        // Update the first name and then expect it to run without
+        // matching the mock when. We should get the function to
+        // run normally this time.
+        u.firstName = "Fred";
+        test.expect(u.getName(), "Fred Durden");
+    }
+
+    /**
+     * What's provided here are two arguments. The first is the instance
+     * of the object itself. The second is the arguments that were
+     * provided to the invoking function.
+     */
+    public onMock1Test(cobj, args) {
+        if (cobj.firstName == "Tyler") { return true; }
+        return false;
+    }
 }
