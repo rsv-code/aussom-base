@@ -7,6 +7,9 @@ public class UnitTestClass {
     protected String name = "";
     protected String className = "";
 
+    protected String beforeFunctionName = "";
+    protected String afterFunctionName = "";
+
     protected List<UnitTest> tests = new ArrayList<UnitTest>();
 
     public UnitTestClass() {}
@@ -48,5 +51,21 @@ public class UnitTestClass {
             ret += "class tests ]";
         }
         return ret;
+    }
+
+    public void setBeforeFunctionName(String beforeFunctionName) {
+        this.beforeFunctionName = beforeFunctionName;
+    }
+
+    public String getBeforeFunctionName() {
+        return beforeFunctionName;
+    }
+
+    public void setAfterFunctionName(String afterFunctionName) {
+        this.afterFunctionName = afterFunctionName;
+    }
+
+    public String getAfterFunctionName() {
+        return afterFunctionName;
     }
 }

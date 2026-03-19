@@ -133,6 +133,6 @@ public class Util {
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
 		e.printStackTrace(pw);
-		return pw.toString();
+		return sw.toString();
 	}
 }

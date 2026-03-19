@@ -24,6 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.aussom.CallStack;
 import com.aussom.Engine;
 import com.aussom.Environment;
+import com.aussom.Universe;
+import com.aussom.stdlib.Lang;
 import com.aussom.stdlib.UnitTest;
 import com.aussom.stdlib.UnitTestClass;
 import com.aussom.stdlib.console;
@@ -157,6 +159,10 @@ public class astClass extends astNode implements astNodeInt {
 						test.setSkip(true);
 					}
 					testClass.addTest(test);
+				} else if (ann.getAnnotationName().equals("Before")) {
+					testClass.setBeforeFunctionName(functName);
+				}  else if (ann.getAnnotationName().equals("After")) {
+					testClass.setAfterFunctionName(functName);
 				}
 			}
 		}
@@ -298,9 +304,15 @@ public class astClass extends astNode implements astNodeInt {
 				spySet = cobj.getMock().isSpySet(functName);
 			}
 
+			if (!(Boolean)env.getEngine().getSecurityManager().getProperty("test.mock.spy")) {
+				return new AussomException("astClass.call(): Security exception, action 'test.mock.spy' not permitted.");
+			}
+
 			// Look for mock set first.
-			// TODO: Implement security manager check.
 			if (cobj != null && cobj.getMock().isMockSet() && cobj.getMock().hasFunctionMock(functName)) {
+				if (!(Boolean)env.getEngine().getSecurityManager().getProperty("test.mock.inject")) {
+					return new AussomException("astClass.call(): Security exception, action 'test.mock.inject' not permitted.");
+				}
 				ret = this.processMock(env, cobj, functName, args);
 			}
 

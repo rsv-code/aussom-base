@@ -87,6 +87,12 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 		 */
 		this.props.put("aussomdoc.file.getJson", false);
 		this.props.put("aussomdoc.class.getJson", false);
+
+		/*
+		 * Unit testing actions.
+		 */
+		this.props.put("test.mock.inject", false);
+		this.props.put("test.mock.spy", false);
 	}
 	
 	/**

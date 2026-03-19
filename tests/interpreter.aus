@@ -136,7 +136,20 @@ class interpreterTests {
 
 	// Util members
 	private testStr = "On a long enough timeline, the survival rate for everyone drops to zero.";
-	
+
+	/***********************************************************************
+     * Before and After
+     *********************************************************************/
+	@Before
+	public toRunBefore() {
+        c.info("Ran unit test @Before function 'toRunBefore()'.");
+	}
+
+	@After
+	public toRunAfter() {
+        c.info("Ran unit test @After function 'toRunAfter()'.");
+	}
+
 	/***********************************************************************
 	 * Local variable assignments.
 	 *********************************************************************/
@@ -1753,14 +1766,14 @@ class interpreterTests {
     }
 
     @Test(name = "(mock) Simple function mock test on string object.")
-        public simpleStringMockTest() {
-            // Create a new string object.
-            name = "Tyler Durden";
+    public simpleStringMockTest() {
+        // Create a new string object.
+        name = "Tyler Durden";
 
-            // Set the simple mock. (funName, retObj)
-            name.mock("toLower", "TYLER DURDEN");
+        // Set the simple mock. (funName, retObj)
+        name.mock("toLower", "TYLER DURDEN");
 
-            // Expect/Assert that the mocked function will return the value we provided.
-            test.expect(name.toLower(), "TYLER DURDEN");
-        }
+        // Expect/Assert that the mocked function will return the value we provided.
+        test.expect(name.toLower(), "TYLER DURDEN");
+    }
 }

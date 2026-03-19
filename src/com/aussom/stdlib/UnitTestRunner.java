@@ -140,6 +140,11 @@ public class UnitTestRunner extends Engine {
             tenv.setClassInstance(classInstance);
 
             try {
+                // Run before if it exists
+                if (!testClass.getBeforeFunctionName().equals("")) {
+                    this.runFunction(testClass, tenv, cls, testClass.getBeforeFunctionName());
+                }
+
                 for (UnitTest test : testClass.getTests()) {
                     result.total++;
                     astNode af = cls.getFunct(test.getFunctionName());
@@ -168,6 +173,11 @@ public class UnitTestRunner extends Engine {
                         }
                     }
                     console.get().info(testLogStr);
+                }
+
+                // Run before if it exists
+                if (!testClass.getAfterFunctionName().equals("")) {
+                    this.runFunction(testClass, tenv, cls, testClass.getAfterFunctionName());
                 }
             } catch (Exception e) {
                 console.get().err(Util.stackTraceToString(e));
