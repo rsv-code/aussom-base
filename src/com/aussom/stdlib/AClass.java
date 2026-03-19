@@ -17,13 +17,10 @@
 package com.aussom.stdlib;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import com.aussom.Environment;
-import com.aussom.ast.astClass;
-import com.aussom.ast.astFunctDef;
-import com.aussom.ast.astNode;
-import com.aussom.ast.astNodeType;
-import com.aussom.ast.aussomException;
+import com.aussom.ast.*;
 import com.aussom.types.AussomBool;
 import com.aussom.types.AussomList;
 import com.aussom.types.AussomMap;
@@ -60,7 +57,20 @@ public class AClass {
 		AussomMap mp = new AussomMap();
 		
 		for(String mname : this.classDef.getMembers().keySet()) {
-			mp.put(mname, new AussomString(this.classDef.getMembers().get(mname).getType().name()));
+			astNode memberDef =  this.classDef.getMembers().get(mname);
+
+			AussomMap memberDefMap = new AussomMap();
+			memberDefMap.put("type", new AussomString(memberDef.getType().name()));
+
+			// Set annotations
+			AussomList alist = new AussomList();
+			List<astAnnotation> annotationList = memberDef.getAnnotations();
+			for  (astAnnotation annotation : annotationList) {
+				alist.getValue().add(annotation.getAussomType());
+			}
+			memberDefMap.put("annotations", alist);
+
+			mp.put(mname, memberDefMap);
 		}
 		
 		return mp;
@@ -73,7 +83,15 @@ public class AClass {
 			astFunctDef afd = (astFunctDef) this.classDef.getFunct(mname);
 			AussomMap fm = new AussomMap();
 			fm.put("isExtern", new AussomBool(afd.getExtern()));
-			
+
+			// Set annotations
+			AussomList annlist = new AussomList();
+			List<astAnnotation> annotationList = afd.getAnnotations();
+			for  (astAnnotation annotation : annotationList) {
+				annlist.getValue().add(annotation.getAussomType());
+			}
+			fm.put("annotations", annlist);
+
 			AussomList alist = new AussomList();
 			for(astNode tn : afd.getArgList().getArgs()) {
 				AussomMap am = new AussomMap();

@@ -1,6 +1,8 @@
 package com.aussom.ast;
 
 import com.aussom.Environment;
+import com.aussom.types.AussomMap;
+import com.aussom.types.AussomString;
 import com.aussom.types.AussomType;
 
 import java.util.ArrayList;
@@ -61,6 +63,21 @@ public class astAnnotation extends astNode implements astNodeInt {
             }
         }
         return null;
+    }
+
+    public AussomType getAussomType() {
+        AussomMap mp = new AussomMap();
+
+        mp.put("annotationName", new AussomString(this.annotationName));
+
+        AussomMap argsMap = new AussomMap();
+        for (astAnnotationArg arg : this.args) {
+            argsMap.put(arg.getKey(), new AussomString(arg.getValue()));
+        }
+
+        mp.put("annotationArgs", argsMap);
+
+        return mp;
     }
 
     @Override
