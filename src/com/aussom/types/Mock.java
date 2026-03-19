@@ -102,6 +102,25 @@ public class Mock {
         }
     }
 
+    public boolean isSpySet(String functionName) {
+        MockFunction mf = null;
+        for (MockFunction mockFunction : mockFunctions) {
+            if (mockFunction.functionName.equals(functionName) && mockFunction.isSpy()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void addSpyRecord(String functionName, MockFunctionSpyRecord  spyRecord) {
+        for (MockFunction mockFunction : mockFunctions) {
+            if (mockFunction.functionName.equals(functionName)) {
+                mockFunction.addMockFunctionSpyRecord(spyRecord);
+                break;
+            }
+        }
+    }
+
     /**
      * Sets a simple function mock which just returns the provided
      * return value when the function is invoked.

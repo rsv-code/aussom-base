@@ -955,7 +955,7 @@ extern class object : com.aussom.types.AussomObject {
      * @p FunctionName is a string with the function to spy.
      * @r this object
      */
-    public extern spy(string FunctionName);
+    public extern setSpy(string FunctionName);
 
     /**
      * Retuns a list of maps with each map contining the following:
@@ -965,7 +965,7 @@ extern class object : com.aussom.types.AussomObject {
      * @p FunctionName is a string with the spy records to get.
      * @r A list of spy records.
      */
-    public extern getSpyResults(string FunctionName);
+    public extern getSpy(string FunctionName);
 }
 
 /**

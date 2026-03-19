@@ -1735,4 +1735,20 @@ class interpreterTests {
         if (cobj.firstName == "Tyler") { return true; }
         return false;
     }
+
+    @Test(name = "(mock) Spy set/get test 1.")
+    public mockSpyTest1() {
+        u = new user();
+        u.setName("Tyler", "Durden");
+
+        // Set the spy.
+        u.setSpy("getName");
+
+        // Call the function.
+        name = u.getName();
+        test.expect(#u.getSpy("getName"), 1);
+
+        name = u.getName();
+        test.expect(#u.getSpy("getName"), 2);
+    }
 }

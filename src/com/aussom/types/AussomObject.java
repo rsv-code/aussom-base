@@ -228,13 +228,13 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 		return env.getClassInstance();
 	}
 
-	public AussomType spy(Environment env, ArrayList<AussomType> args) {
+	public AussomType setSpy(Environment env, ArrayList<AussomType> args) {
 		String functionName = ((AussomString)args.get(0)).getValue();
 		this.mock.setSpy(functionName);
 		return env.getClassInstance();
 	}
 
-	public AussomType getSpyResults(Environment env, ArrayList<AussomType> args) {
+	public AussomType getSpy(Environment env, ArrayList<AussomType> args) {
 		String functionName = ((AussomString)args.get(0)).getValue();
 
 		AussomList ret = new  AussomList();
@@ -243,11 +243,12 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 			AussomMap rec = new AussomMap();
 			rec.getValue().put("timestamp", new AussomInt(spyRecord.getTimestamp()));
 			AussomList recArgs = new AussomList();
-			for (AussomObject arg : spyRecord.getCallArgs()) {
+			for (AussomType arg : spyRecord.getCallArgs().getValue()) {
 				recArgs.getValue().add(arg);
 			}
 			rec.getValue().put("arguments", recArgs);
 			rec.getValue().put("returnValue",  spyRecord.getReturnValue());
+			ret.getValue().add(rec);
 		}
 
 		return ret;

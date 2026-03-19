@@ -14,14 +14,14 @@ public class MockFunctionSpyRecord {
     /**
      * Holds the evaled call args.
      */
-    protected List<AussomObject> callArgs = new ArrayList<AussomObject>();
+    protected AussomList callArgs = new AussomList();
 
     /**
      * Holds the function return object, defaulted to null.
      */
     protected AussomObject returnValue = new AussomNull();
 
-    public MockFunctionSpyRecord(List<AussomObject> callArgs, AussomObject returnValue) {
+    public MockFunctionSpyRecord(AussomList callArgs, AussomObject returnValue) {
         this.timestamp = (new Date()).getTime();
         this.callArgs = callArgs;
         this.returnValue = returnValue;
@@ -29,7 +29,7 @@ public class MockFunctionSpyRecord {
 
     public long getTimestamp() { return timestamp; }
 
-    public List<AussomObject> getCallArgs() {
+    public AussomList getCallArgs() {
         return callArgs;
     }
 

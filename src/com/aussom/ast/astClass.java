@@ -289,10 +289,13 @@ public class astClass extends astNode implements astNodeInt {
 			Environment tenv = new Environment(env.getEngine());
 			AussomObject ci = env.getClassInstance();
 
+			// Spy set?
+			boolean spySet = false;
 			// Set cobj
 			AussomObject cobj = null;
 			if (env.getCurObj() != null && env.getCurObj() instanceof AussomObject) {
 				cobj = (AussomObject) env.getCurObj();
+				spySet = cobj.getMock().isSpySet(functName);
 			}
 
 			// Look for mock set first.
@@ -316,6 +319,11 @@ public class astClass extends astNode implements astNodeInt {
 				} else {
 					ret = ((astFunctDef) this.functDefs.get(functName)).call(tenv, getRef, args, this.getFileName());
 				}
+			}
+
+			if (spySet) {
+				MockFunctionSpyRecord spyRecord = new MockFunctionSpyRecord(args, (AussomObject) ret);
+				cobj.getMock().addSpyRecord(functName, spyRecord);
 			}
 		} else {
 			AussomException ce = new AussomException(exType.exRuntime);
