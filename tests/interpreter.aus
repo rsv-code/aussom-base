@@ -1751,4 +1751,16 @@ class interpreterTests {
         name = u.getName();
         test.expect(#u.getSpy("getName"), 2);
     }
+
+    @Test(name = "(mock) Simple function mock test on string object.")
+        public simpleStringMockTest() {
+            // Create a new string object.
+            name = "Tyler Durden";
+
+            // Set the simple mock. (funName, retObj)
+            name.mock("toLower", "TYLER DURDEN");
+
+            // Expect/Assert that the mocked function will return the value we provided.
+            test.expect(name.toLower(), "TYLER DURDEN");
+        }
 }
