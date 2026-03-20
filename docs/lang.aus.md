@@ -2,7 +2,7 @@
 
 ## class: exception
 
-[975:14] (extern: com.aussom.types.AussomException) **extends: object** 
+[1319:14] (extern: com.aussom.types.AussomException) **extends: object** 
 
 The exception class is the object that is created or
 thrown when an exception occurs. In your catch (e) {}
@@ -70,7 +70,7 @@ block this is the object that is provided there.
 
 ## class: date
 
-[1111:14] (extern: com.aussom.stdlib.ADate) **extends: object** 
+[1455:14] (extern: com.aussom.stdlib.ADate) **extends: object** 
 
 The date class holds date and time information. Internally
 it uses Java Date object.
@@ -179,7 +179,7 @@ it uses Java Date object.
 
 ## class: charset
 
-[1222:6] `static` **extends: object** 
+[1566:6] `static` **extends: object** 
 
 Defines available character set values.
 
@@ -195,7 +195,7 @@ Defines available character set values.
 
 ## class: c
 
-[1044:21] `static` (extern: com.aussom.stdlib.console) **extends: object** 
+[1388:21] `static` (extern: com.aussom.stdlib.console) **extends: object** 
 
 The static 'c' class also known as console is
 the standard object for writing to standard output.
@@ -331,11 +331,46 @@ functions can be used on any bool value.
 	- **@r** `A` packed string.
 
 
+- **mock** (`string FunctionName, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name. When the function is invoked the provided return value is returned instead of calling the original function.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@r** `this` object
+
+
+- **mockWhen** (`string FunctionName, callback Condition, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name with the provided callback to provide the condition. When the function is invoked the provided return value is returned instead of calling the original function. This only occurs when the condition provided in Condition is executed and a 1 or true is returned.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@p** `Condition` is a callback with the condition code.
+	- **@r** `this` object
+
+
+- **setSpy** (`string FunctionName`)
+
+	> Sets the spy flag on the object. This will record the arguements provided and the return value of each function call for the provided function name.
+
+	- **@p** `FunctionName` is a string with the function to spy.
+	- **@r** `this` object
+
+
+- **getSpy** (`string FunctionName`)
+
+	> Retuns a list of maps with each map contining the following: - timestamp: The seconds since epoch that the function was called. - arguments: A list of the arguments provided to the function. - returnValue: The value returned from the function.
+
+	- **@p** `FunctionName` is a string with the spy records to get.
+	- **@r** `A` list of spy records.
+
+
 
 
 ## class: string
 
-[377:14] (extern: com.aussom.types.AussomString) **extends: object** 
+[506:14] (extern: com.aussom.types.AussomString) **extends: object** 
 
 Implements string datatype methods.
 
@@ -556,11 +591,46 @@ Implements string datatype methods.
 	- **@r** `A` packed string.
 
 
+- **mock** (`string FunctionName, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name. When the function is invoked the provided return value is returned instead of calling the original function.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@r** `this` object
+
+
+- **mockWhen** (`string FunctionName, callback Condition, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name with the provided callback to provide the condition. When the function is invoked the provided return value is returned instead of calling the original function. This only occurs when the condition provided in Condition is executed and a 1 or true is returned.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@p** `Condition` is a callback with the condition code.
+	- **@r** `this` object
+
+
+- **setSpy** (`string FunctionName`)
+
+	> Sets the spy flag on the object. This will record the arguements provided and the return value of each function call for the provided function name.
+
+	- **@p** `FunctionName` is a string with the function to spy.
+	- **@r** `this` object
+
+
+- **getSpy** (`string FunctionName`)
+
+	> Retuns a list of maps with each map contining the following: - timestamp: The seconds since epoch that the function was called. - arguments: A list of the arguments provided to the function. - returnValue: The value returned from the function.
+
+	- **@p** `FunctionName` is a string with the spy records to get.
+	- **@r** `A` list of spy records.
+
+
 
 
 ## class: double
 
-[231:14] (extern: com.aussom.types.AussomDouble) **extends: object** 
+[317:14] (extern: com.aussom.types.AussomDouble) **extends: object** 
 
 The int class implements int datatype methods. These
 functions can be used on any int value.
@@ -638,11 +708,46 @@ functions can be used on any int value.
 	- **@r** `A` packed string.
 
 
+- **mock** (`string FunctionName, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name. When the function is invoked the provided return value is returned instead of calling the original function.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@r** `this` object
+
+
+- **mockWhen** (`string FunctionName, callback Condition, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name with the provided callback to provide the condition. When the function is invoked the provided return value is returned instead of calling the original function. This only occurs when the condition provided in Condition is executed and a 1 or true is returned.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@p** `Condition` is a callback with the condition code.
+	- **@r** `this` object
+
+
+- **setSpy** (`string FunctionName`)
+
+	> Sets the spy flag on the object. This will record the arguements provided and the return value of each function call for the provided function name.
+
+	- **@p** `FunctionName` is a string with the function to spy.
+	- **@r** `this` object
+
+
+- **getSpy** (`string FunctionName`)
+
+	> Retuns a list of maps with each map contining the following: - timestamp: The seconds since epoch that the function was called. - arguments: A list of the arguments provided to the function. - returnValue: The value returned from the function.
+
+	- **@p** `FunctionName` is a string with the spy records to get.
+	- **@r** `A` list of spy records.
+
+
 
 
 ## class: list
 
-[618:14] (extern: com.aussom.types.AussomList) **extends: object** 
+[790:14] (extern: com.aussom.types.AussomList) **extends: object** 
 
 Implements list datatype methods.
 
@@ -826,11 +931,46 @@ Implements list datatype methods.
 	- **@r** `A` packed string.
 
 
+- **mock** (`string FunctionName, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name. When the function is invoked the provided return value is returned instead of calling the original function.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@r** `this` object
+
+
+- **mockWhen** (`string FunctionName, callback Condition, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name with the provided callback to provide the condition. When the function is invoked the provided return value is returned instead of calling the original function. This only occurs when the condition provided in Condition is executed and a 1 or true is returned.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@p** `Condition` is a callback with the condition code.
+	- **@r** `this` object
+
+
+- **setSpy** (`string FunctionName`)
+
+	> Sets the spy flag on the object. This will record the arguements provided and the return value of each function call for the provided function name.
+
+	- **@p** `FunctionName` is a string with the function to spy.
+	- **@r** `this` object
+
+
+- **getSpy** (`string FunctionName`)
+
+	> Retuns a list of maps with each map contining the following: - timestamp: The seconds since epoch that the function was called. - arguments: A list of the arguments provided to the function. - returnValue: The value returned from the function.
+
+	- **@p** `FunctionName` is a string with the spy records to get.
+	- **@r** `A` list of spy records.
+
+
 
 
 ## class: cnull
 
-[947:14] (extern: com.aussom.types.AussomNull) **extends: object** 
+[1291:14] (extern: com.aussom.types.AussomNull) **extends: object** 
 
 Implements null datatype methods.
 
@@ -861,7 +1001,7 @@ Implements null datatype methods.
 
 ## class: Double
 
-[311:21] `static` (extern: com.aussom.stdlib.SDouble) **extends: object** 
+[440:21] `static` (extern: com.aussom.stdlib.SDouble) **extends: object** 
 
 Static class Double implements functions the operate on
 double data types. For instance you can call
@@ -943,7 +1083,7 @@ Double.maxVal() to get the maximum double value.
 
 ## class: int
 
-[86:14] (extern: com.aussom.types.AussomInt) **extends: object** 
+[129:14] (extern: com.aussom.types.AussomInt) **extends: object** 
 
 The int class implements int datatype methods. These
 functions can be used on any int value.
@@ -1071,11 +1211,46 @@ functions can be used on any int value.
 	- **@r** `A` packed string.
 
 
+- **mock** (`string FunctionName, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name. When the function is invoked the provided return value is returned instead of calling the original function.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@r** `this` object
+
+
+- **mockWhen** (`string FunctionName, callback Condition, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name with the provided callback to provide the condition. When the function is invoked the provided return value is returned instead of calling the original function. This only occurs when the condition provided in Condition is executed and a 1 or true is returned.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@p** `Condition` is a callback with the condition code.
+	- **@r** `this` object
+
+
+- **setSpy** (`string FunctionName`)
+
+	> Sets the spy flag on the object. This will record the arguements provided and the return value of each function call for the provided function name.
+
+	- **@p** `FunctionName` is a string with the function to spy.
+	- **@r** `this` object
+
+
+- **getSpy** (`string FunctionName`)
+
+	> Retuns a list of maps with each map contining the following: - timestamp: The seconds since epoch that the function was called. - arguments: A list of the arguments provided to the function. - returnValue: The value returned from the function.
+
+	- **@p** `FunctionName` is a string with the spy records to get.
+	- **@r** `A` list of spy records.
+
+
 
 
 ## class: Int
 
-[204:21] `static` (extern: com.aussom.stdlib.SInt) **extends: object** 
+[290:21] `static` (extern: com.aussom.stdlib.SInt) **extends: object** 
 
 Static class Int implements functions the operate on
 int data types. For instance you can call
@@ -1108,7 +1283,7 @@ Int.maxVal() to get the maximum integer value.
 
 ## class: securitymanager
 
-[1867:21] `static` (extern: com.aussom.stdlib.ASecurityManager) **extends: object** 
+[2211:21] `static` (extern: com.aussom.stdlib.ASecurityManager) **extends: object** 
 
 The securitymanager class provides an object that you can
 instantiate and provide to the Aussom engine to use.
@@ -1158,7 +1333,7 @@ instantiate and provide to the Aussom engine to use.
 
 ## class: secman
 
-[1813:21] `static` (extern: com.aussom.stdlib.ASecMan) **extends: object** 
+[2157:21] `static` (extern: com.aussom.stdlib.ASecMan) **extends: object** 
 
 The static secman class implements function for working with
 the security manager of the currently executing engine.
@@ -1208,7 +1383,7 @@ the security manager of the currently executing engine.
 
 ## class: Bool
 
-[73:21] `static` (extern: com.aussom.stdlib.SBool) **extends: object** 
+[116:21] `static` (extern: com.aussom.stdlib.SBool) **extends: object** 
 
 Static class Bool implements functions that operate on
 bool data types. For example you can use Bool.parse()
@@ -1228,7 +1403,7 @@ to parse a string value.
 
 ## class: callback
 
-[933:14] (extern: com.aussom.types.AussomCallback) **extends: object** 
+[1234:14] (extern: com.aussom.types.AussomCallback) **extends: object** 
 
 Implements callback datatype methods. The callback is
 a function reference that can be passed around. This is
@@ -1247,11 +1422,46 @@ useful when needing to pass a function to call later.
 - **\_call** (`list args`)
 
 
+- **mock** (`string FunctionName, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name. When the function is invoked the provided return value is returned instead of calling the original function.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@r** `this` object
+
+
+- **mockWhen** (`string FunctionName, callback Condition, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name with the provided callback to provide the condition. When the function is invoked the provided return value is returned instead of calling the original function. This only occurs when the condition provided in Condition is executed and a 1 or true is returned.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@p** `Condition` is a callback with the condition code.
+	- **@r** `this` object
+
+
+- **setSpy** (`string FunctionName`)
+
+	> Sets the spy flag on the object. This will record the arguements provided and the return value of each function call for the provided function name.
+
+	- **@p** `FunctionName` is a string with the function to spy.
+	- **@r** `this` object
+
+
+- **getSpy** (`string FunctionName`)
+
+	> Retuns a list of maps with each map contining the following: - timestamp: The seconds since epoch that the function was called. - arguments: A list of the arguments provided to the function. - returnValue: The value returned from the function.
+
+	- **@p** `FunctionName` is a string with the spy records to get.
+	- **@r** `A` list of spy records.
+
+
 
 
 ## class: json
 
-[1784:21] `static` (extern: com.aussom.stdlib.AJson) **extends: object** 
+[2128:21] `static` (extern: com.aussom.stdlib.AJson) **extends: object** 
 
 The static json class implements some functions for
 working with JSON data.
@@ -1278,7 +1488,7 @@ working with JSON data.
 
 ## class: buffer
 
-[1247:14] (extern: com.aussom.stdlib.ABuffer) **extends: object** 
+[1591:14] (extern: com.aussom.stdlib.ABuffer) **extends: object** 
 
 The buffer object provides an object for handling binary
 data. Aussom doesn't nativly support something like a
@@ -1709,7 +1919,7 @@ functionality.
 
 ## class: lang
 
-[1754:21] `static` (extern: com.aussom.stdlib.ALang) **extends: object** 
+[2098:21] `static` (extern: com.aussom.stdlib.ALang) **extends: object** 
 
 The staic lang object provides some standard
 functionality for the Aussom language.
@@ -1736,7 +1946,7 @@ functionality for the Aussom language.
 
 ## class: map
 
-[799:14] (extern: com.aussom.types.AussomMap) **extends: object** 
+[1014:14] (extern: com.aussom.types.AussomMap) **extends: object** 
 
 Implements map datatype methods.
 
@@ -1858,11 +2068,46 @@ Implements map datatype methods.
 	- **@r** `A` packed string.
 
 
+- **mock** (`string FunctionName, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name. When the function is invoked the provided return value is returned instead of calling the original function.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@r** `this` object
+
+
+- **mockWhen** (`string FunctionName, callback Condition, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name with the provided callback to provide the condition. When the function is invoked the provided return value is returned instead of calling the original function. This only occurs when the condition provided in Condition is executed and a 1 or true is returned.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@p** `Condition` is a callback with the condition code.
+	- **@r** `this` object
+
+
+- **setSpy** (`string FunctionName`)
+
+	> Sets the spy flag on the object. This will record the arguements provided and the return value of each function call for the provided function name.
+
+	- **@p** `FunctionName` is a string with the function to spy.
+	- **@r** `this` object
+
+
+- **getSpy** (`string FunctionName`)
+
+	> Retuns a list of maps with each map contining the following: - timestamp: The seconds since epoch that the function was called. - arguments: A list of the arguments provided to the function. - returnValue: The value returned from the function.
+
+	- **@p** `FunctionName` is a string with the spy records to get.
+	- **@r** `A` list of spy records.
+
+
 
 
 ## class: byteOrder
 
-[1235:6] `static` **extends: object** 
+[1579:6] `static` **extends: object** 
 
 Defines the byte order types.
 
@@ -1874,7 +2119,7 @@ Defines the byte order types.
 
 ## class: object
 
-[914:14] (extern: com.aussom.types.AussomObject) 
+[1172:14] (extern: com.aussom.types.AussomObject) 
 
 Implements object datatype methods.
 
@@ -1892,6 +2137,41 @@ Implements object datatype methods.
 	> Serializes the data into a structure.
 
 	- **@r** `A` packed string.
+
+
+- **mock** (`string FunctionName, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name. When the function is invoked the provided return value is returned instead of calling the original function.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@r** `this` object
+
+
+- **mockWhen** (`string FunctionName, callback Condition, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name with the provided callback to provide the condition. When the function is invoked the provided return value is returned instead of calling the original function. This only occurs when the condition provided in Condition is executed and a 1 or true is returned.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@p** `Condition` is a callback with the condition code.
+	- **@r** `this` object
+
+
+- **setSpy** (`string FunctionName`)
+
+	> Sets the spy flag on the object. This will record the arguements provided and the return value of each function call for the provided function name.
+
+	- **@p** `FunctionName` is a string with the function to spy.
+	- **@r** `this` object
+
+
+- **getSpy** (`string FunctionName`)
+
+	> Retuns a list of maps with each map contining the following: - timestamp: The seconds since epoch that the function was called. - arguments: A list of the arguments provided to the function. - returnValue: The value returned from the function.
+
+	- **@p** `FunctionName` is a string with the spy records to get.
+	- **@r** `A` list of spy records.
 
 
 

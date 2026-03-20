@@ -2,80 +2,11 @@
 
 ## class: test
 
-[24:7] **extends: object** 
+[20:21] `static` (extern: com.aussom.stdlib.ATest) **extends: object** 
 
-The aunit (Aussom Unit) test class implements Aussom
-unit test framework. It can be used from the CLI but also
-from within an application such as Hogan.
-
-#### Members
-- **tests**
-- **passed**
-- **failed**
-- **name**
-- **silent**
+Implements various static test functions.
 
 #### Methods
-
-- **test** ()
-
-	> Public default constructor.
-
-
-
-- **setName** (`string Name = ""`)
-
-	> Sets the name of the unit test suite.
-
-	- **@p** `Name` is a string with the test name to set.
-	- **@r** `This` object.
-
-
-- **getName** ()
-
-	> Gets the name of the unit test suite.
-
-	- **@r** `A` string with the test name.
-
-
-- **setSilent** (`bool Silent`)
-
-	> Sets the silent flag.
-
-	- **@p** `Silent` is a bool with true for silent and false for not.
-	- **@r** `This` object.
-
-
-- **getSlient** ()
-
-	> Gets the slient flag.
-
-	- **@r** `A` bool with true for silent and false for not.
-
-
-- **add** (`string TestName, callback ToCall, bool DieOnFail = false`)
-
-	> Adds a test function to the test suite.
-
-	- **@p** `TestName` is a string with the test name.
-	- **@p** `ToCall` is a callback with the function to call for the test.
-	- **@p** `DieOnFail` is a boolean that when set to true will make the unit test stop on failure. Default is false.
-	- **@r** `This` object.
-
-
-- **run** ()
-
-	> Runs the test suite.
-
-	- **@r** `This` object.
-
-
-- **getResults** ()
-
-	> Produces a map with the test results including name, total, number ran, number passed, and number failed.
-
-	- **@r** `A` map with the results.
-
 
 - **expect** (`Item, ToBe`)
 
@@ -83,7 +14,7 @@ from within an application such as Hogan.
 
 	- **@p** `Item` is the first item to compare.
 	- **@p** `ToBe` is the second item to compare.
-	- **@r** `A` bool with true if equal and false for not.
+	- **@r** `A` bool with true if equal and throws an exception if not.
 
 
 - **expectNotNull** (`Item`)
@@ -91,7 +22,7 @@ from within an application such as Hogan.
 	> Expect helper function expects value to not be null.
 
 	- **@p** `Item` is the item to check.
-	- **@r** `A` bool with true if not null and false for not.
+	- **@r** `A` bool with true if not null and throws an exception if not.
 
 
 - **expectNull** (`Item`)
@@ -99,7 +30,7 @@ from within an application such as Hogan.
 	> Expect helper function expects value to be null.
 
 	- **@p** `Item` is the item to check.
-	- **@r** `A` bool with true if null and false if not.
+	- **@r** `A` bool with true if null and throws an exception if not.
 
 
 - **expectString** (`Item`)
@@ -107,7 +38,7 @@ from within an application such as Hogan.
 	> Expect helper function expects the provided item to be a string.
 
 	- **@p** `Item` is the item to check.
-	- **@r** `A` bool with true if the item is a string and false if not.
+	- **@r** `A` bool with true if the item is a string and throws an exception if not.
 
 
 - **expectBool** (`Item`)
@@ -115,7 +46,7 @@ from within an application such as Hogan.
 	> Expect helper function expects the provided item to be a bool.
 
 	- **@p** `Item` is the item to check.
-	- **@r** `A` bool with true if the item is a bool and false if not.
+	- **@r** `A` bool with true if the item is a bool and throws an exception if not.
 
 
 - **expectInt** (`Item`)
@@ -123,7 +54,7 @@ from within an application such as Hogan.
 	> Expect helper function expects the provided item to be an int.
 
 	- **@p** `Item` is the item to check.
-	- **@r** `A` bool with true if the item is a int and false if not.
+	- **@r** `A` bool with true if the item is a int and throws an exception if not.
 
 
 - **expectDouble** (`Item`)
@@ -131,7 +62,7 @@ from within an application such as Hogan.
 	> Expect helper function expects the provided item to be a double.
 
 	- **@p** `Item` is the item to check.
-	- **@r** `A` bool with true if the item is a double and false if not.
+	- **@r** `A` bool with true if the item is a double and throws an exception if not.
 
 
 - **expectNumber** (`Item`)
@@ -139,7 +70,7 @@ from within an application such as Hogan.
 	> Expect helper function expects the provided item to be a type of number.
 
 	- **@p** `Item` is the item to check.
-	- **@r** `A` bool with true if the item is a type of number and false if not.
+	- **@r** `A` bool with true if the item is a type of number and throws an exception if not.
 
 
 - **expectList** (`Item`)
@@ -147,7 +78,7 @@ from within an application such as Hogan.
 	> Expect helper function expects the provided item to be a list.
 
 	- **@p** `Item` is the item to check.
-	- **@r** `A` bool with true if the item is a list and false if not.
+	- **@r** `A` bool with true if the item is a list and throws an exception if not.
 
 
 - **expectMap** (`Item`)
@@ -155,7 +86,7 @@ from within an application such as Hogan.
 	> Expect helper function expects the provided item to be a map.
 
 	- **@p** `Item` is the item to check.
-	- **@r** `A` bool with true if the item is a map and false if not.
+	- **@r** `A` bool with true if the item is a map and throws an exception if not.
 
 
 - **expectObject** (`Item, string ClassName`)
@@ -163,7 +94,7 @@ from within an application such as Hogan.
 	> Expect helper function expects the provided item to be an object.
 
 	- **@p** `Item` is the item to check.
-	- **@r** `A` bool with true if the item is an object and false if not.
+	- **@r** `A` bool with true if the item is an object and throws an exception if not.
 
 
 - **expectCallback** (`Item`)
@@ -171,14 +102,101 @@ from within an application such as Hogan.
 	> Expect helper function expects the provided item to be a callback.
 
 	- **@p** `Item` is the item to check.
-	- **@r** `A` bool with true if the item is a callback and false if not.
+	- **@r** `A` bool with true if the item is a callback and throws an exception if not.
 
 
-- **printResult** ()
+- **runTestsForClass** (`string ClassName`)
 
-	> Prints the test results to standard output.
+	> Runs the unit tests for the provided class name and returns a unit test result with the results. Individual messages are logged to standard out. This function requires test.aussom.runner security manager property to be set to true to run this.
 
-	- **@r** `This` object.
+	- **@p** `ClassName` is a string with the class name to run.
+
+
+
+
+## class: testRunner
+
+[129:21] `static` (extern: com.aussom.stdlib.ATestRunner) **extends: object** 
+
+#### Methods
+
+- **loadTestFile** (`string TestsScriptFileName`)
+
+	> Loads a test file with the provided file name and path. This function also identifies and saves the test classes that can be ran.
+
+	- **@p** `TestScriptFileName` is a string with the script file to load.
+	- **@r** `this` object
+
+
+- **loadTestString** (`string FileNameStr, string AussomCodeString`)
+
+	> Loads a test file with the provided file name string contents. This function also identifies and saves the test classes that can be ran.
+
+	- **@p** `FileNameStr` is a string with the name to give to the code provided. This will be the file name the code is attached to. This can be a made up name, it just can't be the same as other loaded file names.
+	- **@p** `AussomCodeString` is a string with the code to load.
+	- **@r** `this` object
+
+
+- **getTestClasses** ()
+
+	> Gets a list of test classes that have been loaded.
+
+	- **@r** `A` list of test class names that have been loaded.
+
+
+- **getTestFunctions** (`string TestClassName`)
+
+	> Gets a list of test functions for the provided class name.
+
+	- **@p** `TestClassName` is a string with the test class to use.
+	- **@r** `A` list of test function names that have been loaded.
+
+
+- **hasBefore** (`string TestClassName`)
+
+	> Checks to see if the @Before function is set.
+
+	- **@p** `TestClassName` is a string with the test class to use.
+	- **@r** `A` bool with true for set and false for not.
+
+
+- **hasAfter** (`string TestClassName`)
+
+	> Checks to see if the @After function is set.
+
+	- **@p** `TestClassName` is a string with the test class to use.
+	- **@r** `A` bool with true for set and false for not.
+
+
+- **runBefore** (`string TestClassName`)
+
+	> Runs the @Before function.
+
+	- **@p** `TestClassName` is a string with the test class to use.
+	- **@r** `this` object
+
+
+- **runAfter** (`string TestClassName`)
+
+	> Runs the @After function.
+
+	- **@p** `TestClassName` is a string with the test class to use.
+	- **@r** `this` object
+
+
+- **runTest** (`string TestClassName, string TestFunctionName`)
+
+	> Runs the function test with the provided function name. Note that the test must be annotated with @Test or it will fail.
+
+	- **@p** `TestClassName` is a string with the test class to use.
+	- **@p** `TestFunctionName` is a string with the test function name.
+	- **@r** `A` bool with true for success and false for failure.
+
+
+- **clearClassObjectCache** ()
+
+	> Clears the class object cache. One object per class is stored and reused to maintain consisitency between class function. This function clears that cache.
+
 
 
 
