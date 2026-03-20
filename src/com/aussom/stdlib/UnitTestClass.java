@@ -68,4 +68,12 @@ public class UnitTestClass {
     public String getAfterFunctionName() {
         return afterFunctionName;
     }
+
+    public boolean hasBefore() {
+        return !this.beforeFunctionName.trim().equals("");
+    }
+
+    public boolean hasAfter() {
+        return !this.afterFunctionName.trim().equals("");
+    }
 }

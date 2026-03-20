@@ -304,7 +304,7 @@ public class astClass extends astNode implements astNodeInt {
 				spySet = cobj.getMock().isSpySet(functName);
 			}
 
-			if (!(Boolean)env.getEngine().getSecurityManager().getProperty("test.mock.spy")) {
+			if (spySet && !(Boolean)env.getEngine().getSecurityManager().getProperty("test.mock.spy")) {
 				return new AussomException("astClass.call(): Security exception, action 'test.mock.spy' not permitted.");
 			}
 

@@ -1,9 +1,6 @@
 package com.aussom.stdlib;
 
-import com.aussom.Engine;
-import com.aussom.Environment;
-import com.aussom.SecurityManagerInt;
-import com.aussom.Util;
+import com.aussom.*;
 import com.aussom.ast.astAnnotation;
 import com.aussom.ast.astClass;
 import com.aussom.ast.astNode;
@@ -19,15 +16,15 @@ public class UnitTestRunner extends Engine {
     protected String description = "";
     protected List<UnitTestClass> testClasses = new ArrayList<UnitTestClass>();
 
-    public UnitTestRunner(SecurityManagerInt SecMan) throws Exception {
-        super(SecMan);
+    public UnitTestRunner() throws Exception {
+        super(new TestSecurityManagerImpl());
     }
-    public UnitTestRunner(SecurityManagerInt SecMan, String name) throws Exception {
-        super(SecMan);
+    public UnitTestRunner(String name) throws Exception {
+        super(new TestSecurityManagerImpl());
         this.name = name;
     }
-    public UnitTestRunner(SecurityManagerInt SecMan, String name, String description) throws Exception {
-        super(SecMan);
+    public UnitTestRunner(String name, String description) throws Exception {
+        super(new TestSecurityManagerImpl());
         this.name = name;
         this.description = description;
     }
@@ -55,38 +52,60 @@ public class UnitTestRunner extends Engine {
     }
 
     /**
+     * Adds an individual test class to be tested.
+     * @param cls is the class to test.
+     */
+    public void addClassToTest(astClass cls) {
+        this.addTestClass(cls.getTestClass());
+    }
+
+    public UnitTestClass getTestClassByName(String className) {
+        for (UnitTestClass testClass : this.testClasses) {
+            if (testClass.getClassName().equals(className)) return testClass;
+        }
+        return null;
+    }
+
+    /**
+     * Loads the test classes from the provided script file name.
+     * @param scriptFile is a String with the script file to load from.
+     * @throws aussomException
+     */
+    public void loadTestClasses(String scriptFile) throws aussomException {
+        // Get all classes associated with that file.
+        List<astClass> testClasses = this.getClassByFileNameAndPath(scriptFile);
+        console.get().trc("Found " + testClasses.size() + " test classes for script '" + scriptFile + "'.");
+
+        if (testClasses.size() == 0) {
+            throw new aussomException("Engine.runTest(): No classes found for that script file.");
+        }
+
+        // Now look for tests.
+        for (astClass cls : testClasses) {
+            if (cls.containsTests()) {
+                // Success, a test was found!
+                this.addTestClass(cls.getTestClass());
+            }
+        }
+    }
+
+    /**
      * Runs the unit tests in the provide script file name.
      * @throws aussomException on failure to find main class or on parse errors.
      * @return An integer with 0 for success and any other value for failure.
      */
-    public int runTest(String scriptFile) throws aussomException {
+    public int runTests() throws aussomException {
         if (!this.hasParseErrors()) {
             console.get().trc("Running tests now ...");
 
-            // Get all classes associated with that file.
-            List<astClass> testClasses = this.getClassByFileNameAndPath(scriptFile);
-            console.get().trc("Found " + testClasses.size() + " test classes for script '" + scriptFile + "'.");
-
-            if (testClasses.size() == 0) {
-                throw new aussomException("Engine.runTest(): No classes found for that script file.");
-            }
-
-            // Now look for tests.
-            for (astClass cls : testClasses) {
-                if (cls.containsTests()) {
-                    // Success, a test was found!
-                    this.addTestClass(cls.getTestClass());
-                }
-            }
-
             console.get().log("");
             console.get().info("**************************************************************");
-            console.get().info("SCRIPT: '" +  scriptFile + "'");
+            console.get().info("RUNNING TESTS");
             console.get().info("**************************************************************\n");
 
             // Finally run the tests
             long start = (new Date()).getTime();
-            UnitTestResult res = this.runTests();
+            UnitTestResult res = this.runTestClasses();
             long end = (new Date()).getTime();
             double elapsedSeconds = (end - start)/1000.0;
 
@@ -106,7 +125,7 @@ public class UnitTestRunner extends Engine {
         }
     }
 
-    public UnitTestResult runTests() {
+    public UnitTestResult runTestClasses() {
         UnitTestResult result = new UnitTestResult();
 
         for (UnitTestClass testClass : testClasses) {
@@ -190,7 +209,7 @@ public class UnitTestRunner extends Engine {
         return result;
     }
 
-    private int runFunction(UnitTestClass testClass, Environment tenv, astClass cls, String functName) throws aussomException {
+    public int runFunction(UnitTestClass testClass, Environment tenv, astClass cls, String functName) throws aussomException {
         /*
          * Main is expecting a list of args, but the function is expecting
          * a list as well, so list inside of list.

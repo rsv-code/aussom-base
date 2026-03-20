@@ -17,7 +17,7 @@
 /**
  * Implements various static test functions.
  */
-static class test {
+static extern class test : com.aussom.stdlib.ATest {
     /**
      * Expect helper function compares two items for equality.
      * @p Item is the first item to compare.
@@ -111,4 +111,98 @@ static class test {
      */
     public expectCallback(Item) { if(Item instanceof "callback") { return true; }
     throw "expectCallback(): Expecting callback but found '" + lang.type(Item) + "' instead."; }
+
+    /**
+     * Runs the unit tests for the provided class name and returns
+     * a unit test result with the results. Individual messages
+     * are logged to standard out.
+     *
+     * This function requires test.aussom.runner security manager
+     * property to be set to true to run this.
+     *
+     * @p ClassName is a string with the class name to run.
+     */
+    public extern runTestsForClass(string ClassName);
+}
+
+
+static extern class testRunner : com.aussom.stdlib.ATestRunner {
+    /**
+     * Loads a test file with the provided file name and path. This
+     * function also identifies and saves the test classes that can
+     * be ran.
+     * @p TestScriptFileName is a string with the script file to load.
+     * @r this object
+     */
+    public extern loadTestFile(string TestsScriptFileName);
+
+    /**
+     * Loads a test file with the provided file name string contents. This
+     * function also identifies and saves the test classes that can
+     * be ran.
+     * @p FileNameStr is a string with the name to give to the
+     * code provided. This will be the file name the code is attached to.
+     * This can be a made up name, it just can't be the same as other
+     * loaded file names.
+     * @p AussomCodeString is a string with the code to load.
+     * @r this object
+     */
+    public extern loadTestString(string FileNameStr, string AussomCodeString);
+
+    /**
+     * Gets a list of test classes that have been loaded.
+     * @r A list of test class names that have been loaded.
+     */
+    public extern getTestClasses();
+
+    /**
+     * Gets a list of test functions for the provided class name.
+     * @p TestClassName is a string with the test class to use.
+     * @r A list of test function names that have been loaded.
+     */
+    public extern getTestFunctions(string TestClassName);
+
+    /**
+     * Checks to see if the @Before function is set.
+     * @p TestClassName is a string with the test class to use.
+     * @r A bool with true for set and false for not.
+     */
+    public extern hasBefore(string TestClassName);
+
+    /**
+     * Checks to see if the @After function is set.
+     * @p TestClassName is a string with the test class to use.
+     * @r A bool with true for set and false for not.
+     */
+    public extern hasAfter(string TestClassName);
+
+    /**
+     * Runs the @Before function.
+     * @p TestClassName is a string with the test class to use.
+     * @r this object
+     */
+    public extern runBefore(string TestClassName);
+
+    /**
+     * Runs the @After function.
+     * @p TestClassName is a string with the test class to use.
+     * @r this object
+     */
+    public extern runAfter(string TestClassName);
+
+    /**
+     * Runs the function test with the provided function name. Note
+     * that the test must be annotated with @Test or it will fail.
+     * @p TestClassName is a string with the test class to use.
+     * @p TestFunctionName is a string with the test function name.
+     * @r A bool with true for success and false for failure.
+     */
+    public extern runTest(string TestClassName, string TestFunctionName);
+
+    /**
+     * Clears the class object cache. One object per class is stored
+     * and reused to maintain consisitency between class function. This
+     * function clears that cache.
+     */
+    public extern clearClassObjectCache();
 }

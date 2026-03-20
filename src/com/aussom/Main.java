@@ -141,7 +141,7 @@ public class Main {
 		console.get().register(logger);
 
 		// Create a new Aussom engine.
-		UnitTestRunner testRunner = new UnitTestRunner(new TestSecurityManagerImpl(), ScriptFile, "Run unit tests");
+		UnitTestRunner testRunner = new UnitTestRunner(ScriptFile, "Run unit tests");
 
 		// Add resource include path.
 		testRunner.addResourceIncludePath("/com/aussom/stdlib/aus/");
@@ -149,8 +149,11 @@ public class Main {
 		// Parse the provided file name.
 		testRunner.parseFile(ScriptFile);
 
+		// Load the test classes for the provided script file.
+		testRunner.loadTestClasses(ScriptFile);
+
 		// Attempt to run the code.
-		int result = testRunner.runTest(ScriptFile);
+		int result = testRunner.runTests();
 
 		// Exit with the code now.
 		System.exit(result);

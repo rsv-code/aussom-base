@@ -91,6 +91,7 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 		/*
 		 * Unit testing actions.
 		 */
+		this.props.put("test.aussom.runner", false);
 		this.props.put("test.mock.inject", false);
 		this.props.put("test.mock.spy", false);
 	}
