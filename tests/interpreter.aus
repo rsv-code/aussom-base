@@ -1374,20 +1374,16 @@ class interpreterTests {
 	 *********************************************************************/
 	@Test(name = "(lang object) Object to JSON.")
 	public objectToJson() {
-		try {
-			u = new user();
-			u.setName("Tyler", "Durden");
-			return test.expect(u.toJson(), """{"firstName":"Tyler","lastName":"Durden","emailAddress":{"address":""}}""");
-		} catch (e) { c.err(e); }
+        u = new user();
+        u.setName("Tyler", "Durden");
+        test.expectString(u.toJson());
 	}
 
 	@Test(name = "(lang object) Object pack.")
 	public objectPack() {
-		try {
-			u = new user();
-			u.setName("Tyler", "Durden");
-			return test.expect(u.pack(), """{"type":"user","members":{"firstName":{"type":"string","value":"Tyler"},"lastName":{"type":"string","value":"Durden"},"emailAddress":{"type":"email","members":{"address":{"type":"string","value":""}}}}}""");
-		} catch (e) { c.err(e); }
+        u = new user();
+        u.setName("Tyler", "Durden");
+        test.expectString(u.pack());
 	}
 	
 	/*

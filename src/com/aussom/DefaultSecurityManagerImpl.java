@@ -8,8 +8,5 @@ public class DefaultSecurityManagerImpl extends SecurityManagerImpl {
          */
         this.props.put("aussomdoc.file.getJson", true);
         this.props.put("aussomdoc.class.getJson", true);
-
-        // TODO: Remove this, it's just for dev testing.
-        this.props.put("test.aussom.runner", true);
     }
 }
