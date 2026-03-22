@@ -119,7 +119,7 @@ public class UnitTestRunner extends Engine {
             console.get().log("");
             console.get().info("**************************************************************");
             console.get().info("RUNNING TESTS");
-            console.get().info("**************************************************************\n");
+            console.get().info("**************************************************************");
 
             // Finally run the tests
             long start = (new Date()).getTime();
@@ -147,6 +147,7 @@ public class UnitTestRunner extends Engine {
         UnitTestResult result = new UnitTestResult();
 
         for (UnitTestClass testClass : testClasses) {
+            console.get().log("");
             console.get().info(testClass.getTestDisplayString());
             try {
                 UnitTestResult tret = this.runClass(testClass);
