@@ -1,6 +1,7 @@
 package com.aussom.stdlib;
 
 import com.aussom.Environment;
+import com.aussom.TestSecurityManagerImpl;
 import com.aussom.Util;
 import com.aussom.ast.astClass;
 import com.aussom.types.*;
@@ -22,7 +23,7 @@ public class ATest {
 
         if  (lcls != null) {
             // If we made it here we're allowed to run it.
-            UnitTestRunner testRunner = new UnitTestRunner(ScriptFile, "Run unit tests");
+            UnitTestRunner testRunner = new UnitTestRunner(new TestSecurityManagerImpl(), ScriptFile, "Run unit tests");
 
             // Add resource include path.
             testRunner.addResourceIncludePath("/com/aussom/stdlib/aus/");

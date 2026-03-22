@@ -159,7 +159,7 @@ public class Main {
 		console.get().register(logger);
 
 		// Create a new Aussom engine.
-		UnitTestRunner testRunner = new UnitTestRunner(ScriptFile, "Run unit tests");
+		UnitTestRunner testRunner = new UnitTestRunner(new TestSecurityManagerImpl(), ScriptFile, "Run unit tests");
 
 		// Add resource include path.
 		testRunner.addResourceIncludePath("/com/aussom/stdlib/aus/");

@@ -24,7 +24,7 @@ public class ATestRunner {
 
     public ATestRunner() throws Exception {
         // Create the new runner
-        this.runner = new UnitTestRunner();
+        this.runner = new UnitTestRunner(new TestSecurityManagerImpl());
 
         // Allow running tests from Aussom
         ((TestSecurityManagerImpl)this.runner.getSecurityManager()).setAllowAussomTestRunner(true);

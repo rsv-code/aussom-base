@@ -16,15 +16,15 @@ public class UnitTestRunner extends Engine {
     protected String description = "";
     protected List<UnitTestClass> testClasses = new ArrayList<UnitTestClass>();
 
-    public UnitTestRunner() throws Exception {
-        super(new TestSecurityManagerImpl());
+    public UnitTestRunner(SecurityManagerInt SecurityManager) throws Exception {
+        super(SecurityManager);
     }
-    public UnitTestRunner(String name) throws Exception {
-        super(new TestSecurityManagerImpl());
+    public UnitTestRunner(SecurityManagerInt SecurityManager, String name) throws Exception {
+        super(SecurityManager);
         this.name = name;
     }
-    public UnitTestRunner(String name, String description) throws Exception {
-        super(new TestSecurityManagerImpl());
+    public UnitTestRunner(SecurityManagerInt SecurityManager, String name, String description) throws Exception {
+        super(SecurityManager);
         this.name = name;
         this.description = description;
     }
