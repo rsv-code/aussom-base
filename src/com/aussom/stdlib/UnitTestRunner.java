@@ -90,6 +90,24 @@ public class UnitTestRunner extends Engine {
     }
 
     /**
+     * Loads all test classes.
+     * @throws aussomException
+     */
+    public void loadAllTestClasses() throws aussomException {
+        // Get all classes associated with that file.
+        for (astClass cls : this.getClasses().values()) {
+            if (cls.containsTests()) {
+                this.addTestClass(cls.getTestClass());
+            }
+        }
+        console.get().trc("Found " + this.testClasses.size() + " test classes.");
+
+        if (this.testClasses.size() == 0) {
+            throw new aussomException("Engine.runTest(): No classes found for that script file.");
+        }
+    }
+
+    /**
      * Runs the unit tests in the provide script file name.
      * @throws aussomException on failure to find main class or on parse errors.
      * @return An integer with 0 for success and any other value for failure.

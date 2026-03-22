@@ -48,9 +48,13 @@ public class Main {
 		Option doc = new Option("d", "doc", false, "generate aussomdoc for file");
 		options.addOption(doc);
 
-		// Aussomdoc option
+		// Test option
 		Option test = new Option("t", "test", false, "run tests for file");
 		options.addOption(test);
+
+		// Test all option
+		Option testAll = new Option("ta", "test-all", false, "run tests for all classes loaded in the engine");
+		options.addOption(testAll);
 
 		try {
 			// parse the command line arguments
@@ -84,7 +88,21 @@ public class Main {
 					// We nailed it, let's run the file
 					String ScriptFile = pargs.get(0);
 					console.get().info("Running tests for file '" + ScriptFile + "'.");
-					runTest(ScriptFile);
+					runTest(ScriptFile, false);
+				}
+			} else if (line.hasOption("test-all")) {
+				List<String> pargs = line.getArgList();
+				if (pargs.size() == 0) {
+					console.get().err("Expecting aussom script file, but no arguments found.\n");
+					printHelp(options);
+				} else if (pargs.size() > 1) {
+					console.get().err("Too many arguments provided, expecting just one script file.\n");
+					printHelp(options);
+				} else {
+					// We nailed it, let's run the file
+					String ScriptFile = pargs.get(0);
+					console.get().info("Running all tests for file '" + ScriptFile + "'.");
+					runTest(ScriptFile, true);
 				}
 			} else {
 				List<String> pargs = line.getArgList();
@@ -135,7 +153,7 @@ public class Main {
 		System.exit(result);
 	}
 
-	public static void runTest(String ScriptFile) throws Exception {
+	public static void runTest(String ScriptFile, boolean RunAll) throws Exception {
 		DefaultLoggingImpl logger = new DefaultLoggingImpl();
 		logger.setLevel(DefaultLoggingImpl.INFO);
 		console.get().register(logger);
@@ -149,8 +167,13 @@ public class Main {
 		// Parse the provided file name.
 		testRunner.parseFile(ScriptFile);
 
-		// Load the test classes for the provided script file.
-		testRunner.loadTestClasses(ScriptFile);
+		if (RunAll) {
+			// Load all test classes found in the entire engine.
+			testRunner.loadAllTestClasses();
+		} else {
+			// Load the test classes for the provided script file.
+			testRunner.loadTestClasses(ScriptFile);
+		}
 
 		// Attempt to run the code.
 		int result = testRunner.runTests();
