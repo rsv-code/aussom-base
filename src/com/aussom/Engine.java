@@ -36,6 +36,11 @@ import com.aussom.types.*;
  */
 public class Engine {
 	/**
+	 * Defines the run mode of then engine. When set to DOC some
+	 * errors are ignored like missing includes.
+	 */
+	protected EngineRunMode engineRunMode = EngineRunMode.NORMAL;
+	/**
 	 * The security manager instance for this engine.
 	 */
 	private SecurityManagerInt secman = null;
@@ -209,7 +214,9 @@ public class Engine {
 
 				if (!found) {
 					console.get().trc("Engine.addInclude(): Include '" + Include + "' not found at all.");
-					throw new aussomException("Engine.addInclude(): Couldn't find requested include module '" + Include + "'.");
+					if (this.engineRunMode != EngineRunMode.DOC) {
+						throw new aussomException("Engine.addInclude(): Couldn't find requested include module '" + Include + "'.");
+					}
 				}
 			}
 		}
@@ -235,6 +242,22 @@ public class Engine {
 	 */
 	public void setLoadExternClasses(boolean loadExternClasses) {
 		this.loadExternClasses = loadExternClasses;
+	}
+
+	/**
+	 * Sets the Engine run mode.
+	 * @param engineRunMode is an EngineRunMode enum value.
+	 */
+	public void setEngineRunMode(EngineRunMode engineRunMode) {
+		this.engineRunMode = engineRunMode;
+	}
+
+	/**
+	 * Gets the Engine run mode.
+	 * @return An EngineRunMode enum value.
+	 */
+	public EngineRunMode getEngineRunMode() {
+		return this.engineRunMode;
 	}
 
 	/**

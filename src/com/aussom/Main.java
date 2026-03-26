@@ -185,6 +185,7 @@ public class Main {
 	public static String getAussomdocMarkdown(String ScriptFile) throws Exception {
 		// Create a new Aussom engine.
 		Engine eng = new Engine(new DefaultSecurityManagerImpl());
+		eng.setEngineRunMode(EngineRunMode.DOC);
 		eng.setLoadExternClasses(false);
 
 		// Sets debug output to true.
