@@ -551,7 +551,7 @@ public class Engine {
 			if (!aci.isEx()) {
 				this.staticClasses.put(ac.getName(), aci);
 			} else {
-				throw new aussomException(((AussomException) aci).getStackTrace());
+				throw new aussomException(ac, ((AussomException) aci).getText(), ((AussomException) aci).getStackTrace());
 			}
 		}
 	}

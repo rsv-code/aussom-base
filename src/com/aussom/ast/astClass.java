@@ -220,7 +220,7 @@ public class astClass extends astNode implements astNodeInt {
 		
 		AussomObject ci;
 		if (this.isExtern) {
-			ci = (AussomObject) instantiateExtern();
+			ci = (AussomObject) instantiateExtern(env);
 		} else {
 			ci = new AussomObject();
 		}
@@ -280,7 +280,7 @@ public class astClass extends astNode implements astNodeInt {
 				ci.addMember(cur.getName(), cur.eval(env));
 				break;
 			default:
-				throw new aussomException("astClass.instantiateMembers(): Unexpected node type '" + cur.getType().name() + "' found.");
+				throw new aussomException(this, "astClass.instantiateMembers(): Unexpected node type '" + cur.getType().name() + "' found.", env.stackTraceToString());
 			}
 		}
 	}
@@ -420,7 +420,7 @@ public class astClass extends astNode implements astNodeInt {
 		}
 	}
 	
-	private AussomType instantiateExtern() throws aussomException {
+	private AussomType instantiateExtern(Environment env) throws aussomException {
 		boolean primType = true;
 		AussomObject obj;
 		
@@ -449,13 +449,13 @@ public class astClass extends astNode implements astNodeInt {
 			try {
 		        obj.setExternObject(this.externClass.newInstance());
 		    } catch (SecurityException e) {
-				throw new aussomException("Instantiate extern security exception: " + e.getMessage());
+				throw new aussomException(this, "Instantiate extern security exception: " + e.getMessage(), env.stackTraceToString());
 			} catch (InstantiationException e) {
-				throw new aussomException("Instantiate extern instantiation exception: " + e.getMessage());
+				throw new aussomException(this, "Instantiate extern instantiation exception: " + e.getMessage(), env.stackTraceToString());
 			} catch (IllegalAccessException e) {
-				throw new aussomException("Instantiate extern illegal access exception: " + e.getMessage());
+				throw new aussomException(this, "Instantiate extern illegal access exception: " + e.getMessage(), env.stackTraceToString());
 			} catch (IllegalArgumentException e) {
-				throw new aussomException("Instantiate extern illegal argument exception: " + e.getMessage());
+				throw new aussomException(this, "Instantiate extern illegal argument exception: " + e.getMessage(), env.stackTraceToString());
 			}
 		}
 		

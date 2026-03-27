@@ -16,6 +16,7 @@
 
 package com.aussom;
 
+import com.aussom.ast.aussomException;
 import com.aussom.stdlib.UnitTestRunner;
 import com.aussom.stdlib.console;
 import org.apache.commons.cli.*;
@@ -158,25 +159,32 @@ public class Main {
 		logger.setLevel(DefaultLoggingImpl.INFO);
 		console.get().register(logger);
 
-		// Create a new Aussom engine.
-		UnitTestRunner testRunner = new UnitTestRunner(new TestSecurityManagerImpl(), ScriptFile, "Run unit tests");
+		int result = 0;
+		try {
+			// Create a new Aussom engine.
+			UnitTestRunner testRunner = new UnitTestRunner(new TestSecurityManagerImpl(), ScriptFile, "Run unit tests");
 
-		// Add resource include path.
-		testRunner.addResourceIncludePath("/com/aussom/stdlib/aus/");
+			// Add resource include path.
+			testRunner.addResourceIncludePath("/com/aussom/stdlib/aus/");
 
-		// Parse the provided file name.
-		testRunner.parseFile(ScriptFile);
+			// Parse the provided file name.
+			testRunner.parseFile(ScriptFile);
 
-		if (RunAll) {
-			// Load all test classes found in the entire engine.
-			testRunner.loadAllTestClasses();
-		} else {
-			// Load the test classes for the provided script file.
-			testRunner.loadTestClasses(ScriptFile);
+			if (RunAll) {
+				// Load all test classes found in the entire engine.
+				testRunner.loadAllTestClasses();
+			} else {
+				// Load the test classes for the provided script file.
+				testRunner.loadTestClasses(ScriptFile);
+			}
+
+			// Attempt to run the code.
+			result = testRunner.runTests();
+		}  catch (aussomException e) {
+			console.get().err(e.getAussomStackTrace());
+		} catch (Exception e) {
+			console.get().err(Util.stackTraceToString(e));
 		}
-
-		// Attempt to run the code.
-		int result = testRunner.runTests();
 
 		// Exit with the code now.
 		System.exit(result);
