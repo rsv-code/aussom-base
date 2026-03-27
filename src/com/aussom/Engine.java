@@ -502,7 +502,7 @@ public class Engine {
 	 * @return A boolean with true if in an exclude path
 	 * and false if not.
 	 */
-	private boolean isPathExcludePath(String testPath) {
+	public boolean isPathExcludePath(String testPath) {
 		for (String excludePath : this.excludePaths) {
 			if (testPath.startsWith(excludePath))
 				return true;
