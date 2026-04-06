@@ -1440,6 +1440,37 @@ class interpreterTests {
 		u = json.unpack(jstr);
 		return test.expect(u instanceof 'user', true);
 	}
+
+	@Test(name = "(lang json) JSON escape object string.")
+    public jsonEscapeObjectString() {
+        jstr = """
+        {
+            "firstName": "Tyler",
+            "lastName": "Durden",
+            "age": 35
+        }
+        """;
+        escapedString = json.escape(jstr);
+        testStr = "\\n        {\\n            \\\"firstName\\\": \\\"Tyler\\\",\\n            \\\"lastName\\\": \\\"Durden\\\",\\n            \\\"age\\\": 35\\n        }\\n";
+        test.expect(escapedString.trim(), testStr);
+    }
+
+    @Test(name = "(lang json) JSON escape array string.")
+    public jsonEscapeArrayString() {
+        jstr = """
+        [
+            "one",
+            "two",
+            "three",
+            4,
+            5,
+            6
+        ]
+        """;
+        escapedString = json.escape(jstr);
+        testStr = "\\n        [\\n            \\\"one\\\",\\n            \\\"two\\\",\\n            \\\"three\\\",\\n            4,\\n            5,\\n            6\\n        ]\\n";
+        test.expect(escapedString.trim(), testStr);
+    }
 	
 	
 	/***********************************************************************

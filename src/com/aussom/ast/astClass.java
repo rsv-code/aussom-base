@@ -463,7 +463,7 @@ public class astClass extends astNode implements astNodeInt {
 	}
 	
 	private void loadExternClass() throws aussomException {
-		ClassLoader cl = Engine.class.getClassLoader();
+		ClassLoader cl = ClassLoader.getSystemClassLoader();
 	    try {
 	        this.externClass = cl.loadClass(this.externClassName);
 	    } catch (ClassNotFoundException e) {

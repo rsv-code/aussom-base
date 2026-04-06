@@ -35,14 +35,14 @@ public class Universe {
 	static Universe instance = null;
 	
 	/**
-	 * Flag defineing if the univers has completed initialization yet or not.
+	 * Flag defining if the universe has completed initialization yet or not.
 	 */
 	private boolean initialized = false;
 	
 	/**
 	 * Defines the Aussom version.
 	 */
-	private static final String version = "1.1.6";
+	private static final String version = "1.1.8";
 	
 	/**
 	 * Map of class definitions. This is used to hold the base lang clases. It allows 

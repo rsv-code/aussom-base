@@ -133,6 +133,11 @@ public class AJson {
 		
 		return AJson.unpackJsonData(env, jobj);
 	}
+
+	public static AussomType escape(Environment env, ArrayList<AussomType> args) throws Exception {
+		String jstr = ((AussomString)args.get(0)).getValueString();
+		return new AussomString(JSONObject.escape(jstr));
+	}
 	
 	private static AussomType unpackJsonData(Environment env, JSONObject obj) throws aussomException {
 		AussomType cobj = null;

@@ -2147,6 +2147,14 @@ static extern class json : com.aussom.stdlib.AJson {
 	 * @r The unpacked data.
 	 */
 	public extern unpack(string JsonString);
+
+    /**
+     * Utility function which takes a JSON encoded string
+     * and escapes it.
+     * @p JsonString is the JSON string to escape.
+     * @r A new string with the escaped JSON.
+     */
+	public extern escape(string JsonString);
 }
 
 	    
