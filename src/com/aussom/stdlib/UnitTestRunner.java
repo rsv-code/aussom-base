@@ -176,6 +176,7 @@ public class UnitTestRunner extends Engine {
         {
             AussomObject classInstance = (AussomObject) tci;
             tenv.setClassInstance(classInstance);
+            tenv.setCurObj(classInstance);
 
             try {
                 // Run before if it exists

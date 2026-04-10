@@ -4,10 +4,7 @@ import com.aussom.Environment;
 import com.aussom.ast.doc.docAnnotation;
 import com.aussom.ast.doc.docText;
 import com.aussom.ast.doc.docType;
-import com.aussom.types.AussomList;
-import com.aussom.types.AussomMap;
-import com.aussom.types.AussomString;
-import com.aussom.types.AussomType;
+import com.aussom.types.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -130,7 +127,7 @@ public class astAussomDoc extends astNode implements astNodeInt {
 
     @Override
     public AussomType evalImpl(Environment env, boolean getref) throws aussomException {
-        return null;
+        return new AussomNull();
     }
 
     public AussomType getAussomdoc() {

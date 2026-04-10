@@ -1,6 +1,7 @@
 package com.aussom.ast;
 
 import com.aussom.Environment;
+import com.aussom.types.AussomNull;
 import com.aussom.types.AussomType;
 
 import javax.management.DescriptorKey;
@@ -47,6 +48,6 @@ public class astAnnotationArg extends astNode implements astNodeInt {
 
     @Override
     public AussomType evalImpl(Environment env, boolean getref) throws aussomException {
-        return null;
+        return new AussomNull();
     }
 }

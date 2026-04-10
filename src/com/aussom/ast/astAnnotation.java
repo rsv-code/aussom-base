@@ -2,6 +2,7 @@ package com.aussom.ast;
 
 import com.aussom.Environment;
 import com.aussom.types.AussomMap;
+import com.aussom.types.AussomNull;
 import com.aussom.types.AussomString;
 import com.aussom.types.AussomType;
 
@@ -100,6 +101,6 @@ public class astAnnotation extends astNode implements astNodeInt {
 
     @Override
     public AussomType evalImpl(Environment env, boolean getref) throws aussomException {
-        return null;
+        return new AussomNull();
     }
 }

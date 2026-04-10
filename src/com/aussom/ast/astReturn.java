@@ -17,6 +17,7 @@
 package com.aussom.ast;
 
 import com.aussom.Environment;
+import com.aussom.types.AussomNull;
 import com.aussom.types.AussomReturn;
 import com.aussom.types.AussomType;
 
@@ -55,6 +56,8 @@ public class astReturn extends astNode implements astNodeInt
 		AussomReturn ret = new AussomReturn();
 		if(this.value != null) {
 			ret.setValue(this.value.eval(env, getref));
+		} else {
+			ret.setValue(new AussomNull());
 		}
 		return ret;
 	}

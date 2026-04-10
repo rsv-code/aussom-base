@@ -1283,7 +1283,7 @@ Int.maxVal() to get the maximum integer value.
 
 ## class: securitymanager
 
-[2211:21] `static` (extern: com.aussom.stdlib.ASecurityManager) **extends: object** 
+[2219:21] `static` (extern: com.aussom.stdlib.ASecurityManager) **extends: object** 
 
 The securitymanager class provides an object that you can
 instantiate and provide to the Aussom engine to use.
@@ -1333,7 +1333,7 @@ instantiate and provide to the Aussom engine to use.
 
 ## class: secman
 
-[2157:21] `static` (extern: com.aussom.stdlib.ASecMan) **extends: object** 
+[2165:21] `static` (extern: com.aussom.stdlib.ASecMan) **extends: object** 
 
 The static secman class implements function for working with
 the security manager of the currently executing engine.
@@ -1482,6 +1482,14 @@ working with JSON data.
 
 	- **@p** `JsonString` is a string with the packed data.
 	- **@r** `The` unpacked data.
+
+
+- **escape** (`string JsonString`)
+
+	> Utility function which takes a JSON encoded string and escapes it.
+
+	- **@p** `JsonString` is the JSON string to escape.
+	- **@r** `A` new string with the escaped JSON.
 
 
 
