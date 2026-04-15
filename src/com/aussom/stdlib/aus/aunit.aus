@@ -31,14 +31,14 @@ static extern class test : com.aussom.stdlib.ATest {
      * @p Item is the item to check.
      * @r A bool with true if not null and throws an exception if not.
      */
-    public expectNotNull(Item) { if(Item == null) { return false; } throw "expectNotNull(): Null found"; }
+    public expectNotNull(Item) { if(Item != null) { return true; } throw "expectNotNull(): Null found"; }
 
     /**
      * Expect helper function expects value to be null.
      * @p Item is the item to check.
      * @r A bool with true if null and throws an exception if not.
      */
-    public expectNull(Item) { if(Item == null) { return true; } throw "expectNull(): Not nul found"; }
+    public expectNull(Item) { if(Item == null) { return true; } throw "expectNull(): Not null found"; }
 
     /**
      * Expect helper function expects the provided item to be a string.

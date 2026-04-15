@@ -2,6 +2,38 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+# Overall Guidelines
+
+- When working in a git repo, only change files within that repo, never make any changes
+  outside the repo, and especially never in the system files, even if they are owned by the
+  current user. If you need to modify a file outside the current git repo, ask for
+  permission first.
+
+# Documentation
+
+- When writing documentation assume a United States 12th grade reading level.
+
+- Do a thorough job explaining the subject, but keep descriptions consise and avoid
+  wordy descriptions.
+
+- For complex subjects, start writing about key building blocks first and then build
+  up to explaining the complex parts to give the reader the foundation to understand
+  the complex subject.
+
+- Use documentation best practices and try to keep the characters written to those in the
+  ASCII table as much as possible.
+
+# Aussom Coding Guides
+
+Use the following guides whenever writing Aussom code.
+
+Always use inheritance over composition.
+
+- Aussom Language Overview: https://aussom-lang.com/docPage?page=written/aussom.md&title=Aussom%20Language%20Overview
+- Aussom Style Guide: https://aussom-lang.com/docPage?page=written/aussom-style-guide.md&title=Aussom%20Style%20Guide
+
+Keep in mind error handling and implement try/catch blocks where appropriate. 
+
 ## Build Commands
 
 ```bash
