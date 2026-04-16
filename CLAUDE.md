@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # Documentation
 
-- When writing documentation assume a United States 12th grade reading level.
+- When writing documentation, assume a United States 12th grade reading level.
 
 - Do a thorough job explaining the subject, but keep descriptions consise and avoid
   wordy descriptions.

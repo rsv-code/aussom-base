@@ -235,8 +235,14 @@ public class astObj  extends astNode implements astNodeInt {
 				if (ao.getMembers().contains(ind)) {
 					// We found it!
 					if (this.getChild() != null) {
-						Environment tenv = env.clone(((AussomMap)env.getCurObj()).getValue().get(ind));
-						ret = this.getChild().eval(tenv, getRef);
+						if (env.getCurObj() instanceof AussomMap) {
+							Environment tenv = env.clone(((AussomMap)env.getCurObj()).getValue().get(ind));
+							ret = this.getChild().eval(tenv, getRef);
+						} else {
+							AussomException e = new AussomException(exType.exRuntime);
+							e.setException(this.getLineNum(), "INVALID_EXPRESSION", "aObj.callObj(): Expecting type Map but found '" + ((AussomObject) env.getCurObj()).getType() + "' instead.", env.getCallStack().getStackTrace());
+							return e;
+						}
 					} else {
 						ret = ((AussomObject)env.getCurObj()).getMembers().get(ind);
 					}

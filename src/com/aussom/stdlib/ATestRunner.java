@@ -112,7 +112,7 @@ public class ATestRunner {
                 astClass cls = this.runner.getClassByName(testClass.getClassName());
                 AussomType tci = this.getClassObject(cls);
                 if(!tci.isEx()) {
-                    // Set the current object.
+                    // Set the class instance and current object.
                     this.tenv.setCurObj(tci);
 
                     // Run the function
@@ -138,8 +138,9 @@ public class ATestRunner {
                 astClass cls = this.runner.getClassByName(testClass.getClassName());
                 AussomType tci = this.getClassObject(cls);
                 if(!tci.isEx()) {
-                    // Set the current object.
-                    this.tenv.setCurObj(tci);
+                    // Set the current object if it's null.
+                    if (this.tenv.getCurObj() == null)
+                        this.tenv.setCurObj(tci);
 
                     // Run the function
                     this.runner.runFunction(testClass, this.tenv, cls, testClass.getAfterFunctionName());
@@ -147,7 +148,7 @@ public class ATestRunner {
                     return tci;
                 }
             } else {
-                return new AussomException("testRunner.hasAfter(): Provided class '" + className + "' nas no @After function set.");
+                return new AussomException("testRunner.hasAfter(): Provided class '" + className + "' has no @After function set.");
             }
         } else {
             return new AussomException("testRunner.hasAfter(): Provided class '" + className + "' not found.");
@@ -160,31 +161,28 @@ public class ATestRunner {
         String functName = ((AussomString)args.get(1)).getValue();
         UnitTestClass testClass = this.runner.getTestClassByName(className);
         if (testClass != null) {
-            if (testClass.hasAfter()) {
-                // Run the @After function
-                astClass cls = this.runner.getClassByName(testClass.getClassName());
-                AussomType tci = this.getClassObject(cls);
-                if(!tci.isEx()) {
-                    // Set the current object.
+            // Run the @After function
+            astClass cls = this.runner.getClassByName(testClass.getClassName());
+            AussomType tci = this.getClassObject(cls);
+            if(!tci.isEx()) {
+                // Set the current object if it's null.
+                if (this.tenv.getCurObj() == null)
                     this.tenv.setCurObj(tci);
 
-                    astNode af = cls.getFunct(functName);
-                    if (af != null) {
-                        astAnnotation functAnn = af.getAnnotation("Test");
-                        if (functAnn != null) {
-                            // Run the function
-                            this.runner.runFunction(testClass, this.tenv, cls, functName);
-                        } else {
-                            return new AussomException("testRunner.runTest(): Provided class '" + className + "' function '" + functName + "' has no @Test annotation.");
-                        }
+                astNode af = cls.getFunct(functName);
+                if (af != null) {
+                    astAnnotation functAnn = af.getAnnotation("Test");
+                    if (functAnn != null) {
+                        // Run the function
+                        this.runner.runFunction(testClass, this.tenv, cls, functName);
                     } else {
-                        return new AussomException("testRunner.runTest(): Provided class '" + className + "' nas no function '" + functName + "'.");
+                        return new AussomException("testRunner.runTest(): Provided class '" + className + "' function '" + functName + "' has no @Test annotation.");
                     }
                 } else {
-                    return tci;
+                    return new AussomException("testRunner.runTest(): Provided class '" + className + "' nas no function '" + functName + "'.");
                 }
             } else {
-                return new AussomException("testRunner.runTest(): Provided class '" + className + "' nas no @After function set.");
+                return tci;
             }
         } else {
             return new AussomException("testRunner.runTest(): Provided class '" + className + "' not found.");
