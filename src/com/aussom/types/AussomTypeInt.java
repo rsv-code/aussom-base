@@ -20,5 +20,6 @@ public interface AussomTypeInt {
 	public String toString();
 	public String toString(int Level);
 	public String str();
+	public String str(int Level);
 }
 

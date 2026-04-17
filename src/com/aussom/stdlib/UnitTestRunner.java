@@ -172,54 +172,56 @@ public class UnitTestRunner extends Engine {
 
         astClass cls = this.getClassByName(testClass.getClassName());
         AussomType tci = cls.instantiate(tenv, false, new AussomList());
-        if(!tci.isEx())
-        {
+        if(!tci.isEx()) {
             AussomObject classInstance = (AussomObject) tci;
             tenv.setClassInstance(classInstance);
             tenv.setCurObj(classInstance);
 
-            try {
-                // Run before if it exists
-                if (!testClass.getBeforeFunctionName().equals("")) {
-                    this.runFunction(testClass, tenv, cls, testClass.getBeforeFunctionName());
-                }
+            // Run before if it exists
+            if (!testClass.getBeforeFunctionName().equals("")) {
+                this.runFunction(testClass, tenv, cls, testClass.getBeforeFunctionName());
+            }
 
-                for (UnitTest test : testClass.getTests()) {
-                    result.total++;
+            for (UnitTest test : testClass.getTests()) {
+                result.total++;
+                String testLogStr = test.getTestDisplayString();
+
+                try {
+
                     astNode af = cls.getFunct(test.getFunctionName());
                     astAnnotation functAnn = af.getAnnotation("Test");
+                } catch (Exception e) {
+                    result.failed++;
+                    testLogStr += "FAILED\n" + e.getMessage();
+                }
 
-                    String testLogStr = test.getTestDisplayString();
-                    if (test.getSkip()) {
-                        result.skipped++;
-                        testLogStr += "SKIPPED";
-                    } else {
-                        int tret = 0;
+                if (test.getSkip()) {
+                    result.skipped++;
+                    testLogStr += "SKIPPED";
+                } else {
+                    int tret = 0;
 
-                        try {
-                            tret = this.runFunction(testClass, tenv, cls, test.getFunctionName());
+                    try {
+                        tret = this.runFunction(testClass, tenv, cls, test.getFunctionName());
 
-                            if (tret != 0) {
-                                result.failed++;
-                                testLogStr += "FAILED";
-                            } else {
-                                result.passed++;
-                                testLogStr += "PASSED";
-                            }
-                        } catch (aussomException e) {
+                        if (tret != 0) {
                             result.failed++;
-                            testLogStr += "FAILED\n" + e.getMessage();
+                            testLogStr += "FAILED";
+                        } else {
+                            result.passed++;
+                            testLogStr += "PASSED";
                         }
+                    } catch (aussomException e) {
+                        result.failed++;
+                        testLogStr += "FAILED\n" + e.getMessage();
                     }
-                    console.get().info(testLogStr);
                 }
+                console.get().info(testLogStr);
+            }
 
-                // Run before if it exists
-                if (!testClass.getAfterFunctionName().equals("")) {
-                    this.runFunction(testClass, tenv, cls, testClass.getAfterFunctionName());
-                }
-            } catch (Exception e) {
-                console.get().err(Util.stackTraceToString(e));
+            // Run before if it exists
+            if (!testClass.getAfterFunctionName().equals("")) {
+                this.runFunction(testClass, tenv, cls, testClass.getAfterFunctionName());
             }
         } else {
             AussomException ex = (AussomException) tci;

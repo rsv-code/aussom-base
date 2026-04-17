@@ -1449,17 +1449,17 @@ static extern class c : com.aussom.stdlib.console {
 
 	    
 /**
- * The date class holds date and time information. Internally
+ * The Date class holds date and time information. Internally
  * it uses Java Date object.
  */
-extern class date : com.aussom.stdlib.ADate {
+extern class Date : com.aussom.stdlib.ADate {
 	/**
 	 * Default constructor takes an optional argument of
-	 * milliseconds since epoch and returns the new date.
+	 * milliseconds since epoch and returns the new Date.
 	 * @p Mills is an optional int with the milliseconds since epoch.
-	 * @r A new date object.
+	 * @r A new Date object.
 	 */
-	public date(int Mills = null) {
+	public Date(int Mills = null) {
 		return this.newDate(Mills);
 	}
 	private extern newDate(int Mills = null);
@@ -1489,7 +1489,7 @@ extern class date : com.aussom.stdlib.ADate {
 	/**
 	 * Gets the number of milliseconds since
 	 * epoch (January 1, 1970, 00:00:00 GMT) represented
-	 * by this date object.
+	 * by this Date object.
 	 * @r An int with the number of milliseconds since epoch.
 	 */
 	public extern getTime();
@@ -1583,32 +1583,32 @@ enum byteOrder {
 
 	    
 /**
- * The buffer object provides an object for handling binary
- * data. Aussom doesn't nativly support something like a
+ * The Buffer object provides an object for handling binary
+ * data. Aussom doesn't natively support something like a
  * byte array, so this object is used to provide that
  * functionality.
  */
-extern class buffer : com.aussom.stdlib.ABuffer {
+extern class Buffer : com.aussom.stdlib.ABuffer {
     /**
-     * Creates a new buffer object with the optional
+     * Creates a new Buffer object with the optional
      * provided number of bytes.
      * @p Size is an int with the number of bytes to
-     * allocate in the buffer.
-     * @r A new buffer object.
+     * allocate in the Buffer.
+     * @r A new Buffer object.
      */
-	public buffer(int Size = 1024) {
+	public Buffer(int Size = 1024) {
 		return this.newBuffer(Size);
 	}
 	private extern newBuffer(int Size = 1024);
 
 	/**
-	 * Gets the size of the buffer in bytes.
+	 * Gets the size of the Buffer in bytes.
 	 * @r An int with the number of bytes.
 	 */
 	public extern size();
 
 	/**
-	 * Clears the buffer setting all bytes to 0
+	 * Clears the Buffer setting all bytes to 0
 	 * and resets the read and write cursors.
 	 * @r this object
 	 */
@@ -1629,7 +1629,7 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern readSeek(int Index);
 
 	/**
-	 * Adds the provided string to the buffer at the
+	 * Adds the provided string to the Buffer at the
 	 * current write index with the provided optional
 	 * character set. This also moves the write cursor
 	 * to the end of the string that was added.
@@ -1641,7 +1641,7 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern addString(string Str, string Charset = "utf_8");
 
 	/**
-	 * Adds the provided byte to the buffer at the
+	 * Adds the provided byte to the Buffer at the
 	 * current write index. Note that an int (long in Java)
 	 * is provided but that will be cast to an int to the
 	 * least significant byte will be added.
@@ -1651,7 +1651,7 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern addByte(int Byte);
 
 	/**
-	 * Adds the provided byte to the buffer at the
+	 * Adds the provided byte to the Buffer at the
 	 * current write index. Note that an int (long in Java)
 	 * is provided but the least significant byte will be added.
 	 * @p Byte is an int with a value between 0 and 255.
@@ -1660,13 +1660,13 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern addUByte(int Byte);
 
 	/**
-	 * Adds the provided short to the buffer at the
+	 * Adds the provided short to the Buffer at the
 	 * current write index. Note that an int (long in Java)
 	 * is provided but that will be cast to an int to the
 	 * least significant two bytes will be added. You can also
 	 * supply the byte order which defaults to big endian. The
 	 * byte order affects the order in which they bytes are added
-	 * to the buffer and not to how the bytes are taken from the
+	 * to the Buffer and not to how the bytes are taken from the
 	 * provided int value.
 	 * @p Short is an int to add.
 	 * @p ByteOrder is an optional string with the byte order (big or little).
@@ -1675,13 +1675,13 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern addShort(int Short, string ByteOrder = "big");
 
 	/**
-	 * Adds the provided unsigned short to the buffer at the
+	 * Adds the provided unsigned short to the Buffer at the
 	 * current write index. Note that an int (long in Java)
 	 * is provided but that will be cast to an int to the
 	 * least significant two bytes will be added. You can also
 	 * supply the byte order which defaults to big endian. The
 	 * byte order affects the order in which they bytes are added
-	 * to the buffer and not to how the bytes are taken from the
+	 * to the Buffer and not to how the bytes are taken from the
 	 * provided int value.
 	 * @p Short is an int to add.
 	 * @p ByteOrder is an optional string with the byte order (big or little).
@@ -1690,13 +1690,13 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern addUShort(int Short, string ByteOrder = "big");
 
 	/**
-	 * Adds the provided int (4 bytes) to the buffer at the
+	 * Adds the provided int (4 bytes) to the Buffer at the
 	 * current write index. Note that an int (long in Java)
 	 * is provided but that will be cast to an int to the
 	 * least significant four bytes will be added. You can also
 	 * supply the byte order which defaults to big endian. The
 	 * byte order affects the order in which they bytes are added
-	 * to the buffer and not to how the bytes are taken from the
+	 * to the Buffer and not to how the bytes are taken from the
 	 * provided int value.
 	 * @p Int is an int to add.
 	 * @p ByteOrder is an optional string with the byte order (big or little).
@@ -1705,13 +1705,13 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern addInt(int Int, string ByteOrder = "big");
 
 	/**
-	 * Adds the provided unsigned int (4 bytes) to the buffer at the
+	 * Adds the provided unsigned int (4 bytes) to the Buffer at the
 	 * current write index. Note that an int (long in Java)
 	 * is provided but that will be cast to an int to the
 	 * least significant four bytes will be added. You can also
 	 * supply the byte order which defaults to big endian. The
 	 * byte order affects the order in which they bytes are added
-	 * to the buffer and not to how the bytes are taken from the
+	 * to the Buffer and not to how the bytes are taken from the
 	 * provided int value.
 	 * @p Int is an int to add.
 	 * @p ByteOrder is an optional string with the byte order (big or little).
@@ -1720,12 +1720,12 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern addUInt(int Int, string ByteOrder = "big");
 
 	/**
-	 * Adds the provided long (8 bytes) to the buffer at the
+	 * Adds the provided long (8 bytes) to the Buffer at the
 	 * current write index. Note that an int (long in Java)
 	 * is provided so all eight bytes will be added. You can also
 	 * supply the byte order which defaults to big endian. The
 	 * byte order affects the order in which they bytes are added
-	 * to the buffer and not to how the bytes are taken from the
+	 * to the Buffer and not to how the bytes are taken from the
 	 * provided int value.
 	 * @p Long is an int to add.
 	 * @p ByteOrder is an optional string with the byte order (big or little).
@@ -1734,12 +1734,12 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern addLong(int Long, string ByteOrder = "big");
 
 	/**
-	 * Adds a float (4 bytes) to the current buffer. Note that a
+	 * Adds a float (4 bytes) to the current Buffer. Note that a
 	 * Aussom double (8 bytes) is provided so only the first 4 bytes
 	 * will be added. You can also
 	 * supply the byte order which defaults to big endian. The
 	 * byte order affects the order in which they bytes are added
-	 * to the buffer and not to how the bytes are taken from the
+	 * to the Buffer and not to how the bytes are taken from the
 	 * provided double value.
 	 * @p Float is a double to add.
 	 * @p ByteOrder is an optional string with the byte order (big or little).
@@ -1748,10 +1748,10 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern addFloat(double Float, string ByteOrder = "big");
 
 	/**
-	 * Adds a double (8 bytes) to the current buffer. You can also
+	 * Adds a double (8 bytes) to the current Buffer. You can also
 	 * supply the byte order which defaults to big endian. The
 	 * byte order affects the order in which they bytes are added
-	 * to the buffer and not to how the bytes are taken from the
+	 * to the Buffer and not to how the bytes are taken from the
 	 * provided double value.
 	 * @p Double is a double to add.
 	 * @p ByteOrder is an optional string with the byte order (big or little).
@@ -1773,7 +1773,7 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 
 	/**
 	 * Gets a string from the current read cursor to the end
-	 * of the buffer with the optional character set.
+	 * of the Buffer with the optional character set.
 	 * @p Charset is a string with the charcter set to use.
 	 * @r A string with the content.
 	 */
@@ -1879,13 +1879,13 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern getDouble(int Index = -1, string ByteOrder = "big");
 
 	/**
-	 * Sets the buffer to the current provided string. The buffer
+	 * Sets the Buffer to the current provided string. The Buffer
 	 * will be resized from what it was to the size of the string
 	 * and will return the number of bytes as an int.
 	 * @p Str is the string to set.
 	 * @p Charset is an optional string with the
 	 * character set to use.
-	 * @r An int with the size of the new buffer.
+	 * @r An int with the size of the new Buffer.
 	 */
 	public extern setString(string Str, string Charset = "utf_8");
 
@@ -1902,7 +1902,7 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern setStringAt(int Index, string Str, string Charset = "utf_8");
 	
 	/**
-	 * Sets the provided byte in the buffer at the
+	 * Sets the provided byte in the Buffer at the
 	 * provided index. Note that an int (long in Java)
 	 * is provided but that will be cast to an int to the
 	 * least significant byte will be added.
@@ -1914,7 +1914,7 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern setByte(int Index, int Byte, string ByteOrder = "big");
 
 	/**
-	 * Sets the provided unsigned byte in the buffer at the
+	 * Sets the provided unsigned byte in the Buffer at the
 	 * provided index. Note that an int (long in Java)
 	 * is provided but that will be cast to a byte to the
 	 * least significant byte will be added.
@@ -1926,7 +1926,7 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern setUByte(int Index, int Byte, string ByteOrder = "big");
 
 	/**
-	 * Sets the provided short (2 bytes) in the buffer at the
+	 * Sets the provided short (2 bytes) in the Buffer at the
 	 * provided index. Note that an int (long in Java)
 	 * is provided but that will be cast to a short and the
 	 * least significant bytes will be added.
@@ -1938,7 +1938,7 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern setShort(int Index, int Short, string ByteOrder = "big");
 
 	/**
-	 * Sets the provided unsigned short (2 bytes) in the buffer at the
+	 * Sets the provided unsigned short (2 bytes) in the Buffer at the
 	 * provided index. Note that an int (long in Java)
 	 * is provided but that will be cast to an unsigned short and the
 	 * least significant bytes will be added.
@@ -1950,7 +1950,7 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern setUShort(int Index, int Short, string ByteOrder = "big");
 
 	/**
-	 * Sets the provided int (4 bytes) in the buffer at the
+	 * Sets the provided int (4 bytes) in the Buffer at the
 	 * provided index. Note that an int (long in Java)
 	 * is provided but that will be cast to an int and the
 	 * least significant bytes will be added.
@@ -1962,7 +1962,7 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern setInt(int Index, int Int, string ByteOrder = "big");
 
 	/**
-	 * Sets the provided unsigned int (4 bytes) in the buffer at the
+	 * Sets the provided unsigned int (4 bytes) in the Buffer at the
 	 * provided index. Note that an int (long in Java)
 	 * is provided but that will be cast to an unsigned int and the
 	 * least significant bytes will be added.
@@ -1974,7 +1974,7 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern setUInt(int Index, int Int, string ByteOrder = "big");
 
 	/**
-	 * Sets the provided long (8 bytes) in the buffer at the
+	 * Sets the provided long (8 bytes) in the Buffer at the
 	 * provided index.
 	 * @p Index in an int with the index to set the long at.
 	 * @p Long is an int with a value to set.
@@ -1984,12 +1984,12 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern setLong(int Index, int Long, string ByteOrder = "big");
 
 	/**
-	 * Adds a float (4 bytes) to the current buffer. Note that a
+	 * Adds a float (4 bytes) to the current Buffer. Note that a
 	 * Aussom double (8 bytes) is provided so only the first 4 bytes
 	 * will be added. You can also
 	 * supply the byte order which defaults to big endian. The
 	 * byte order affects the order in which they bytes are added
-	 * to the buffer and not to how the bytes are taken from the
+	 * to the Buffer and not to how the bytes are taken from the
 	 * provided double value.
 	 * @p Index in an int with the index to set the float at.
 	 * @p Float is a double to add.
@@ -1999,10 +1999,10 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern setFloat(int Index, double Float, string ByteOrder = "big");
 
 	/**
-	 * Adds a double (8 bytes) to the current buffer. You can also
+	 * Adds a double (8 bytes) to the current Buffer. You can also
 	 * supply the byte order which defaults to big endian. The
 	 * byte order affects the order in which they bytes are added
-	 * to the buffer and not to how the bytes are taken from the
+	 * to the Buffer and not to how the bytes are taken from the
 	 * provided double value.
 	 * @p Index in an int with the index to set the double at.
 	 * @p Double is a double to add.
@@ -2012,30 +2012,30 @@ extern class buffer : com.aussom.stdlib.ABuffer {
 	public extern setDouble(int Index, double Double, string ByteOrder = "big");
 
 	/**
-	 * Coppies the bytes from a source buffer to this buffer. You must specify
-	 * the index in the current (destination) buffer and the buffer object to
-	 * copy from. You may optionally set the index in the source buffer, otherwise
+	 * Coppies the bytes from a source Buffer to this Buffer. You must specify
+	 * the index in the current (destination) Buffer and the Buffer object to
+	 * copy from. You may optionally set the index in the source Buffer, otherwise
 	 * it will just copy from the beginning. You may optionally set the length to
 	 * copy.
-	 * @p DestIndex is an int with the index in the current (destination) buffer to
+	 * @p DestIndex is an int with the index in the current (destination) Buffer to
 	 * start copying to.
-	 * @p Buffer is a buffer object to copy bytes from.
-	 * @p SrcIndex is an optional index to start copying bytes from in the source buffer.
+	 * @p Buffer is a Buffer object to copy bytes from.
+	 * @p SrcIndex is an optional index to start copying bytes from in the source Buffer.
 	 * @p Length is an optional int with the number of bytes to copy.
 	 * @r this object
 	 */
 	public extern copyFrom(int DestIndex, object Buffer, int SrcIndex = -1, int Length = -1);
 
 	/**
-	 * Coppies the bytes from this buffer to the provided buffer. You must specify
-	 * the index in the current (source) buffer and the buffer object to
-	 * copy to. You may optionally set the index in the dest buffer, otherwise
+	 * Coppies the bytes from this Buffer to the provided Buffer. You must specify
+	 * the index in the current (source) Buffer and the Buffer object to
+	 * copy to. You may optionally set the index in the dest Buffer, otherwise
 	 * it will just copy from the beginning. You may optionally set the length to
 	 * copy.
-	 * @p SrcIndex is an int with the index in the current (source) buffer to
+	 * @p SrcIndex is an int with the index in the current (source) Buffer to
 	 * start copying from.
-	 * @p Buffer is a buffer object to copy the bytes to.
-	 * @p DestIndex is an optional int with the destination buffer to start copying to.
+	 * @p Buffer is a Buffer object to copy the bytes to.
+	 * @p DestIndex is an optional int with the destination Buffer to start copying to.
 	 * @p Length is an optional int with the number of bytes to copy.
 	 */
 	public extern copyTo(int SrcIndex, object Buffer, int DestIndex = -1, int Length = -1);

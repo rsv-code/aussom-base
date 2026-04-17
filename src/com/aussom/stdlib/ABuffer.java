@@ -24,20 +24,43 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import com.aussom.Environment;
+import com.aussom.Util;
 import com.aussom.ast.aussomException;
-import com.aussom.types.AussomType;
-import com.aussom.types.AussomNull;
-import com.aussom.types.AussomObject;
-import com.aussom.types.AussomInt;
-import com.aussom.types.AussomDouble;
-import com.aussom.types.AussomString;
-import com.aussom.types.AussomException;
+import com.aussom.types.*;
 
 
-public class ABuffer {
+public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	private int writeCursor = 0;
 	private int readCursor = 0;
-	
+
+	@Override
+	public String toString(int Level) {
+		return "Buffer(" + this.buff.length + ")";
+	}
+
+	@Override
+	public String str() {
+		return this.toString(0);
+	}
+
+	@Override
+	public String str(int Level) {
+		return this.str();
+	}
+
+	@Override
+	public AussomType toJson(Environment env, ArrayList<AussomType> args) {
+		return new AussomString("\"" + ABase64.encode(this.buff) + "\"");
+	}
+
+	@Override
+	public AussomType pack(Environment env, ArrayList<AussomType> args) {
+		ArrayList<String> parts = new ArrayList<String>();
+		parts.add("\"type\":\"Buffer\"");
+		parts.add("\"value\":\"" + ABase64.encode(this.buff) + "\"");
+		return new AussomString("{" + Util.join(parts, ",") + "}");
+	}
+
 	public enum byteOrder {
 		BIG,
 		LITTLE
@@ -79,7 +102,7 @@ public class ABuffer {
 			if((index >= 0)&&(index < buff.length)) {
 				this.writeCursor = index;
 			} else {
-				return new AussomException("buffer.writeSeek(): Index out of bounds.");
+				return new AussomException("Buffer.writeSeek(): Index out of bounds.");
 			}
 			return env.getClassInstance();
 		}
@@ -91,7 +114,7 @@ public class ABuffer {
 			if((index >= 0)&&(index < buff.length)) {
 				this.readCursor = index;
 			} else {
-				return new AussomException("buffer.readSeek(): Index out of bounds.");
+				return new AussomException("Buffer.readSeek(): Index out of bounds.");
 			}
 			return env.getClassInstance();
 		}
@@ -418,7 +441,7 @@ public class ABuffer {
 			while(bin.length() < 8) bin = "0" + bin;
 			return new AussomString(bin);
 		} else {
-			return new AussomException("buffer.byteToBinary(): Index out of bounds.");
+			return new AussomException("Buffer.byteToBinary(): Index out of bounds.");
 		}
 	}
 	
@@ -438,7 +461,7 @@ public class ABuffer {
 				return new AussomString(bin2 + bin1);
 			}
 		} else {
-			return new AussomException("buffer.shortToBinary(): Index out of bounds.");
+			return new AussomException("Buffer.shortToBinary(): Index out of bounds.");
 		}
 	}
 	
@@ -462,7 +485,7 @@ public class ABuffer {
 				return new AussomString(bin4 + bin3 + bin2 + bin1);
 			}
 		} else {
-			return new AussomException("buffer.intToBinary(): Index out of bounds.");
+			return new AussomException("Buffer.intToBinary(): Index out of bounds.");
 		}
 	}
 	
@@ -510,7 +533,7 @@ public class ABuffer {
 				return new AussomString(bin8 + bin7 + bin6 + bin5 + bin4 + bin3 + bin2 + bin1);
 			}
 		} else {
-			return new AussomException("buffer.longToBinary(): Index out of bounds.");
+			return new AussomException("Buffer.longToBinary(): Index out of bounds.");
 		}
 	}
 	
@@ -542,7 +565,7 @@ public class ABuffer {
 				return new AussomString(bin4 + bin3 + bin2 + bin1);
 			}
 		} else {
-			return new AussomException("buffer.intToBinary(): Index out of bounds.");
+			return new AussomException("Buffer.intToBinary(): Index out of bounds.");
 		}
 	}
 	
@@ -590,7 +613,7 @@ public class ABuffer {
 				return new AussomString(bin8 + bin7 + bin6 + bin5 + bin4 + bin3 + bin2 + bin1);
 			}
 		} else {
-			return new AussomException("buffer.doubleToBinary(): Index out of bounds.");
+			return new AussomException("Buffer.doubleToBinary(): Index out of bounds.");
 		}
 	}
 	
@@ -605,17 +628,17 @@ public class ABuffer {
 			if((obj.getExternObject() != null)&&(obj.getExternObject() instanceof ABuffer)) {
 				obuff = ((ABuffer)obj.getExternObject()).buff;
 			} else {
-				return new AussomException("buffer.copyFrom(): External object is null or not of type buffer.");
+				return new AussomException("Buffer.copyFrom(): External object is null or not of type Buffer.");
 			}
 			
 			if((dindex + length) < this.buff.length) {
 				if((sindex + length) < obuff.length) {
 					System.arraycopy(obuff, sindex, this.buff, dindex, length);
 				} else {
-					return new AussomException("buffer.copyFrom(): Source buffer overflow.");
+					return new AussomException("Buffer.copyFrom(): Source buffer overflow.");
 				}
 			} else {
-				return new AussomException("buffer.copyFrom(): Destination buffer overflow.");
+				return new AussomException("Buffer.copyFrom(): Destination buffer overflow.");
 			}
 			
 			return env.getClassInstance();
@@ -633,17 +656,17 @@ public class ABuffer {
 			if((obj.getExternObject() != null)&&(obj.getExternObject() instanceof ABuffer)) {
 				obuff = ((ABuffer)obj.getExternObject()).buff;
 			} else {
-				return new AussomException("buffer.copyTo(): External object is null or not of type buffer.");
+				return new AussomException("Buffer.copyTo(): External object is null or not of type Buffer.");
 			}
 			
 			if((dindex + length) < this.buff.length) {
 				if((sindex + length) < obuff.length) {
 					System.arraycopy(this.buff, sindex, obuff, dindex, length);
 				} else {
-					return new AussomException("buffer.copyTo(): Source buffer overflow.");
+					return new AussomException("Buffer.copyTo(): Source buffer overflow.");
 				}
 			} else {
-				return new AussomException("buffer.copyTo(): Destination buffer overflow.");
+				return new AussomException("Buffer.copyTo(): Destination buffer overflow.");
 			}
 			
 			return env.getClassInstance();
@@ -665,9 +688,9 @@ public class ABuffer {
 		try {
 			return new String(this.buff, cset);
 		} catch (UnsupportedEncodingException e) {
-			throw new aussomException("buffer.getString(): Unsopported encoding exception. (" + e.getMessage() + ")");
+			throw new aussomException("Buffer.getString(): Unsopported encoding exception. (" + e.getMessage() + ")");
 		} catch(NullPointerException npe) {
-			throw new aussomException("buffer.getString(): Buffer object is null.");
+			throw new aussomException("Buffer.getString(): Buffer object is null.");
 		}
 	}
 	
@@ -678,7 +701,7 @@ public class ABuffer {
 			System.arraycopy(this.buff, index, dest, 0, length);
 			return new String(dest, cset);
 		} catch (UnsupportedEncodingException e) {
-			throw new aussomException("buffer.getStringAt(): Unsopported encoding exception. (" + e.getMessage() + ")");
+			throw new aussomException("Buffer.getStringAt(): Unsopported encoding exception. (" + e.getMessage() + ")");
 		}
 	}
 	
@@ -686,7 +709,7 @@ public class ABuffer {
 		if((index >= 0)&&(index < buff.length)) {
 			return (int)this.buff[index];
 		} else {
-			throw new aussomException("buffer.getByte(): Index out of bounds.");
+			throw new aussomException("Buffer.getByte(): Index out of bounds.");
 		}
 	}
 	
@@ -695,7 +718,7 @@ public class ABuffer {
 			int val = (int) this.buff[index] & 0xff;
 			return val;
 		} else {
-			throw new aussomException("buffer.getUByte(): Index out of bounds.");
+			throw new aussomException("Buffer.getUByte(): Index out of bounds.");
 		}
 	}
 	
@@ -715,7 +738,7 @@ public class ABuffer {
 			}
 			return val;
 		} else {
-			throw new aussomException("buffer.getShort(): Index out of bounds.");
+			throw new aussomException("Buffer.getShort(): Index out of bounds.");
 		}
 	}
 	
@@ -736,7 +759,7 @@ public class ABuffer {
 			}
 			return val;
 		} else {
-			throw new aussomException("buffer.getShort(): Index out of bounds.");
+			throw new aussomException("Buffer.getShort(): Index out of bounds.");
 		}
 	}
 	
@@ -760,7 +783,7 @@ public class ABuffer {
 			}
 			return val;
 		} else {
-			throw new aussomException("buffer.getInt(): Index out of bounds.");
+			throw new aussomException("Buffer.getInt(): Index out of bounds.");
 		}
 	}
 	
@@ -784,7 +807,7 @@ public class ABuffer {
 			}
 			return val;
 		} else {
-			throw new aussomException("buffer.getUInt(): Index out of bounds.");
+			throw new aussomException("Buffer.getUInt(): Index out of bounds.");
 		}
 	}
 	
@@ -816,7 +839,7 @@ public class ABuffer {
 			}
 			return val;
 		} else {
-			throw new aussomException("buffer.getLong(): Index out of bounds.");
+			throw new aussomException("Buffer.getLong(): Index out of bounds.");
 		}
 	}
 	
@@ -830,7 +853,7 @@ public class ABuffer {
 			}
 			return val;
 		} else {
-			throw new aussomException("buffer.getInt(): Index out of bounds.");
+			throw new aussomException("Buffer.getInt(): Index out of bounds.");
 		}
 	}
 	
@@ -844,7 +867,7 @@ public class ABuffer {
 			}
 			return val;
 		} else {
-			throw new aussomException("buffer.getDouble(): Index out of bounds.");
+			throw new aussomException("Buffer.getDouble(): Index out of bounds.");
 		}
 	}
 	
@@ -855,7 +878,7 @@ public class ABuffer {
 				this.buff = str.getBytes(cset);
 				return this.buff.length;
 			} catch (UnsupportedEncodingException e) {
-				throw new aussomException("buffer._setString(): Unsupported encoding exception. " + e.getMessage());
+				throw new aussomException("Buffer._setString(): Unsupported encoding exception. " + e.getMessage());
 			}
 		}
 	}
@@ -868,7 +891,7 @@ public class ABuffer {
 				System.arraycopy(str.getBytes(Charset.forName(cset)), 0, this.buff, index, len);
 				return str.getBytes(Charset.forName(cset)).length;
 			} else {
-				throw new aussomException("buffer.setStringAt(): Index " + (index + len) + "/" + this.buff.length + " out of bounds.");
+				throw new aussomException("Buffer.setStringAt(): Index " + (index + len) + "/" + this.buff.length + " out of bounds.");
 			}
 		}
 	}
@@ -878,7 +901,7 @@ public class ABuffer {
 			if((index >= 0)&&(index < this.buff.length)) {
 				this.buff[index] = (byte)ival;
 			} else {
-				throw new aussomException("buffer.setByte(): Index out of bounds.");
+				throw new aussomException("Buffer.setByte(): Index out of bounds.");
 			}
 		}
 	}
@@ -888,7 +911,7 @@ public class ABuffer {
 			if((index >= 0)&&(index < this.buff.length)) {
 				this.buff[index] = (byte)(ival & (0xff));
 			} else {
-				throw new aussomException("buffer.setUByte(): Index out of bounds.");
+				throw new aussomException("Buffer.setUByte(): Index out of bounds.");
 			}
 		}
 	}
@@ -904,7 +927,7 @@ public class ABuffer {
 					this.buff[index + 1] = (byte)((ival >> 8) & 0xff);
 				}
 			} else {
-				throw new aussomException("buffer.setShort(): Index out of bounds.");
+				throw new aussomException("Buffer.setShort(): Index out of bounds.");
 			}
 		}
 	}
@@ -920,7 +943,7 @@ public class ABuffer {
 					this.buff[index + 1] = (byte)((ival >> 8) & 0xff);
 				}
 			} else {
-				throw new aussomException("buffer.setUShort(): Index out of bounds.");
+				throw new aussomException("Buffer.setUShort(): Index out of bounds.");
 			}
 		}
 	}
@@ -940,7 +963,7 @@ public class ABuffer {
 					this.buff[index + 3] = (byte)((ival >> 24) & 0xff);
 				}
 			} else {
-				throw new aussomException("buffer.setInt(): Index out of bounds.");
+				throw new aussomException("Buffer.setInt(): Index out of bounds.");
 			}
 		}
 	}
@@ -960,7 +983,7 @@ public class ABuffer {
 					this.buff[index + 3] = (byte)((ival >> 24) & 0xff);
 				}
 			} else {
-				throw new aussomException("buffer.setUInt(): Index out of bounds.");
+				throw new aussomException("Buffer.setUInt(): Index out of bounds.");
 			}
 		}
 	}
@@ -988,7 +1011,7 @@ public class ABuffer {
 					this.buff[index + 7] = (byte)((ival >> 56) & 0xff);
 				}
 			} else {
-				throw new aussomException("buffer.setLong(): Index out of bounds.");
+				throw new aussomException("Buffer.setLong(): Index out of bounds.");
 			}
 		}
 	}
@@ -1009,7 +1032,7 @@ public class ABuffer {
 					this.buff[index + 3] = (byte)((ival >> 24) & 0xff);
 				}
 			} else {
-				throw new aussomException("buffer.setFloat(): Index out of bounds.");
+				throw new aussomException("Buffer.setFloat(): Index out of bounds.");
 			}
 		}
 	}
@@ -1038,7 +1061,7 @@ public class ABuffer {
 					this.buff[index + 7] = (byte)((ival >> 56) & 0xff);
 				}
 			} else {
-				throw new aussomException("buffer.setDouble(): Index out of bounds.");
+				throw new aussomException("Buffer.setDouble(): Index out of bounds.");
 			}
 		}
 	}

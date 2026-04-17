@@ -107,7 +107,7 @@ public class AReflect {
 		String ClassName = ((AussomString)args.get(0)).getValue();
 		if(env.getEngine().getClasses().containsKey(ClassName)) {
 			astClass tc = env.getEngine().getClasses().get(ClassName);
-			astClass cc = env.getEngine().getClasses().get("rclass");
+			astClass cc = env.getEngine().getClasses().get("RClass");
 			try {
 				AussomObject co = (AussomObject) cc.instantiate(env);
 				AClass ccobj = (AClass)co.getExternObject();

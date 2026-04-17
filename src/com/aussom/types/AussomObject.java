@@ -110,6 +110,13 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 			rstr += " name='" + this.getClassDef().getName() + "'";
 		rstr += "\n";
 
+		if (this.getClassDef().getExtern() && this.getClassDef().getExternClass() != AussomObject.class && this.externObject instanceof AussomTypeInt) {
+			AussomTypeInt ati = (AussomTypeInt)this.externObject;
+			System.out.println(ati.str());
+			rstr += getTabs(Level) + "value=" + ati.toString(Level + 1);
+			rstr += "\n";
+		}
+
 		if(this.members != null)
 			rstr += this.members.toString(Level);
 
@@ -120,7 +127,8 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 	public String str() {
 		return this.str(0);
 	}
-	
+
+
 	public String str(int Level) {
 		if (this.members.getMap().size() > 0) {
 			String rstr = "{\n";
@@ -137,11 +145,14 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 			}
 			rstr += getTabs(Level) + "}";
 			return rstr;
+		} else if (this.externObject != null && this.externObject instanceof AussomTypeInt) {
+			AussomTypeInt ati = (AussomTypeInt)this.externObject;
+			return ati.str(Level);
 		} else {
 			return "{}";
 		}
 	}
-	
+
 	public String str(Environment env) throws aussomException {
 		if (this.getClassDef().containsFunction("toString")) {
 			astClass ac = this.getClassDef();
@@ -155,58 +166,67 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 		  }
 		return "cObject@" + Integer.toHexString(System.identityHashCode(this));
 	}
-	
+
+	@Override
 	public AussomType toJson(Environment env, ArrayList<AussomType> args) {
-		ArrayList<String> parts = new ArrayList<String>();
-		for (String key : this.members.getMap().keySet()) {
-			AussomType ct = this.members.get(key);
-			if (
-					ct instanceof AussomBool
-					|| ct instanceof AussomNull
-					|| ct instanceof AussomInt
-					|| ct instanceof AussomDouble
-					|| ct instanceof AussomString
-					|| ct instanceof AussomList
-					|| ct instanceof AussomMap
-					|| ct instanceof AussomObject
+		String clsName = this.getClassDef().getExternClass().getName();
+		if (this.getClassDef().getExtern() && this.getClassDef().getExternClass() != AussomObject.class && this.externObject instanceof AussomTypeObjectInt) {
+			AussomTypeObjectInt atoi = (AussomTypeObjectInt)this.externObject;
+			return atoi.toJson(env, args);
+		} else {
+			ArrayList<String> parts = new ArrayList<String>();
+			for (String key : this.members.getMap().keySet()) {
+				AussomType ct = this.members.get(key);
+				if (
+						ct instanceof AussomBool
+								|| ct instanceof AussomNull
+								|| ct instanceof AussomInt
+								|| ct instanceof AussomDouble
+								|| ct instanceof AussomString
+								|| ct instanceof AussomList
+								|| ct instanceof AussomMap
+								|| ct instanceof AussomObject
 				) {
-				parts.add("\"" + key + "\":" + ((AussomTypeObjectInt)ct).toJson(env, new ArrayList<AussomType>()).getValueString());
-				
-			} else {
-				return new AussomException("Unexpected type found '" + ct.getType().name() + "' when converting to JSON.");
+					parts.add("\"" + key + "\":" + ((AussomTypeObjectInt) ct).toJson(env, new ArrayList<AussomType>()).getValueString());
+
+				} else {
+					return new AussomException("Unexpected type found '" + ct.getType().name() + "' when converting to JSON.");
+				}
 			}
+			return new AussomString("{" + Util.join(parts, ",") + "}");
 		}
-		return new AussomString("{" + Util.join(parts, ",") + "}");
 	}
 	
 	public AussomType pack(Environment env, ArrayList<AussomType> args) {
-		ArrayList<String> parts = new ArrayList<String>();
-		
-		// Object metadata.
-		parts.add("\"type\":\"" + this.getClassDef().getName() + "\"");
-		
-		ArrayList<String> mparts = new ArrayList<String>();
-		for (String key : this.members.getMap().keySet()) {
-			AussomType ct = this.members.get(key);
-			if (
-					ct instanceof AussomBool
-					|| ct instanceof AussomNull
-					|| ct instanceof AussomInt
-					|| ct instanceof AussomDouble
-					|| ct instanceof AussomString
-					|| ct instanceof AussomList
-					|| ct instanceof AussomMap
-					|| ct instanceof AussomObject
+		if (this.getClassDef().getExtern() && this.getClassDef().getExternClass() != AussomObject.class  && this.externObject instanceof AussomTypeObjectInt) {
+			AussomTypeObjectInt atoi = (AussomTypeObjectInt)this.externObject;
+			return atoi.pack(env, args);
+		} else {
+			ArrayList<String> parts = new ArrayList<String>();
+			// Object metadata.
+			parts.add("\"type\":\"" + this.getClassDef().getName() + "\"");
+			ArrayList<String> mparts = new ArrayList<String>();
+			for (String key : this.members.getMap().keySet()) {
+				AussomType ct = this.members.get(key);
+				if (
+						ct instanceof AussomBool
+								|| ct instanceof AussomNull
+								|| ct instanceof AussomInt
+								|| ct instanceof AussomDouble
+								|| ct instanceof AussomString
+								|| ct instanceof AussomList
+								|| ct instanceof AussomMap
+								|| ct instanceof AussomObject
 				) {
-				mparts.add("\"" + key + "\":" + ((AussomTypeObjectInt)ct).pack(env, new ArrayList<AussomType>()).getValueString());
-				
-			} else {
-				return new AussomException("Unexpected type found '" + ct.getType().name() + "' when packing object.");
+					mparts.add("\"" + key + "\":" + ((AussomTypeObjectInt) ct).pack(env, new ArrayList<AussomType>()).getValueString());
+
+				} else {
+					return new AussomException("Unexpected type found '" + ct.getType().name() + "' when packing object.");
+				}
 			}
+			parts.add("\"members\":{" + Util.join(mparts, ",") + "}");
+			return new AussomString("{" + Util.join(parts, ",") + "}");
 		}
-		parts.add("\"members\":{" + Util.join(mparts, ",") + "}");
-		
-		return new AussomString("{" + Util.join(parts, ",") + "}");
 	}
 
 	public Mock getMock() {

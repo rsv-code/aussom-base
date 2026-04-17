@@ -10,8 +10,8 @@ tests (outside of this file) to test and recreate those bugs.
 
 # Deliverable
 
-Please create a design doc (design/qa-testing.md) with a test plan to accomplish the testing 
-goals outlined in this doc. If need be break the implementation up into phases in the design 
+Please create a design doc (design/qa-testing.md) with a test plan to achieve the testing 
+goals outlined in this doc. If need be, break the implementation up into phases in the design 
 if that makes more sense.
 
 # Task Overview

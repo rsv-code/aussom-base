@@ -19,9 +19,9 @@ public class ATest {
         }
 
         astClass lcls = env.getEngine().getClassByName(testClassName);
-        String ScriptFile = lcls.getFileName();
-
         if  (lcls != null) {
+            String ScriptFile = lcls.getFileName();
+
             // If we made it here we're allowed to run it.
             UnitTestRunner testRunner = new UnitTestRunner(new TestSecurityManagerImpl(), ScriptFile, "Run unit tests");
 

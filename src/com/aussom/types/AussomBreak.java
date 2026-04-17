@@ -34,4 +34,8 @@ public class AussomBreak extends AussomType implements AussomTypeInt {
 	public String str() {
 		return "break";
 	}
+
+	public String str(int Level) {
+		return this.str();
+	}
 }

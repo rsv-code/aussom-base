@@ -169,7 +169,7 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 				} else if (tobj instanceof String) {
 					cm.put(key, new AussomString((String)tobj));
 				} else {
-					return new AussomException("securitymanager.getMap(): Expecting simpel type (bool, int, double, string, null) but found '" + tobj.getClass().getName() + "' instead for key '" + key + "'.");
+					return new AussomException("securitymanager.getMap(): Expecting simple type (bool, int, double, string, null) but found '" + tobj.getClass().getName() + "' instead for key '" + key + "'.");
 				}
 			}
 			return cm;
@@ -202,7 +202,7 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 			} else if (ct instanceof AussomNull) {
 				val = null;
 			} else {
-				return new AussomException("securitymanager.setProp(): Expecting simpel type (bool, int, double, string, null) but found '" + ct.getClass().getName() + "' instead.");
+				return new AussomException("securitymanager.setProp(): Expecting simple type (bool, int, double, string, null) but found '" + ct.getClass().getName() + "' instead.");
 			}
 			
 			this.props.put(key, val);
@@ -237,7 +237,7 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 				} else if (ct instanceof AussomNull) {
 					val = null;
 				} else {
-					return new AussomException("securitymanager.setMap(): Expecting simpel type (bool, int, double, string, null) but found '" + ct.getClass().getName() + "' instead.");
+					return new AussomException("securitymanager.setMap(): Expecting simple type (bool, int, double, string, null) but found '" + ct.getClass().getName() + "' instead.");
 				}
 				
 				this.props.put(key, val);

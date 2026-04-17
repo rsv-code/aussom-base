@@ -51,4 +51,9 @@ public class AussomReturn extends AussomType implements AussomTypeInt {
 	public String str() {
 		return "return";
 	}
+
+	@Override
+	public String str(int Level) {
+		return this.str();
+	}
 }

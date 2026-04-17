@@ -52,11 +52,13 @@ class user {
 	 */
 	public emailAddress = null;
 
+	public dob = null;
+
 	/**
 	 * Default constructor creates a new user object and
 	 * also sets a default email object.
 	 */
-	public user() { this.emailAddress = new email(); }
+	public user() { this.emailAddress = new email(); this.dob = new Date(); }
 
 	/**
 	 * Sets the fist and last name with the provided values.
@@ -71,6 +73,12 @@ class user {
 	 * @r A string with with the first and last name.
 	 */
 	public getName() { return this.firstName + " " + this.lastName; }
+}
+
+class Info {
+    public name = "";
+    public date = null;
+    public buff = null;
 }
 
 class car {
@@ -1433,11 +1441,16 @@ class interpreterTests {
 								"value":""
 							}
 						}
+					},
+					"dob": {
+						"type":"Date",
+						"value":"2015-01-01T00:00:00.000Z"
 					}
 				}
 			}
 		""";
 		u = json.unpack(jstr);
+		test.expect(u.dob.toString(), '2015-01-01T00:00:00.000Z');
 		return test.expect(u instanceof 'user', true);
 	}
 
@@ -1471,139 +1484,156 @@ class interpreterTests {
         testStr = "\\n        [\\n            \\\"one\\\",\\n            \\\"two\\\",\\n            \\\"three\\\",\\n            4,\\n            5,\\n            6\\n        ]\\n";
         test.expect(escapedString.trim(), testStr);
     }
+
+    @Test(name = "(lang json) Pack and unpack JSON string")
+    public jsonPackUnpack() {
+        bf = new Buffer();
+        bf.setString("Hello World");
+
+        info = new Info();
+        info.name = "Test";
+        info.date = (new Date()).parse("2015-01-01T00:00:00.000Z", "yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+        info.buff = bf;
+
+        packed = info.pack();
+        unpacked = json.unpack(packed);
+
+        test.expect(unpacked.date.toString(), "2015-01-01T00:00:00.000Z");
+        test.expect(unpacked.buff.getString(), "Hello World");
+    }
 	
 	
 	/***********************************************************************
-	 * buffer tests
+	 * Buffer tests
 	 *********************************************************************/
-	@Test(name = "(lang buffer) Buffer instantiate.")
-	public bufferInstantiate() { this.buff = new buffer(); return test.expectObject(this.buff, 'buffer'); }
+	@Test(name = "(lang Buffer) Buffer instantiate.")
+	public bufferInstantiate() { this.buff = new Buffer(); return test.expectObject(this.buff, 'Buffer'); }
 
-	@Test(name = "(lang buffer) Buffer size.")
+	@Test(name = "(lang Buffer) Buffer size.")
 	public bufferSize() { return test.expect(this.buff.size(), 1024); }
 
-	@Test(name = "(lang buffer) Buffer add string.")
+	@Test(name = "(lang Buffer) Buffer add string.")
 	public bufferAddString() { this.buff.addString("welcome"); return test.expect(this.buff.getStringAt(this.buff.getWriteCursor()), "welcome"); }
 
-	@Test(name = "(lang buffer) Buffer add byte.")
+	@Test(name = "(lang Buffer) Buffer add byte.")
 	public bufferAddByte() { this.buff.addByte(10); return test.expect(this.buff.getByte(), 10); }
 
-	@Test(name = "(lang buffer) Buffer add unsigned byte.")
+	@Test(name = "(lang Buffer) Buffer add unsigned byte.")
 	public bufferAddUByte() { this.buff.addUByte(15); return test.expect(this.buff.getUByte(), 15); }
 
-	@Test(name = "(lang buffer) Buffer add short.")
+	@Test(name = "(lang Buffer) Buffer add short.")
 	public bufferAddShort() { this.buff.addShort(12345); return test.expect(this.buff.getShort(), 12345); }
 
-	@Test(name = "(lang buffer) Buffer add unsigned short.")
+	@Test(name = "(lang Buffer) Buffer add unsigned short.")
 	public bufferAddUShort() { this.buff.addUShort(12345); return test.expect(this.buff.getUShort(), 12345); }
 
-	@Test(name = "(lang buffer) Buffer add int.")
+	@Test(name = "(lang Buffer) Buffer add int.")
 	public bufferAddInt() { this.buff.addInt(12345678); return test.expect(this.buff.getInt(), 12345678); }
 
-	@Test(name = "(lang buffer) Buffer add unsigned int.")
+	@Test(name = "(lang Buffer) Buffer add unsigned int.")
 	public bufferAddUInt() { this.buff.addUInt(12345678); return test.expect(this.buff.getUInt(), 12345678); }
 
-	@Test(name = "(lang buffer) Buffer add long.")
+	@Test(name = "(lang Buffer) Buffer add long.")
 	public bufferAddLong() { this.buff.addLong(1234567890); return test.expect(this.buff.getLong(), 1234567890); }
 
-	@Test(name = "(lang buffer) Buffer add float.")
+	@Test(name = "(lang Buffer) Buffer add float.")
 	public bufferAddFloat() { this.buff.addFloat(123.456); return test.expect(math.round(this.buff.getFloat()), 123.0); }
 
-	@Test(name = "(lang buffer) Buffer add double.")
+	@Test(name = "(lang Buffer) Buffer add double.")
 	public bufferAddDouble() { this.buff.addDouble(123456.123456); return test.expect(this.buff.getDouble(), 123456.123456); }
 
-	@Test(name = "(lang buffer) Buffer get write cursor.")
+	@Test(name = "(lang Buffer) Buffer get write cursor.")
 	public bufferGetWriteCursor() { return test.expect(this.buff.getWriteCursor(), 41); }
 
-	@Test(name = "(lang buffer) Buffer get read cursor.")
+	@Test(name = "(lang Buffer) Buffer get read cursor.")
 	public bufferGetReadCursor() { return test.expect(this.buff.getReadCursor(), 37); }
 
-	@Test(name = "(lang buffer) Buffer set string.")
+	@Test(name = "(lang Buffer) Buffer set string.")
 	public bufferSetString() { this.buff.setString("Hello World"); return test.expect(this.buff.getString(), "Hello World"); }
 
-	@Test(name = "(lang buffer) Buffer set byte.")
-	public bufferSetByte() { this.buff = new buffer(); this.buff.setByte(0, 10); return test.expect(this.buff.getByte(0), 10); }
+	@Test(name = "(lang Buffer) Buffer set byte.")
+	public bufferSetByte() { this.buff = new Buffer(); this.buff.setByte(0, 10); return test.expect(this.buff.getByte(0), 10); }
 
-	@Test(name = "(lang buffer) Buffer set unsigned byte.")
+	@Test(name = "(lang Buffer) Buffer set unsigned byte.")
 	public bufferSetUByte() { this.buff.setUByte(1, 64); return test.expect(this.buff.getUByte(1), 64); }
 
-	@Test(name = "(lang buffer) Buffer set short.")
+	@Test(name = "(lang Buffer) Buffer set short.")
 	public bufferSetShort() { this.buff.setShort(2, 1000); return test.expect(this.buff.getShort(2), 1000); }
 
-	@Test(name = "(lang buffer) Buffer set unsigned short.")
+	@Test(name = "(lang Buffer) Buffer set unsigned short.")
 	public bufferSetUShort() { this.buff.setUShort(4, 1024); return test.expect(this.buff.getUShort(4), 1024); }
 
-	@Test(name = "(lang buffer) Buffer set int.")
+	@Test(name = "(lang Buffer) Buffer set int.")
 	public bufferSetInt() { this.buff.setInt(6, 123456); return test.expect(this.buff.getInt(6), 123456); }
 
-	@Test(name = "(lang buffer) Buffer set unsigned int.")
+	@Test(name = "(lang Buffer) Buffer set unsigned int.")
 	public bufferSetUInt() { this.buff.setUInt(10, 1234567); return test.expect(this.buff.getUInt(10), 1234567); }
 
-	@Test(name = "(lang buffer) Buffer set long.")
+	@Test(name = "(lang Buffer) Buffer set long.")
 	public bufferSetLong() { this.buff.setLong(14, 1234567890); return test.expect(this.buff.getLong(14), 1234567890); }
 
-	@Test(name = "(lang buffer) Buffer set float.")
+	@Test(name = "(lang Buffer) Buffer set float.")
 	public bufferSetFloat() { this.buff.setFloat(22, 123.456); return test.expect(math.round(this.buff.getFloat(22)), 123.0); }
 
-	@Test(name = "(lang buffer) Buffer set double.")
+	@Test(name = "(lang Buffer) Buffer set double.")
 	public bufferSetDouble() { this.buff.setDouble(26, 12345.12345); return test.expect(this.buff.getDouble(26), 12345.12345); }
 
-	@Test(name = "(lang buffer) Buffer copy from.")
-	public bufferCopyFrom() { tmp = new buffer(); tmp.copyFrom(0, this.buff, 0, 34); return test.expect(tmp.getDouble(26), 12345.12345); }
+	@Test(name = "(lang Buffer) Buffer copy from.")
+	public bufferCopyFrom() { tmp = new Buffer(); tmp.copyFrom(0, this.buff, 0, 34); return test.expect(tmp.getDouble(26), 12345.12345); }
 
-	@Test(name = "(lang buffer) Buffer copy to.")
-	public bufferCopyTo() { tmp = new buffer(); this.buff.copyTo(0, tmp, 0, 34); return test.expect(tmp.getDouble(26), 12345.12345); }
+	@Test(name = "(lang Buffer) Buffer copy to.")
+	public bufferCopyTo() { tmp = new Buffer(); this.buff.copyTo(0, tmp, 0, 34); return test.expect(tmp.getDouble(26), 12345.12345); }
 
-	@Test(name = "(lang buffer) Buffer byte to binary.")
+	@Test(name = "(lang Buffer) Buffer byte to binary.")
 	public bufferByteToBinary() { return test.expect(this.buff.byteToBinary(0), '00001010'); }
 
-	@Test(name = "(lang buffer) Buffer short to binary.")
+	@Test(name = "(lang Buffer) Buffer short to binary.")
 	public bufferShortToBinary() { return test.expect(this.buff.shortToBinary(2), '0000001111101000'); }
 
-	@Test(name = "(lang buffer) Buffer int to binary.")
+	@Test(name = "(lang Buffer) Buffer int to binary.")
 	public bufferIntToBinary() { return test.expect(this.buff.intToBinary(6), '00000000000000011110001001000000'); }
 
-	@Test(name = "(lang buffer) Buffer long to binary.")
+	@Test(name = "(lang Buffer) Buffer long to binary.")
 	public bufferLongToBinary() { return test.expect(this.buff.longToBinary(14), '0000000000000000000000000000000001001001100101100000001011010010'); }
 
-	@Test(name = "(lang buffer) Buffer float to binary.")
+	@Test(name = "(lang Buffer) Buffer float to binary.")
 	public bufferFloatToBinary() { return test.expect(this.buff.floatToBinary(22), '01000010111101101110100101111001'); }
 
-	@Test(name = "(lang buffer) Buffer double to binary.")
+	@Test(name = "(lang Buffer) Buffer double to binary.")
 	public bufferDoubleToBinary() { return test.expect(this.buff.doubleToBinary(26), '0100000011001000000111001000111111001101001101011010100001011000'); }
 
-	@Test(name = "(lang buffer) Buffer clearn.")
+	@Test(name = "(lang Buffer) Buffer clearn.")
 	public bufferClear() { this.buff.clear(); return test.expect(this.buff.getByte(0), 0); }
 	
 	/***********************************************************************
-	 * date tests
+	 * Date tests
 	 *********************************************************************/
-	@Test(name = "(lang date) Date instantiate.")
-	public dateInstantiate() { this.dt = new date(); return test.expectObject(this.dt, 'date'); }
+	@Test(name = "(lang Date) Date instantiate.")
+	public dateInstantiate() { this.dt = new Date(); return test.expectObject(this.dt, 'Date'); }
 
-	@Test(name = "(lang date) Date set hours.")
+	@Test(name = "(lang Date) Date set hours.")
 	public dateSetHours() { this.dt.setHours(1); return test.expect(this.dt.getHours(), 1); }
 
-	@Test(name = "(lang date) Date set minutes.")
+	@Test(name = "(lang Date) Date set minutes.")
 	public dateSetMinutes() { this.dt.setMinutes(30); return test.expect(this.dt.getMinutes(), 30); }
 
-	@Test(name = "(lang date) Date set seconds.")
+	@Test(name = "(lang Date) Date set seconds.")
 	public dateSetSeconds() { this.dt.setSeconds(30); return test.expect(this.dt.getSeconds(), 30); }
 
-	@Test(name = "(lang date) Date set time.")
+	@Test(name = "(lang Date) Date set time.")
 	public dateSetTime() { this.dt.setTime(3600); return test.expect(this.dt.getTime(), 3600); }
 
-	@Test(name = "(lang date) Date to string.")
+	@Test(name = "(lang Date) Date to string.")
 	public dateToString() { return test.expectString(this.dt.toString()); }
 
-	@Test(name = "(lang date) Date parse.")
-	public dateParse() { this.dt.parse("2014-12-31 23:59:59", "yyyy-MM-dd HH:mm:ss"); return test.expectObject(this.dt, 'date'); }
+	@Test(name = "(lang Date) Date parse.")
+	public dateParse() { this.dt.parse("2014-12-31 23:59:59", "yyyy-MM-dd HH:mm:ss"); return test.expectObject(this.dt, 'Date'); }
 
-	@Test(name = "(lang date) Date format.")
+	@Test(name = "(lang Date) Date format.")
 	public dateFormat() { return test.expect(this.dt.format("yyyy-MM-dd HH:mm:ss"), "2014-12-31 23:59:59"); }
 
-	@Test(name = "(lang date) Date is epoch.")
-	public dateIsEpoch() { this.dt = new date(0); return test.expect(this.dt.isEpoch(), true); }
+	@Test(name = "(lang Date) Date is epoch.")
+	public dateIsEpoch() { this.dt = new Date(0); return test.expect(this.dt.isEpoch(), true); }
 	
 	/***********************************************************************
 	 * security manager tests
@@ -1666,7 +1696,7 @@ class interpreterTests {
 	 *********************************************************************/
 	@Test(name = "(util hex) Encode/Decode hex value.")
 	public hexEncodeDecode() {
-	    buff = new buffer();
+	    buff = new Buffer();
 	    buff.addString("Aussom");
 	    encodedStr = hex.encode(buff);
 	    decodedBuff = hex.decode(encodedStr);
@@ -1675,7 +1705,7 @@ class interpreterTests {
 
     @Test(name = "(util base64) Encode/Decode base64 value.")
     public base64EncodeDecode() {
-        buff = new buffer();
+        buff = new Buffer();
         buff.addString("Aussom");
 	    encodedStr = base64.encode(buff);
 	    decodedBuff = base64.decode(encodedStr);
@@ -1684,7 +1714,7 @@ class interpreterTests {
 
     @Test(name = "(util base64) Encode/Decode raw base64 value.")
     public base64EncodeDecodeRaw() {
-        buff = new buffer();
+        buff = new Buffer();
         buff.addString("Aussom");
 	    encodedStr = base64.encodeRaw(buff);
 	    decodedBuff = base64.decodeRaw(encodedStr);

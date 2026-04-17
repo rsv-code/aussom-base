@@ -122,5 +122,10 @@ public class AussomRef extends AussomType implements AussomTypeInt {
 			return "cList@" + Integer.toHexString(System.identityHashCode(this));
 		}
 	}
-	
+
+	@Override
+	public String str(int Level) {
+		return this.str();
+	}
+
 }

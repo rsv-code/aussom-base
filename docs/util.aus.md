@@ -11,34 +11,34 @@ encoding and decoding.
 
 - **encode** (`object BufferObj`)
 
-	> Converts binary buffer object to base64 encoded hex string.
+	> Converts binary Buffer object to base64 encoded hex string.
 
-	- **@p** `BufferObj` is the binary buffer object to convert.
+	- **@p** `BufferObj` is the binary Buffer object to convert.
 	- **@r** `An` encoded string.
 
 
 - **encodeRaw** (`object BufferObj`)
 
-	> Converts binary buffer object to raw base64 encoded string.
+	> Converts binary Buffer object to raw base64 encoded string.
 
-	- **@p** `BufferObj` is the binary buffer object to convert.
+	- **@p** `BufferObj` is the binary Buffer object to convert.
 	- **@r** `An` encoded string.
 
 
 - **decode** (`string B64EncodedString`)
 
-	> Converts base64 encoded hex string to binary buffer object.
+	> Converts base64 encoded hex string to binary Buffer object.
 
 	- **@p** `B64EncodedString` is a base64 encoded string.
-	- **@r** `A` binary buffer object with the result.
+	- **@r** `A` binary Buffer object with the result.
 
 
 - **decodeRaw** (`string B64EncodedString`)
 
-	> Converts base64 encoded raw string to binary buffer object.
+	> Converts base64 encoded raw string to binary Buffer object.
 
 	- **@p** `B64EncodedString` is a base64 encoded string.
-	- **@r** `A` binary buffer object with the result.
+	- **@r** `A` binary Buffer object with the result.
 
 
 
@@ -79,18 +79,18 @@ encoding and decoding.
 
 - **encode** (`object BufferObj`)
 
-	> Converts binary buffer object to hex string.
+	> Converts binary Buffer object to hex string.
 
-	- **@p** `BufferObj` is a binary buffer object to convert.
+	- **@p** `BufferObj` is a binary Buffer object to convert.
 	- **@r** `A` hex encoded string.
 
 
 - **decode** (`string HexEncodedString`)
 
-	> Converts hex string to binary buffer object.
+	> Converts hex string to binary Buffer object.
 
 	- **@p** `HexEncodedString` is a string to encode.
-	- **@r** `A` binary buffer object with the decoded value.
+	- **@r** `A` binary Buffer object with the decoded value.
 
 
 

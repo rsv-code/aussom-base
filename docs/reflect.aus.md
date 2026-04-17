@@ -70,10 +70,10 @@ the runtime that may not be granted.
 
 - **getClassDef** (`string ClassName`)
 
-	> Gets the class definition for the provided class name. The return object is an instance of rclass, see it's definition for details.
+	> Gets the class definition for the provided class name. The return object is an instance of RClass, see it's definition for details.
 
 	- **@p** `ClassName` is a string with the class to get the definition of.
-	- **@r** `An` instance of rclass with the class definition.
+	- **@r** `An` instance of RClass with the class definition.
 
 
 - **instantiate** (`string ClassName`)
@@ -96,11 +96,11 @@ the runtime that may not be granted.
 
 
 
-## class: rclass
+## class: RClass
 
 [115:14] (extern: com.aussom.stdlib.AClass) **extends: object** 
 
-The rclass object is an object that is returned
+The RClass object is an object that is returned
 when calling reflect.getClassDef(). It provides a way
 to inspect the class definition.
 

@@ -55,7 +55,7 @@ public class ABase64 {
 			return new AussomString(ABase64.encode(cb.buff));
 		}
 		else
-			return new AussomException("base64.encode(): External object is null or not of type buffer.");
+			return new AussomException("base64.encode(): External object is null or not of type Buffer.");
 	}
 
 	public AussomType encodeRaw(Environment env, ArrayList<AussomType> args)
@@ -67,16 +67,16 @@ public class ABase64 {
 			return new AussomString(ABase64.encodeRaw(cb.buff));
 		}
 		else
-			return new AussomException("base64.encodeRaw(): External object is null or not of type buffer.");
+			return new AussomException("base64.encodeRaw(): External object is null or not of type Buffer.");
 	}
 
 	public AussomType decode(Environment env, ArrayList<AussomType> args)
 	{
 		String data = ((AussomString)args.get(0)).getValueString();
 		Engine eng = env.getEngine();
-		if(eng.getClasses().containsKey("buffer"))
+		if(eng.getClasses().containsKey("Buffer"))
 		{
-			astClass cls = eng.getClassByName("buffer");
+			astClass cls = eng.getClassByName("Buffer");
 			try
 			{
 				AussomList bargs = new AussomList();
@@ -88,20 +88,20 @@ public class ABase64 {
 			}
 			catch (Exception e)
 			{
-				return new AussomException("base64.decode(): Class 'buffer'.");
+				return new AussomException("base64.decode(): Class 'Buffer'.");
 			}
 		}
 		else
-			return new AussomException("base64.decode(): Class 'buffer' not found.");
+			return new AussomException("base64.decode(): Class 'Buffer' not found.");
 	}
 
 	public AussomType decodeRaw(Environment env, ArrayList<AussomType> args)
 	{
 		String data = ((AussomString)args.get(0)).getValueString();
 		Engine eng = env.getEngine();
-		if(eng.getClasses().containsKey("buffer"))
+		if(eng.getClasses().containsKey("Buffer"))
 		{
-			astClass cls = eng.getClassByName("buffer");
+			astClass cls = eng.getClassByName("Buffer");
 			try
 			{
 				AussomList bargs = new AussomList();
@@ -113,10 +113,10 @@ public class ABase64 {
 			}
 			catch (Exception e)
 			{
-				return new AussomException("base64.decodeRaw(): Class 'buffer'.");
+				return new AussomException("base64.decodeRaw(): Class 'Buffer'.");
 			}
 		}
 		else
-			return new AussomException("base64.decodeRaw(): Class 'buffer' not found.");
+			return new AussomException("base64.decodeRaw(): Class 'Buffer' not found.");
 	}
 }

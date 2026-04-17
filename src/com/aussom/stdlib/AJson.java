@@ -16,8 +16,15 @@
 
 package com.aussom.stdlib;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.TimeZone;
 
+import com.aussom.Engine;
+import com.aussom.ast.astClass;
+import com.aussom.types.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -25,15 +32,6 @@ import org.json.simple.parser.JSONParser;
 import com.aussom.Environment;
 import com.aussom.Universe;
 import com.aussom.ast.aussomException;
-import com.aussom.types.AussomBool;
-import com.aussom.types.AussomDouble;
-import com.aussom.types.AussomInt;
-import com.aussom.types.AussomList;
-import com.aussom.types.AussomMap;
-import com.aussom.types.AussomNull;
-import com.aussom.types.AussomObject;
-import com.aussom.types.AussomString;
-import com.aussom.types.AussomType;
 
 public class AJson {
 	public static AussomType parse(Environment env, ArrayList<AussomType> args) throws Exception {
@@ -192,6 +190,22 @@ public class AJson {
 					throw new aussomException("json.unpack(): Malformed JSON, missing value.");
 				}
 			}
+			// Date
+			else if (type.equals("Date")) {
+				if (obj.containsKey("value")) {
+					cobj = AJson.getJsonDate(env, obj, "value");
+				} else {
+					throw new aussomException("json.unpack(): Malformed JSON, missing value.");
+				}
+			}
+			// Buffer
+			else if (type.equals("Buffer")) {
+				if (obj.containsKey("value")) {
+					cobj = AJson.getJsonBuffer(env, obj, "value");
+				} else {
+					throw new aussomException("json.unpack(): Malformed JSON, missing value.");
+				}
+			}
 			// OBJECT
 			else if (env.getClassByName(type) != null) {
 				if (obj.containsKey("members")) {
@@ -246,6 +260,52 @@ public class AJson {
 			throw new aussomException("json.unpack(): Getting value for key '" + key + "'. Expecting object of type String but found '" + tobj.getClass().getName() + "' instead.");
 		}
 	}
+
+	private static AussomType getJsonDate(Environment env, JSONObject obj, String key) throws aussomException {
+		Object tobj = obj.get(key);
+		if (tobj instanceof String) {
+			astClass ac = env.getClassByName("Date");
+			if (ac != null) {
+				AussomObject co = (AussomObject) ac.instantiate(env, false, new AussomList());
+				ADate ad = (ADate) co.getExternObject();
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+				sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+				Date dt = null;
+				try {
+					dt = sdf.parse((String) tobj);
+				} catch (ParseException e) {
+					throw new aussomException("json.unpack(): Getting value for key '" + key + "'. Parse exception of String (ISO 8601) with value '" + (String) tobj + "'.");
+				}
+				ad.setTime(dt.getTime());
+				return co;
+			} else {
+				throw new aussomException("json.unpack():  Class 'Date' not found." );
+			}
+		} else {
+			throw new aussomException("json.unpack(): Getting value for key '" + key + "'. Expecting object of type String (ISO 8601) but found '" + tobj.getClass().getName() + "' instead.");
+		}
+	}
+
+	private static AussomType getJsonBuffer(Environment env, JSONObject obj, String key) throws aussomException {
+		Object tobj = obj.get(key);
+		if (tobj instanceof String) {
+			astClass ac = env.getClassByName("Buffer");
+			if (ac != null) {
+				AussomObject co = (AussomObject) ac.instantiate(env, false, new AussomList());
+				ABuffer ab = (ABuffer) co.getExternObject();
+				try {
+					ab.setBuffer(ABase64.decode((String) tobj));
+				} catch (Exception e) {
+					throw new aussomException("json.unpack(): Getting value for key '" + key + "'. Exception unpacking String (Base64 Encoded): " + e.getMessage());
+				}
+				return co;
+			} else {
+				throw new aussomException("json.unpack():  Class 'Buffer' not found." );
+			}
+        } else {
+			throw new aussomException("json.unpack(): Getting value for key '" + key + "'. Expecting object of type String (Base64 Encoded) but found '" + tobj.getClass().getName() + "' instead.");
+		}
+	}
 	
 	private static AussomList getJsonList(Environment env, JSONObject obj, String key) throws aussomException {
 		Object tobj = obj.get(key);
@@ -270,21 +330,26 @@ public class AJson {
 		Object tobj = obj.get("members");
 		if (tobj instanceof JSONObject) {
 			JSONObject jmemb = (JSONObject)tobj;
-			AussomObject co = env.getEngine().instantiateObject(type);
-			
-			for (String key : co.getMembers().getMap().keySet()) {
-				if (jmemb.containsKey(key)) {
-					if (jmemb.get(key) instanceof JSONObject) {
-						co.addMember(key, AJson.unpackJsonData(env, (JSONObject)jmemb.get(key)));
+
+			astClass ac = env.getClassByName(type);
+			if (ac != null) {
+				AussomObject co = (AussomObject) ac.instantiate(env, false, new AussomList());
+
+				for (String key : co.getMembers().getMap().keySet()) {
+					if (jmemb.containsKey(key)) {
+						if (jmemb.get(key) instanceof JSONObject) {
+							co.addMember(key, AJson.unpackJsonData(env, (JSONObject) jmemb.get(key)));
+						} else {
+							throw new aussomException("json.unpack(): Malformed JSON, expecting '" + key + "' to be a JSON object but found '" + tobj.getClass().getName() + "' instead.");
+						}
 					} else {
-						throw new aussomException("json.unpack(): Malformed JSON, expecting '" + key + "' to be a JSON object but found '" + tobj.getClass().getName() + "' instead.");
+						throw new aussomException("json.unpack(): Malformed JSON, object '" + type + "' missing member '" + key + "'.");
 					}
-				} else {
-					throw new aussomException("json.unpack(): Malformed JSON, object '" + type + "' missing member '" + key + "'.");
 				}
+				return co;
+			} else {
+				throw new aussomException("json.unpack(): Class '" + type + "' not found.");
 			}
-			
-			return co;
 		} else {
 			throw new aussomException("json.unpack(): Getting value for key 'members'. Expecting object of type JSONObject but found '" + tobj.getClass().getName() + "' instead.");
 		}

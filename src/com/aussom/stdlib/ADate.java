@@ -23,16 +23,13 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
-import com.aussom.types.AussomNull;
-import com.aussom.types.AussomString;
-import com.aussom.types.AussomType;
+import com.aussom.Util;
+import com.aussom.types.*;
 import com.aussom.Environment;
-import com.aussom.types.AussomBool;
-import com.aussom.types.AussomException;
-import com.aussom.types.AussomInt;
 
-public class ADate extends Date {
+public class ADate extends Date implements AussomTypeObjectInt, AussomTypeInt {
 	private static final long serialVersionUID = 1579993228939943395L;
 	
 	public ADate() { }
@@ -47,7 +44,11 @@ public class ADate extends Date {
 	
 	public AussomType newDate(Environment env, ArrayList<AussomType> args) {
 		if(!args.get(0).isNull()) {
-			this.setTime(((AussomInt)args.get(0)).getValue());
+			long mills = ((AussomInt)args.get(0)).getValue();
+			if (mills < 0) {
+				mills = (new Date()).getTime();
+			}
+			this.setTime(mills);
 		}
 		return env.getClassInstance();
 	}
@@ -129,5 +130,39 @@ public class ADate extends Date {
 		c.setTime(dt);
 		c.add(Calendar.DATE, numDays);
 		return c.getTime();
+	}
+
+	@Override
+	public AussomType toJson(Environment env, ArrayList<AussomType> args) {
+		return new AussomString(this.toString());
+	}
+
+	@Override
+	public AussomType pack(Environment env, ArrayList<AussomType> args) {
+		ArrayList<String> parts = new ArrayList<String>();
+		parts.add("\"type\":\"Date\"");
+		parts.add("\"value\":\"" + this.toString() + "\"");
+		return new AussomString("{" + Util.join(parts, ",") + "}");
+	}
+
+	@Override
+	public String toString() {
+		return this.toString(0);
+	}
+
+	@Override
+	public String toString(int Level) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+		sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+		return sdf.format(this);
+	}
+
+	@Override
+	public String str() {
+		return this.toString();
+	}
+
+	public String str(int Level) {
+		return "\"" + this.toString() + "\"";
 	}
 }

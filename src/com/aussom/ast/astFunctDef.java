@@ -315,7 +315,7 @@ public class astFunctDef extends astNode implements astNodeInt {
 								AussomDouble ad = new AussomDouble((double)((AussomInt)eargs.getValue().get(i)).getValue());
 								args.add(ad);
 							} else {
-								throw new aussomException(this, "Expecting type '" + v.getPrimType().name() + " but found type '" + eargs.getValue().get(i).getType().name() + "'.", env.stackTraceToString());
+								throw new aussomException(this, "Expecting type '" + v.getPrimType().name() + "' but found type '" + eargs.getValue().get(i).getType().name() + "'.", env.stackTraceToString());
 							}
 						} else {
 							args.add(this.argList.getArgs().get(i).eval(env));

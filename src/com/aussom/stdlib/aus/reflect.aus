@@ -81,10 +81,10 @@ static extern class reflect : com.aussom.stdlib.AReflect {
 	/**
 	 * Gets the class definition for the provided
 	 * class name. The return object is an instance of
-	 * rclass, see it's definition for details.
+	 * RClass, see it's definition for details.
 	 * @p ClassName is a string with the class to get
 	 * the definition of.
-	 * @r An instance of rclass with the class definition.
+	 * @r An instance of RClass with the class definition.
 	 */
 	public extern getClassDef(string ClassName);
 
@@ -108,11 +108,11 @@ static extern class reflect : com.aussom.stdlib.AReflect {
 }
 
 /**
- * The rclass object is an object that is returned
+ * The RClass object is an object that is returned
  * when calling reflect.getClassDef(). It provides a way
  * to inspect the class definition.
  */
-extern class rclass : com.aussom.stdlib.AClass {
+extern class RClass : com.aussom.stdlib.AClass {
 	/**
 	 * Gets the class name.
 	 * @r A string with the class name.
