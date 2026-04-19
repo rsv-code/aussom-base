@@ -183,7 +183,7 @@ public class Engine {
 						if (!this.includes.contains(Include)) {
 							console.get().trc("Engine.addInclude(): Include " + Include + " found in '" + fname + "'");
 							this.includes.add(tinc);
-							this.parseString(Include, Util.loadResource(tinc));
+							this.parseString(tinc, Util.loadResource(tinc));
 							return;
 						}
 					}
@@ -464,7 +464,7 @@ public class Engine {
 	 * @throws Exception on parse failure.
 	 */
 	public void parseString(String FileName, String Contents) throws Exception {
-		Lexer scanner = new Lexer(new StringReader(Contents));
+		Lexer scanner = new Lexer(new StringReader(Contents), FileName);
 		parser p = new parser(scanner, this, FileName, this.loadExternClasses);
 		p.parse();
 		this.fileNames.add(FileName);

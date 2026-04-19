@@ -35,6 +35,7 @@ import com.aussom.stdlib.console;
 
 %{
   StringBuffer string = new StringBuffer();
+  String fileName = "<unknown>";
 
   private Symbol symbol(int sym) {
     return new Symbol(sym, yyline+1, yycolumn+1);
@@ -45,9 +46,15 @@ import com.aussom.stdlib.console;
   }
   
   private void error(String message) {
-    console.get().err("Error at line "+(yyline+1)+", column "+(yycolumn+1)+" : "+message);
+    console.get().err(this.fileName + " [" + (yyline+1) + "]: Error at line "
+      + (yyline+1) + ", column " + (yycolumn+1) + " : " + message);
   }
-%} 
+
+  Lexer(java.io.Reader in, String FileName) {
+    this(in);
+    this.fileName = FileName;
+  }
+%}
 
 white_space 	= [ \t\f]
 /* number 			= "-"? ({white_space}*)? [0-9]+ ("." [0-9]+)? */
