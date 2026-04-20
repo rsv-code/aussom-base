@@ -146,6 +146,26 @@ public class Engine {
 		
 		this.initComplete = true;
 	}
+
+	/**
+	 * Adds a string to the main(args) function
+	 * args list.
+	 * @param MainArg is a String with the arg to add.
+	 */
+	public void addMainArg(String MainArg) {
+		this.mainFunctArgs.getValue().add(new AussomString(MainArg));
+	}
+
+	/**
+	 * Adds a list of strings to the main(args) function
+	 * args list.
+	 * @param MainArgs is a List of Strings with the args to add.
+	 */
+	public void addMainArgs(List<String> MainArgs) {
+		for (String arg : MainArgs) {
+			this.mainFunctArgs.getValue().add(new AussomString(arg));
+		}
+	}
 	
 	/**
 	 * Gets the instance of the security manager for this Engine.
