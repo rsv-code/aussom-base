@@ -63,28 +63,47 @@ public class astNewInst extends astNode implements astNodeInt {
 		AussomType ret = new AussomNull();
 		
 		if(env.getEngine().containsClass(this.getName())) {
-			AussomType targs = this.args.eval(env, getref);
+            AussomType targs = null;
+			targs = this.args.eval(env, getref);
 
-			if (targs.isEx()) {
-				throw new aussomException(this, "Exception while evaluating function arguments for new instance of '" + this.getName() + "'.", ((AussomException)targs).stackTraceToString());
+            if (targs.isEx()) {
+				return targs;
 			}
 
 			AussomList cargs = (AussomList) targs;
-			AussomObject cobj = (AussomObject) env.getEngine().getClassByName(this.getName()).instantiate(env, getref, cargs);
-			
-			if(cobj != null) {
-				ret = cobj;
+			astClass ac = env.getEngine().getClassByName(this.getName());
+			if (ac != null) {
+                AussomObject cobj = null;
+                try {
+                    cobj = (AussomObject) ac.instantiate(env, getref, cargs);
+                } catch (aussomException e) {
+					AussomException ex = new AussomException(AussomException.exType.exInternal);
+					ex.setException(this.getLineNum(), "INSTANTIATION_FAILURE", "Instantiation threw exception.", e.getAussomStackTrace());
+					return ex;
+                }
+
+                if (cobj != null) {
+					ret = cobj;
+				} else {
+					AussomException e = new AussomException(AussomException.exType.exInternal);
+					e.setException(this.getLineNum(), "INSTANTIATION_FAILURE", "Cannot instantiate object of type '" + this.getName() + "', instantiated object is null.", env.getCallStack().getStackTrace());
+					return e;
+				}
 			} else {
-				throw new aussomException(this, "Cannot instantiate object of type '" + this.getName() + "', class definition not found.", env.stackTraceToString());
+				AussomException e = new AussomException(AussomException.exType.exInternal);
+				e.setException(this.getLineNum(), "INSTANTIATION_FAILURE", "Cannot instantiate object of type '" + this.getName() + "', class definition not found.", env.getCallStack().getStackTrace());
+				return e;
 			}
 		} else {
-			throw new aussomException(this, "Cannot instantiate class '" + this.getName() + "'.", env.stackTraceToString());
+			AussomException e = new AussomException(AussomException.exType.exInternal);
+			e.setException(this.getLineNum(), "INSTANTIATION_FAILURE", "Cannot instantiate object of type '" + this.getName() + "', class definition not found in engine.", env.getCallStack().getStackTrace());
+			return e;
 		}
 		
 		if (this.getChild() != null) {
 			Environment tenv = env.clone(ret);
 			return this.getChild().eval(tenv, getref);
-		}
+        }
 		
 		return ret;
 	}

@@ -110,6 +110,19 @@ class dog {
 	public dog(string Breed) { this.breed = Breed; }
 }
 
+static class throwingHelper {
+    public boom() { throw "throwingHelper.boom()"; }
+}
+
+class needsArg {
+    public val = null;
+    public needsArg(X) { this.val = X; }
+}
+
+class childOfMissing : missingBaseClass {
+    public childOfMissing() { }
+}
+
 @Test(name = "Interpreter Tests")
 class interpreterTests {
 	// public member used for testing
@@ -784,6 +797,45 @@ class interpreterTests {
 	    return test.expect(thrown, true);
 	 }
 
+	 @Test(name = "(object operations) Constructor argument expression exception caught by surrounding try/catch.")
+	 public objectConstructorArgExceptionCaught() {
+	    thrown = false;
+	    try {
+	        // An expression evaluated for a 'new' argument throws.
+	        // The exception must be catchable by the surrounding try/catch.
+	        n = new needsArg(throwingHelper.boom());
+	    } catch (e) {
+	        thrown = true;
+	    }
+	    return test.expect(thrown, true);
+	 }
+
+	 @Test(name = "(object operations) Instantiating an unknown class caught by surrounding try/catch.")
+	 public objectInstantiateUnknownClassCaught() {
+	    thrown = false;
+	    try {
+	        // No class named 'thisClassDoesNotExist' exists. The instantiation
+	        // failure must be catchable by the surrounding try/catch.
+	        x = new thisClassDoesNotExist();
+	    } catch (e) {
+	        thrown = true;
+	    }
+	    return test.expect(thrown, true);
+	 }
+
+	 @Test(name = "(object operations) Inheriting from a missing base class caught by surrounding try/catch.")
+	 public objectInheritMissingBaseCaught() {
+	    thrown = false;
+	    try {
+	        // childOfMissing extends a base class that does not exist.
+	        // The class-init error must be catchable by the surrounding try/catch.
+	        x = new childOfMissing();
+	    } catch (e) {
+	        thrown = true;
+	    }
+	    return test.expect(thrown, true);
+	 }
+
 	 // access public/private
 	 @Test(name = "(object access) Member access for local variable public.")
 	 public objectAccessLocVarPub() { l = new atest(); ex = false; try { t = l.pub; } catch(e) { ex = true; } return test.expect(ex, false); }
@@ -971,6 +1023,46 @@ class interpreterTests {
         return test.expect(ret, "def");
 	 }
 
+	 @Test(name = "(switch) Switch case type mismatch caught by surrounding try/catch.")
+	 public switchTypeMismatchCaught() {
+	    thrown = false;
+	    try {
+	        // The switch value is an int but the cases are strings. The
+	        // type-mismatch error must be catchable by the surrounding
+	        // try/catch block.
+	        val = 5;
+	        switch (val) {
+	            case "one": { c.println("one"); }
+	            case "two": { c.println("two"); }
+	            default: { c.println("def"); }
+	        }
+	    } catch (e) {
+	        thrown = true;
+	    }
+	    return test.expect(thrown, true);
+	 }
+
+	 @Test(name = "(switch) Default body exception caught by surrounding try/catch.")
+	 public switchDefaultBodyExceptionCaught() {
+	    thrown = false;
+	    try {
+	        // A statement in the default block throws. The exception must
+	        // propagate out of the switch and be caught here, not silently
+	        // swallowed by the default-block iteration.
+	        x = "no_match";
+	        switch (x) {
+	            case "a": { c.println("a"); }
+	            default: {
+	                throwingHelper.boom();
+	                c.println("never");
+	            }
+	        }
+	    } catch (e) {
+	        thrown = true;
+	    }
+	    return test.expect(thrown, true);
+	 }
+
 	 /***********************************************************************
 	  * loop tests
 	  *********************************************************************/
@@ -998,7 +1090,70 @@ class interpreterTests {
 	        }
 	    }
 	 }
-	 
+
+	 @Test(name = "(foreach) Non-iterable target caught by surrounding try/catch.")
+	 public foreachNonIterableCaught() {
+	    thrown = false;
+	    try {
+	        // The foreach target is an int (not a list or map). The
+	        // type error must be catchable by the surrounding try/catch.
+	        for (item : 5) {
+	            c.println("never");
+	        }
+	    } catch (e) {
+	        thrown = true;
+	    }
+	    return test.expect(thrown, true);
+	 }
+
+	 @Test(name = "(for) C-style condition exception caught by surrounding try/catch.")
+	 public forConditionExceptionCaught() {
+	    thrown = false;
+	    try {
+	        // The condition expression of a C-style for loop throws.
+	        // The exception must be catchable by the surrounding try/catch.
+	        for (i = 0; throwingHelper.boom(); i++) {
+	            c.println("never");
+	        }
+	    } catch (e) {
+	        thrown = true;
+	    }
+	    return test.expect(thrown, true);
+	 }
+
+	 @Test(name = "(while) Condition exception caught by surrounding try/catch.")
+	 public whileConditionExceptionCaught() {
+	    thrown = false;
+	    try {
+	        // The condition expression of a while loop throws. The
+	        // exception must be catchable by the surrounding try/catch.
+	        while (throwingHelper.boom()) {
+	            c.println("never");
+	        }
+	    } catch (e) {
+	        thrown = true;
+	    }
+	    return test.expect(thrown, true);
+	 }
+
+	 @Test(name = "(while) Body exception caught by surrounding try/catch.")
+	 public whileBodyExceptionCaught() {
+	    thrown = false;
+	    try {
+	        // A statement in the while body throws. The exception must
+	        // propagate out of the loop and be caught here, not silently
+	        // swallowed by the loop iteration.
+	        i = 0;
+	        while (i < 1) {
+	            throwingHelper.boom();
+	            i = i + 1;
+	        }
+	    } catch (e) {
+	        thrown = true;
+	    }
+	    return test.expect(thrown, true);
+	 }
+
 	 /***********************************************************************
 	  * lang tests
 	  *********************************************************************/

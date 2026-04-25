@@ -20,6 +20,7 @@ import java.util.ArrayList;
 
 import com.aussom.Environment;
 import com.aussom.types.AussomBool;
+import com.aussom.types.AussomException;
 import com.aussom.types.AussomNull;
 import com.aussom.types.AussomType;
 
@@ -75,27 +76,33 @@ public class astSwitch extends astNode implements astNodeInt {
 	@Override
 	public AussomType evalImpl(Environment env, boolean getref) throws aussomException {
 		AussomType ret = new AussomNull();
-		AussomType tmp = this.expr.eval(env, getref);
+		AussomType tmp;
+		tmp = this.expr.eval(env, getref);
+
 		boolean found = false;
 		// Else If Blocks
 		for(int i = 0; (i < this.caseConditions.size())&&(!found); i++) {
 			astConditionBlock acb = (astConditionBlock)this.caseConditions.get(i);
+
 			AussomType etemp = acb.getExpression().eval(env, getref);
-			if(tmp.getType() == etemp.getType()) {
+			if (tmp.getType() == etemp.getType()) {
 				AussomBool res = tmp.compareEqual(env, etemp);
-				if(res.getValue()) {
+				if (res.getValue()) {
 					ret = acb.eval(env, getref);
 					found = true;
 					break;
 				}
 			} else {
-				throw new aussomException(acb, "Switch statement expecting type '" + tmp.getType().name() + " but found type '" + etemp.getType().name() + "'.", env.stackTraceToString());
+				AussomException ex = new AussomException(AussomException.exType.exRuntime);
+				ex.setException(this.getLineNum(), "SWITCH_TYPE_EXCEPTION", "Switch statement expecting type '" + tmp.getType().name() + " but found type '" + etemp.getType().name() + "'.", env.getCallStack().getStackTrace());
+				return ex;
 			}
 		}
 		// Else block
 		if(!found) {
 			for(astNode inst : this.defaultList.getStatements()) {
 				ret = inst.eval(env, getref);
+
 				if(astNode.isBreakReturnEvent(ret))
 					break;
 			}

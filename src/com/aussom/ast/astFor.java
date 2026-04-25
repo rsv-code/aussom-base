@@ -17,13 +17,7 @@
 package com.aussom.ast;
 
 import com.aussom.Environment;
-import com.aussom.types.AussomBool;
-import com.aussom.types.AussomList;
-import com.aussom.types.AussomMap;
-import com.aussom.types.AussomNull;
-import com.aussom.types.AussomString;
-import com.aussom.types.AussomType;
-import com.aussom.types.cType;
+import com.aussom.types.*;
 
 public class astFor extends astNode implements astNodeInt {
 	private astNode exprInit = null;
@@ -123,7 +117,9 @@ public class astFor extends astNode implements astNodeInt {
 			}
 		}
 		else {
-			throw new aussomException(this, "For loop expecting of type LIST or MAP, found '" + titems.getType().name() + "' instead.", env.stackTraceToString());
+			AussomException ex = new AussomException(AussomException.exType.exRuntime);
+			ex.setException(this.getLineNum(), "FOR_EXCEPTION", "For loop expecting of type LIST or MAP, found '" + titems.getType().name() + "' instead.", env.getCallStack().getStackTrace());
+			return ex;
 		}
 		
 		return ret;
