@@ -133,6 +133,7 @@ public class astFor extends astNode implements astNodeInt {
 		AussomType einit = this.exprInit.eval(env, getref);
 		
 		AussomType etmp = this.exprCond.eval(env, getref);
+		if (etmp.isEx()) return etmp;
 		AussomBool cond = etmp.evalExpressionBool();
 		while(cond.getValue()) {
 			for(astNode inst : this.instructions.getStatements()) {
@@ -140,7 +141,7 @@ public class astFor extends astNode implements astNodeInt {
 				if(astNode.isBreakReturnExcept(ret))
 					break;
 			}
-			
+
 			if(astNode.isBreakReturnExcept(ret)) {
 				if (!ret.isEx() && astNode.isBreakEvent(ret))
 					ret = new AussomNull();
@@ -149,9 +150,10 @@ public class astFor extends astNode implements astNodeInt {
 				// Increment step
 				@SuppressWarnings("unused")
 				AussomType einc = this.exprInc.eval(env, getref);
-				
+
 				// Recheck condition
 				etmp = this.exprCond.eval(env, getref);
+				if (etmp.isEx()) return etmp;
 				cond = etmp.evalExpressionBool();
 			}
 		}

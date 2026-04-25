@@ -103,7 +103,7 @@ public class astSwitch extends astNode implements astNodeInt {
 			for(astNode inst : this.defaultList.getStatements()) {
 				ret = inst.eval(env, getref);
 
-				if(astNode.isBreakReturnEvent(ret))
+				if(astNode.isBreakReturnExcept(ret))
 					break;
 			}
 		}

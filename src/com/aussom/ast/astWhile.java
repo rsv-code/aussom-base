@@ -62,19 +62,21 @@ public class astWhile extends astNode implements astNodeInt
 	public AussomType evalImpl(Environment env, boolean getref) throws aussomException {
 		AussomType ret = new AussomNull();
 		AussomType etemp = this.expr.eval(env, getref);
+		if (etemp.isEx()) return etemp;
 		AussomBool tmp = etemp.evalExpressionBool();
 		while(tmp.getValue()) {
 			for(astNode inst : this.instructions.getStatements()) {
 				ret = inst.eval(env, getref);
-				if(astNode.isBreakReturnEvent(ret))
+				if(astNode.isBreakReturnExcept(ret))
 					break;
 			}
-			if(astNode.isBreakReturnEvent(ret)) {
-				if (astNode.isBreakEvent(ret))
+			if(astNode.isBreakReturnExcept(ret)) {
+				if (!ret.isEx() && astNode.isBreakEvent(ret))
 					ret = new AussomNull();
 				break;
 			} else {
 				etemp = this.expr.eval(env, getref);
+				if (etemp.isEx()) return etemp;
 				tmp = etemp.evalExpressionBool();
 			}
 		}
