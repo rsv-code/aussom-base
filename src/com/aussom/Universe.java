@@ -42,7 +42,7 @@ public class Universe {
 	/**
 	 * Defines the Aussom version.
 	 */
-	private static final String version = "1.1.14";
+	private static final String version = "1.1.15";
 	
 	/**
 	 * Map of class definitions. This is used to hold the base lang clases. It allows 
