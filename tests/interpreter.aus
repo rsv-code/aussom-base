@@ -770,6 +770,20 @@ class interpreterTests {
         }
 	 }
 
+	 @Test(name = "(object operations) Constructor exception caught by surrounding try/catch.")
+	 public objectConstructorExceptionCaught() {
+	    thrown = false;
+	    try {
+	        // The Date(int Mills) constructor delegates to an extern call
+	        // that fails when given a non-int. The thrown exception must
+	        // be caught by this surrounding try/catch.
+	        d = new Date("not_a_date");
+	    } catch (e) {
+	        thrown = true;
+	    }
+	    return test.expect(thrown, true);
+	 }
+
 	 // access public/private
 	 @Test(name = "(object access) Member access for local variable public.")
 	 public objectAccessLocVarPub() { l = new atest(); ex = false; try { t = l.pub; } catch(e) { ex = true; } return test.expect(ex, false); }

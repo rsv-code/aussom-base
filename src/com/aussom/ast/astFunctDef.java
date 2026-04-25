@@ -217,7 +217,15 @@ public class astFunctDef extends astNode implements astNodeInt {
 		Object o = callingObj.getExternObject();
 		
 		if(o != null) {
-			ArrayList<AussomType> fargs = this.getExternArgs(env, args);
+			ArrayList<AussomType> fargs = null;
+			try {
+				fargs = this.getExternArgs(env, args);
+			} catch (aussomException e) {
+				AussomException ex = new AussomException(exType.exRuntime);
+				ex.setException(this.getLineNum(), "EXTERN_ARGS_EXCEPTION", "Exception while getting args: '" + this.getName() + "'.", env.getCallStack().getStackTrace());
+				return ex;
+			}
+
 			try {
 				Class<?> aclass = callingObj.getClassDef().getExternClass();
 				if (aclass == null) {
