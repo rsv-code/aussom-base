@@ -190,7 +190,7 @@ public class Engine {
 			if (!this.includes.contains(Include)) {
 				console.get().trc("Engine.addInclude(): Adding langInclude: " + Include);
 				this.includes.add(Include);
-				this.parseString(Include, Lang.get().getLangIncludes().get(Include));
+				this.parseString("/com/aussom/stdlib/aus/" + Include, Lang.get().getLangIncludes().get(Include));
 			}
 		} else {
 			console.get().trc("Engine.addInclude(): Attempting to find in resourceIncludePaths ...");
