@@ -3459,7 +3459,7 @@ class CUP$parser$actions {
 		astObj aobj = new astObj();
 		aobj.setParserInfo(this.parser.fileName, erleft, erright);
 		aobj.setIndex(er);
-		ie.setChild(aobj);
+		ie.appendChild(aobj);
 		RESULT = ie;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("indexExp",32, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-3)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -3477,7 +3477,7 @@ class CUP$parser$actions {
 		int erright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
-		ie.setChild(er);
+		ie.appendChild(er);
 		RESULT = ie;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("indexExp",32, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);

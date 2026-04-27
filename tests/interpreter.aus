@@ -946,6 +946,37 @@ class interpreterTests {
 	 @Test(name = "(object access) Method access for member variable by index expression.")
 	 public objectAccessMemVarIndexExp() { this.obj = new cont(); fname = 'pub'; ex = false; try { t = this.obj.c[fname]; }  catch(e) { ex = true; } return test.expect(ex, false); }
 
+	 // Chained bracket access (3+ steps must navigate every link in the chain)
+	 @Test(name = "(index access) Three bracket chain on map of list of map.")
+	 public indexThreeBracketsMapListMap() {
+	     r = { "rows": [ { "firstName": "Alice" } ] };
+	     return test.expect(r["rows"][0]["firstName"], "Alice");
+	 }
+
+	 @Test(name = "(index access) Three bracket chain on map of list of list.")
+	 public indexThreeBracketsMapListList() {
+	     r = { "rows": [ [ "Alice", "Anderson" ] ] };
+	     return test.expect(r["rows"][0][1], "Anderson");
+	 }
+
+	 @Test(name = "(index access) Three bracket chain on map of list of list returning first.")
+	 public indexThreeBracketsMapListListFirst() {
+	     r = { "rows": [ [ "Alice", "Anderson" ] ] };
+	     return test.expect(r["rows"][0][0], "Alice");
+	 }
+
+	 @Test(name = "(index access) Bracket chain ending in dot on map of list of map.")
+	 public indexBracketEndDotMapListMap() {
+	     r = { "rows": [ { "firstName": "Alice" } ] };
+	     return test.expect(r["rows"][0].firstName, "Alice");
+	 }
+
+	 @Test(name = "(index access) Four bracket chain on nested map list map.")
+	 public indexFourBracketsDeep() {
+	     r = { "a": { "b": [ { "c": "deep" } ] } };
+	     return test.expect(r["a"]["b"][0]["c"], "deep");
+	 }
+
 
 	 /***********************************************************************
       * enum tests

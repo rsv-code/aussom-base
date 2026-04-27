@@ -931,17 +931,17 @@ indexExp ::=
 		aobj.setIndex(er);
 		RESULT = aobj;
 	:}
-|	indexExp:ie LBRACE expression:er RBRACE 
+|	indexExp:ie LBRACE expression:er RBRACE
 	{:
 		astObj aobj = new astObj();
 		aobj.setParserInfo(this.parser.fileName, erleft, erright);
 		aobj.setIndex(er);
-		ie.setChild(aobj);
+		ie.appendChild(aobj);
 		RESULT = ie;
 	:}
 |	indexExp:ie DOT expression:er
 	{:
-		ie.setChild(er);
+		ie.appendChild(er);
 		RESULT = ie;
 	:}
 ;

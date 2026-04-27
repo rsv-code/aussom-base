@@ -112,9 +112,17 @@ public class astNode {
 	public void setChild(astNode Child) {
 		this.child = Child;
 	}
-	
+
 	public astNode getChild() {
 		return this.child;
+	}
+
+	public void appendChild(astNode Child) {
+		astNode cur = this;
+		while (cur.getChild() != null) {
+			cur = cur.getChild();
+		}
+		cur.setChild(Child);
 	}
 	
 	public void setParserInfo(String FileName, int LineNum, int ColNum) {
