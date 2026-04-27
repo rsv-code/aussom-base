@@ -1526,6 +1526,35 @@ class interpreterTests {
 
 	@Test(name = "(lang string) String to JSON.")
 	public stringToJson() { return test.expect("Tyler Durdon".toJson(), "\"Tyler Durdon\""); }
+
+	// Unicode \uXXXX escape in string literals. The lexer should decode
+	// \uXXXX to the matching code point in all string forms. Without the
+	// fix the backslash is silently dropped and the literal "u" plus the
+	// hex digits stay in the string -- so length and equality assertions
+	// against the expected decoded form will fail.
+	@Test(name = "(string escape) Unicode \u0041 in double-quote string -> 'A'.")
+	public stringEscapeUnicodeDouble() { return test.expect("\u0041", "A"); }
+
+	@Test(name = "(string escape) Unicode \u0061 in double-quote string -> 'a'.")
+	public stringEscapeUnicodeDoubleLower() { return test.expect("\u0061", "a"); }
+
+	@Test(name = "(string escape) Unicode \u0041 in single-quote string -> 'A'.")
+	public stringEscapeUnicodeSingle() { return test.expect('\u0041', "A"); }
+
+	@Test(name = "(string escape) Unicode \u0041 in triple-quote string -> 'A'.")
+	public stringEscapeUnicodeTriple() { return test.expect("""\u0041""", "A"); }
+
+	@Test(name = "(string escape) Multiple unicode escapes -> 'ABC'.")
+	public stringEscapeUnicodeMultiple() { return test.expect("\u0041\u0042\u0043", "ABC"); }
+
+	@Test(name = "(string escape) Unicode escape mid-string -> length 4.")
+	public stringEscapeUnicodeMidLen() { return test.expect(#"caf\u00e9", 4); }
+
+	@Test(name = "(string escape) Unicode \u2022 (bullet) length 1.")
+	public stringEscapeUnicodeBulletLen() { return test.expect(#"\u2022", 1); }
+
+	@Test(name = "(string escape) Unicode escape with surrounding text -> 'Hi!'.")
+	public stringEscapeUnicodeSurround() { return test.expect("H\u0069!", "Hi!"); }
 	
 	/***********************************************************************
 	 * list tests

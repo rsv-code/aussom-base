@@ -198,40 +198,43 @@ new_line 		= \r\n;
 	\n						{ string.append('\n'); }
 	\r						{ string.append('\r'); }
 	\\\\					{ string.append("\\"); }
+	\\u[0-9a-fA-F]{4}		{ string.append((char)Integer.parseInt(yytext().substring(2), 16)); }
 	.						{ string.append( yytext() ); }
 }
 
 <STRING>
 {
 	\"						{
-								yybegin(YYINITIAL); 
-								return symbol(sym.STRING, 
-								string.toString()); 
+								yybegin(YYINITIAL);
+								return symbol(sym.STRING,
+								string.toString());
 							}
 	[^\n\r\"\\]+			{ string.append( yytext() ); }
 	[\t\r\n]+				{ /* Do nothing. */ }
 	\\t						{ string.append('\t'); }
 	\\n						{ string.append('\n'); }
-	
+
 	\\r						{ string.append('\r'); }
 	\\\"					{ string.append('\"'); }
 	\\\\					{ string.append("\\"); }
+	\\u[0-9a-fA-F]{4}		{ string.append((char)Integer.parseInt(yytext().substring(2), 16)); }
 }
 
 <STRING_LIT>
 {
 	\'						{
-								yybegin(YYINITIAL); 
-								return symbol(sym.STRING, string.toString()); 
+								yybegin(YYINITIAL);
+								return symbol(sym.STRING, string.toString());
 							}
 	[^\n\r\'\\]+			{ string.append( yytext() ); }
 	[\t\r\n]+				{ /* Do nothing. */ }
 	\\t						{ string.append('\t'); }
 	\\n						{ string.append('\n'); }
-	
+
 	\\r						{ string.append('\r'); }
 	\\\'					{ string.append('\''); }
 	\\\\					{ string.append("\\"); }
+	\\u[0-9a-fA-F]{4}		{ string.append((char)Integer.parseInt(yytext().substring(2), 16)); }
 }
 
 <AUSSOM_DOC>
