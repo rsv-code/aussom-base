@@ -336,6 +336,24 @@ class interpreterTests {
 
 	 @Test(name = "(- operator) Double minus double.")
 	 public operDoubleMinusDouble() { var = 2.0 - 1.0; return test.expect(var, 1.0); }
+	 // Chained additive (left-associative)
+	 @Test(name = "(- operator) Int minus int minus int.")
+	 public operIntMinusIntMinusInt() { var = 10 - 5 - 3; return test.expect(var, 2); }
+
+	 @Test(name = "(- + operator) Int minus int plus int.")
+	 public operIntMinusIntPlusInt() { var = 10 - 5 + 3; return test.expect(var, 8); }
+
+	 @Test(name = "(- + - operator) Int minus int plus int minus int.")
+	 public operIntMinusIntPlusIntMinusInt() { var = 10 - 5 + 3 - 2; return test.expect(var, 6); }
+
+	 @Test(name = "(- + - + operator) Int minus int plus int minus int plus int.")
+	 public operIntMinusIntPlusIntMinusIntPlusInt() { var = 20 - 5 + 4 - 3 + 2; return test.expect(var, 18); }
+
+	 @Test(name = "(- - operator) Double minus double minus double.")
+	 public operDoubleMinusDoubleMinusDouble() { var = 10.0 - 5.0 - 3.0; return test.expect(var, 2.0); }
+
+	 @Test(name = "(- + - operator) Double minus double plus double minus double.")
+	 public operDoubleMinusDoublePlusDoubleMinusDouble() { var = 10.5 - 5.25 + 3.0 - 2.25; return test.expect(var, 6.0); }
 	 // Numeric *
 	 @Test(name = "(* operator) Bool times bool.")
 	 public operBoolTimesBool() { var = true * true; return test.expect(var, 1); }
@@ -390,6 +408,15 @@ class interpreterTests {
 
 	 @Test(name = "(/ operator) Double divide double.")
 	 public operDoubleDivideDouble() { var = 2.0 / 2.0; return test.expect(var, 1.0); }
+	 // Chained multiplicative (left-associative)
+	 @Test(name = "(/ operator) Int divide int divide int.")
+	 public operIntDivideIntDivideInt() { var = 12 / 6 / 2; return test.expect(var, 1.0); }
+
+	 @Test(name = "(/ * operator) Int divide int times int.")
+	 public operIntDivideIntTimesInt() { var = 12 / 6 * 2; return test.expect(var, 4.0); }
+
+	 @Test(name = "(/ operator) Double divide double divide double.")
+	 public operDoubleDivideDoubleDivideDouble() { var = 12.0 / 6.0 / 2.0; return test.expect(var, 1.0); }
 	 // Numeric %
 	 @Test(name = "(% operator) Bool modulus bool.")
 	 public operBoolModulusBool() { var = true % true; return test.expect(var, 0.0); }
@@ -417,6 +444,9 @@ class interpreterTests {
 
 	 @Test(name = "(% operator) Double modulus double.")
 	 public operDoubleModulusDouble() { var = 2.0 % 2.0; return test.expect(var, 0.0); }
+	 // Chained modulus (left-associative)
+	 @Test(name = "(% operator) Int modulus int modulus int.")
+	 public operIntModulusIntModulusInt() { var = 100 % 30 % 7; return test.expect(var, 3.0); }
 	 // Count #
 	 @Test(name = "(# operator) Local list count.")
 	 public operLocalListCount() { var = []; var @= "Tyler"; return test.expect(#var - 1, 0); }
@@ -454,6 +484,14 @@ class interpreterTests {
 	    }
 	    return test.expect(thrown, true);
 	 }
+     // Equals == (chained, left-associative)
+     @Test(name = "(== operator) Int equals int equals int.")
+     public operIntEqualsIntEqualsInt() { var = 1 == 2 == 0; return test.expect(var, true); }
+
+     // Not equals != (chained, left-associative)
+     @Test(name = "(!= operator) Int not equals int not equals int.")
+     public operIntNotEqualsIntNotEqualsInt() { var = 1 != 2 != 0; return test.expect(var, true); }
+
      // Greater than >
      @Test(name = "(> operator) Greater than bool vals.")
      public operGreaterThanBool() { return test.expect(true > false, true); }
@@ -463,6 +501,9 @@ class interpreterTests {
 
      @Test(name = "(> operator) Greater than double vals.")
      public operGreaterThanDouble() { return test.expect(3.14157 > 1.2345, true); }
+
+     @Test(name = "(> operator) Greater than int greater than int.")
+     public operGreaterThanIntGreaterThanInt() { var = 3 > 2 > 1; return test.expect(var, false); }
 
      // Less than <
      @Test(name = "(< operator) Less than bool vals.")
@@ -474,6 +515,9 @@ class interpreterTests {
      @Test(name = "(< operator) Less than double vals.")
      public operLessThanDouble() { return test.expect(3.14157 < 1.2345, false); }
 
+     @Test(name = "(< operator) Less than int less than int.")
+     public operLessThanIntLessThanInt() { var = 1 < 2 < 3; return test.expect(var, true); }
+
      // Greater than equal >=
      @Test(name = "(>= operator) Greater than equal to bool vals.")
      public operGreaterThanEqualToBool() { return test.expect(true >= false, true); }
@@ -484,6 +528,9 @@ class interpreterTests {
      @Test(name = "(>= operator) Greater than equal to double vals.")
      public operGreaterThanEqualToDouble() { return test.expect(3.14157 >= 1.2345, true); }
 
+     @Test(name = "(>= operator) Greater than equal int greater than equal int.")
+     public operGreaterThanEqualToIntGreaterThanEqualToInt() { var = 2 >= 1 >= 5; return test.expect(var, false); }
+
      // Less than equal <=
      @Test(name = "(<= operator) Less than equal to bool vals.")
      public operLessThanEqualToBool() { return test.expect(true <= false, false); }
@@ -493,6 +540,9 @@ class interpreterTests {
 
      @Test(name = "(<= operator) Less than equal to double vals.")
      public operLessThanEqualToDouble() { return test.expect(3.14157 <= 1.2345, false); }
+
+     @Test(name = "(<= operator) Less than equal int less than equal int.")
+     public operLessThanEqualToIntLessThanEqualToInt() { var = 5 <= 5 <= 1; return test.expect(var, true); }
 
 	 @Test(name = "(&& operator) Both true.")
 	 public operAndTrueTrue() { return test.expect(true && true, true); }
