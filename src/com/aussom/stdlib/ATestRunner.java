@@ -169,7 +169,8 @@ public class ATestRunner {
                 if (this.tenv.getCurObj() == null)
                     this.tenv.setCurObj(tci);
 
-                astNode af = cls.getFunct(functName);
+                // Test methods are zero-arg by convention.
+                astNode af = cls.getFunct(functName, "");
                 if (af != null) {
                     astAnnotation functAnn = af.getAnnotation("Test");
                     if (functAnn != null) {

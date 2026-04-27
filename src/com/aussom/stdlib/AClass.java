@@ -77,54 +77,64 @@ public class AClass {
 	}
 	
 	public AussomType getMethods(Environment env, ArrayList<AussomType> args) throws aussomException {
+		// Returns map[name -> list of overload records]. Each record
+		// describes one declared overload (signature, args,
+		// annotations, extern flag). With overloading by signature
+		// a single name can map to multiple records.
 		AussomMap map = new AussomMap();
-		
-		for(String mname : this.classDef.getFuncts().keySet()) {
-			astFunctDef afd = (astFunctDef) this.classDef.getFunct(mname);
+
+		for (astFunctDef afd : this.classDef.getAllFunctions()) {
+			String mname = afd.getName();
 			AussomMap fm = new AussomMap();
 			fm.put("isExtern", new AussomBool(afd.getExtern()));
+			fm.put("signature", new AussomString(afd.getSignature()));
 
 			// Set annotations
 			AussomList annlist = new AussomList();
 			List<astAnnotation> annotationList = afd.getAnnotations();
-			for  (astAnnotation annotation : annotationList) {
+			for (astAnnotation annotation : annotationList) {
 				annlist.getValue().add(annotation.getAussomType());
 			}
 			fm.put("annotations", annlist);
 
 			AussomList alist = new AussomList();
-			for(astNode tn : afd.getArgList().getArgs()) {
+			for (astNode tn : afd.getArgList().getArgs()) {
 				AussomMap am = new AussomMap();
-				
-				if(tn.getType() == astNodeType.ETCETERA) {
+
+				if (tn.getType() == astNodeType.ETCETERA) {
 					am.put("name", new AussomString("..."));
 				} else {
 					am.put("name", new AussomString(tn.getName()));
-					
-					
-					
+
 					String primType = "";
-					if(tn.getPrimType() != cType.cUndef) {
+					if (tn.getPrimType() != cType.cUndef) {
 						primType = tn.getPrimType().name().toLowerCase().substring(1);
 					}
 					am.put("requiredType", new AussomString(primType));
-					
+
 					if (tn.getType() == astNodeType.VAR) {
 						am.put("hasDefaultValue", new AussomBool(false));
 					} else {
 						am.put("hasDefaultValue", new AussomBool(true));
 						AussomType defVal = tn.eval(env);
 						am.put("defaultValueType", new AussomString(defVal.getType().name().toLowerCase().substring(1)));
-						am.put("defaultValue", new AussomString(((AussomTypeInt)defVal).str()));
+						am.put("defaultValue", new AussomString(((AussomTypeInt) defVal).str()));
 					}
 				}
-				
+
 				alist.add(am);
 			}
 			fm.put("arguments", alist);
-			map.put(mname, fm);
+
+			if (map.contains(mname)) {
+				((AussomList) map.getValue().get(mname)).add(fm);
+			} else {
+				AussomList overloads = new AussomList();
+				overloads.add(fm);
+				map.put(mname, overloads);
+			}
 		}
-		
+
 		return map;
 	}
 }

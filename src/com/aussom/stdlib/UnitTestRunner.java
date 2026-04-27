@@ -188,7 +188,7 @@ public class UnitTestRunner extends Engine {
 
                 try {
 
-                    astNode af = cls.getFunct(test.getFunctionName());
+                    astNode af = cls.getFunct(test.getFunctionName(), "");
                     astAnnotation functAnn = af.getAnnotation("Test");
                 } catch (Exception e) {
                     result.failed++;
@@ -233,15 +233,12 @@ public class UnitTestRunner extends Engine {
 
     public int runFunction(UnitTestClass testClass, Environment tenv, astClass cls, String functName) throws aussomException {
         /*
-         * Main is expecting a list of args, but the function is expecting
-         * a list as well, so list inside of list.
+         * @Test, @Before, and @After test methods are zero-arg by
+         * convention; pass an empty argument list so the
+         * dispatcher resolves to the zero-arg overload.
          */
         AussomList margs = new AussomList();
-        margs.add(new AussomList(false));
 
-        /*
-         * Call the function.
-         */
         AussomType ret = new AussomNull();
         ret = cls.call(tenv, false, functName, margs);
         if(ret.isEx()) {

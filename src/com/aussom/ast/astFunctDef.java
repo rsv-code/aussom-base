@@ -64,6 +64,132 @@ public class astFunctDef extends astNode implements astNodeInt {
 		return this.isExtern;
 	}
 
+	/**
+	 * Maps a cType to its single-character mangle tag used for
+	 * overload signatures. cUndef becomes '*' (wildcard).
+	 */
+	public static char mangleChar(cType t) {
+		if (t == null) return '*';
+		switch (t) {
+			case cBool: return 'b';
+			case cInt: return 'i';
+			case cDouble: return 'd';
+			case cString: return 's';
+			case cList: return 'l';
+			case cMap: return 'm';
+			case cObject: return 'o';
+			case cCallback: return 'c';
+			case cNull: return 'n';
+			case cUndef:
+			default: return '*';
+		}
+	}
+
+	/**
+	 * Maps an arg-list AST node to the cType it accepts for
+	 * dispatch matching. Untyped `var` slots return cUndef
+	 * (wildcard). Literal-default args (`x = 5`) report the
+	 * literal's type. A slot with a null default but no declared
+	 * type (`x = null`) returns cUndef — the runtime does not
+	 * enforce a type at that slot, so it behaves as a wildcard.
+	 * ETCETERA returns cUndef here; callers check
+	 * astNodeType.ETCETERA separately.
+	 */
+	public static cType effectiveArgType(astNode arg) {
+		astNodeType nt = arg.getType();
+		if (nt == astNodeType.ETCETERA) return cType.cUndef;
+		cType pt = arg.getPrimType();
+		if (pt != null && pt != cType.cUndef) return pt;
+		switch (nt) {
+			case BOOL: return cType.cBool;
+			case INT: return cType.cInt;
+			case DOUBLE: return cType.cDouble;
+			case STRING: return cType.cString;
+			case LIST: return cType.cList;
+			case MAP: return cType.cMap;
+			case NULL: return cType.cUndef; // permissive: null-default + no type = wildcard
+			case OBJ: return cType.cObject;
+			case VAR:
+			default: return cType.cUndef;
+		}
+	}
+
+	/**
+	 * Returns the mangled signature for this definition. Examples:
+	 * "" for f(), "i,i" for f(int,int), "s,..." for f(string,...),
+	 * "*" for f(x), "i,*" for f(int x, var y).
+	 */
+	public String getSignature() {
+		StringBuilder sb = new StringBuilder();
+		List<astNode> as = (this.argList != null) ? this.argList.getArgs() : null;
+		if (as == null || as.isEmpty()) return "";
+		for (int i = 0; i < as.size(); i++) {
+			astNode arg = as.get(i);
+			if (i > 0) sb.append(',');
+			if (arg.getType() == astNodeType.ETCETERA) {
+				sb.append("...");
+			} else {
+				sb.append(mangleChar(effectiveArgType(arg)));
+			}
+		}
+		return sb.toString();
+	}
+
+	/**
+	 * True when the last declared arg is ETCETERA.
+	 */
+	public boolean isVariadic() {
+		List<astNode> as = (this.argList != null) ? this.argList.getArgs() : null;
+		if (as == null || as.isEmpty()) return false;
+		return as.get(as.size() - 1).getType() == astNodeType.ETCETERA;
+	}
+
+	/**
+	 * True when any non-variadic arg slot is a wildcard — a slot
+	 * whose effective type is cUndef. This includes both `var x`
+	 * (untyped VAR) and `x = null` (null default, no declared
+	 * type), since the runtime treats both as accepting any tag.
+	 */
+	public boolean hasWildcard() {
+		List<astNode> as = (this.argList != null) ? this.argList.getArgs() : null;
+		if (as == null) return false;
+		for (astNode arg : as) {
+			if (arg.getType() == astNodeType.ETCETERA) continue;
+			if (effectiveArgType(arg) == cType.cUndef) return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Number of leading required args: VAR slots with no default
+	 * value, before the first default-bearing arg or ETCETERA.
+	 */
+	public int getMinArity() {
+		List<astNode> as = (this.argList != null) ? this.argList.getArgs() : null;
+		if (as == null) return 0;
+		int min = 0;
+		for (astNode arg : as) {
+			if (arg.getType() == astNodeType.ETCETERA) break;
+			if (arg.getType() == astNodeType.VAR) {
+				min++;
+			} else {
+				break;
+			}
+		}
+		return min;
+	}
+
+	/**
+	 * Maximum arity: Integer.MAX_VALUE if variadic, else total
+	 * declared args.
+	 */
+	public int getMaxArity() {
+		List<astNode> as = (this.argList != null) ? this.argList.getArgs() : null;
+		if (as == null) return 0;
+		if (this.isVariadic()) return Integer.MAX_VALUE;
+		return as.size();
+	}
+
 	@Override
 	public AussomType evalImpl(Environment env, boolean getref) throws aussomException {
 		throw new aussomException(this, "INTERNAL [astFunctDef.evalImpl] Not implemented.", env.stackTraceToString());
@@ -95,23 +221,42 @@ public class astFunctDef extends astNode implements astNodeInt {
 				// Data type in funct def specified, check that passed data 
 				// is valid.
 				if (i < args.getValue().size()) {
+					cType actualT = args.getValue().get(i).getType();
 					if (adef.getType() != astNodeType.UNDEF) {
-						if (
-							(adef.getType() == astNodeType.BOOL && args.getValue().get(i).getType() != cType.cBool) 
-							|| (adef.getType() == astNodeType.INT && args.getValue().get(i).getType() != cType.cInt) 
-							|| (adef.getType() == astNodeType.DOUBLE && args.getValue().get(i).getType() != cType.cDouble) 
-							|| (adef.getType() == astNodeType.STRING && args.getValue().get(i).getType() != cType.cString)
-							|| (adef.getType() == astNodeType.LIST && args.getValue().get(i).getType() != cType.cList)
-							|| (adef.getType() == astNodeType.MAP && args.getValue().get(i).getType() != cType.cMap)
-							|| (adef.getType() == astNodeType.OBJ && args.getValue().get(i).getType() != cType.cObject) 
-							) {
+						boolean typeMismatch =
+							(adef.getType() == astNodeType.BOOL && actualT != cType.cBool)
+							|| (adef.getType() == astNodeType.INT && actualT != cType.cInt)
+							|| (adef.getType() == astNodeType.DOUBLE && actualT != cType.cDouble)
+							|| (adef.getType() == astNodeType.STRING && actualT != cType.cString)
+							|| (adef.getType() == astNodeType.LIST && actualT != cType.cList)
+							|| (adef.getType() == astNodeType.MAP && actualT != cType.cMap)
+							|| (adef.getType() == astNodeType.OBJ && actualT != cType.cObject);
+						// Allow null at any ref-shape slot, matching the
+						// dispatcher's null-matches-refs rule.
+						if (typeMismatch && actualT == cType.cNull
+							&& (adef.getType() == astNodeType.STRING
+								|| adef.getType() == astNodeType.LIST
+								|| adef.getType() == astNodeType.MAP
+								|| adef.getType() == astNodeType.OBJ)) {
+							typeMismatch = false;
+						}
+						if (typeMismatch) {
 								AussomException e = new AussomException(exType.exRuntime);
-								e.setException(this.getLineNum(), "INVALID_DATA_TYPE", "Function '" + this.getName() + "' definition at position " + (i + 1) + " is expected to be of type '" + adef.getType().name() + "' but found '" + args.getValue().get(i).getType().name() + "' instead.", env.getCallStack().getStackTrace());
+								e.setException(this.getLineNum(), "INVALID_DATA_TYPE", "Function '" + this.getName() + "' definition at position " + (i + 1) + " is expected to be of type '" + adef.getType().name() + "' but found '" + actualT.name() + "' instead.", env.getCallStack().getStackTrace());
 								return e;
-						} else if (adef.getType() == astNodeType.VAR && adef.getPrimType() != cType.cUndef && adef.getPrimType() != args.getValue().get(i).getType()) {
-							AussomException e = new AussomException(exType.exRuntime);
-							e.setException(this.getLineNum(), "INVALID_DATA_TYPE", "Function '" + this.getName() + "' definition at position " + (i + 1) + " is expected to be of type '" + adef.getPrimType().name() + "' but found '" + args.getValue().get(i).getType().name() + "' instead.", env.getCallStack().getStackTrace());
-							return e;
+						} else if (adef.getType() == astNodeType.VAR && adef.getPrimType() != cType.cUndef && adef.getPrimType() != actualT) {
+							// Same null-ref allowance for typed VAR slots.
+							boolean nullOk = (actualT == cType.cNull) && (
+								adef.getPrimType() == cType.cString
+								|| adef.getPrimType() == cType.cList
+								|| adef.getPrimType() == cType.cMap
+								|| adef.getPrimType() == cType.cObject
+								|| adef.getPrimType() == cType.cCallback);
+							if (!nullOk) {
+								AussomException e = new AussomException(exType.exRuntime);
+								e.setException(this.getLineNum(), "INVALID_DATA_TYPE", "Function '" + this.getName() + "' definition at position " + (i + 1) + " is expected to be of type '" + adef.getPrimType().name() + "' but found '" + actualT.name() + "' instead.", env.getCallStack().getStackTrace());
+								return e;
+							}
 						}
 					}
 					

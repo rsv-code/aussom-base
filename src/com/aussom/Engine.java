@@ -531,14 +531,14 @@ public class Engine {
 	}
 	
 	/**
-	 * Sets the constructor function reference for the 
-	 * provided astClass class definition object.
-	 * @param ac is a astClass object to set.
+	 * Constructors are stored in the same overload group as
+	 * methods, keyed at the class name. astClass.instantiate
+	 * routes through the dispatcher to pick the matching ctor
+	 * overload by signature, so no separate setup is needed.
+	 * Kept as a no-op for any external caller still invoking it.
 	 */
 	private void setClassConstructor(astClass ac) {
-		if (ac.containsFunction(ac.getName())) {
-			ac.setConstructor((astFunctDef)ac.getFunct(ac.getName()));
-		}
+		// No-op: see method comment.
 	}
 	
 	/**
@@ -590,11 +590,14 @@ public class Engine {
 			if (found) break;
 			astClass ac = this.classes.get(cname);
 			
-			if (ac.containsFunction("main")) {
+			if (ac.hasAnyFunctionByName("main")) {
 				this.mainClassFound = true;
 				this.mainClassDef = ac;
 				this.mainFunctFound = true;
-				this.mainFunctDef = (astFunctDef) ac.getFunct("main");
+				// Pick the zero-arg main overload. If absent the
+				// dispatcher will surface NO_MATCHING_OVERLOAD when
+				// callMain runs.
+				this.mainFunctDef = ac.getFunct("main", "");
 				found = true;
 				break;
 			}
@@ -647,18 +650,36 @@ public class Engine {
 	}
 	
 	/**
-	 * Instantiates a new object with the provided class name.
+	 * Instantiates a new object with the provided class name and
+	 * no constructor arguments. Equivalent to calling the
+	 * (Name, Args) overload with an empty list.
 	 * @param Name is a String with the class name to instantiate.
-	 * @return A newly intsantiated AussomObject.
-	 * @throws aussomException if class not found.
+	 * @return A newly instantiated AussomObject.
+	 * @throws aussomException if the class is not found or the
+	 * constructor fails.
 	 */
 	public AussomObject instantiateObject(String Name) throws aussomException {
+		return this.instantiateObject(Name, new AussomList());
+	}
+
+	/**
+	 * Instantiates a new object with the provided class name,
+	 * routing the supplied argument list through the constructor
+	 * dispatcher so an overloaded constructor can be selected by
+	 * signature.
+	 * @param Name is a String with the class name to instantiate.
+	 * @param Args is the argument list passed to the constructor.
+	 * @return A newly instantiated AussomObject.
+	 * @throws aussomException if the class is not found or the
+	 * constructor fails or no matching overload exists.
+	 */
+	public AussomObject instantiateObject(String Name, AussomList Args) throws aussomException {
 		if (this.classes.containsKey(Name)) {
 			Environment tenv = new Environment(this);
 			Members locals = new Members();
 			tenv.setEnvironment(this.mainClassInstance, locals, this.mainCallStack);
 
-			AussomType result = this.classes.get(Name).instantiate(tenv);
+			AussomType result = this.classes.get(Name).instantiate(tenv, false, Args == null ? new AussomList() : Args);
 			if (result.isEx()) {
 				throw new aussomException("instantiateObject('" + Name + "') failed: "
 					+ ((AussomException) result).stackTraceToString());

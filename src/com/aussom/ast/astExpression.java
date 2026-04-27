@@ -1033,26 +1033,26 @@ public class astExpression extends astNode implements astNodeInt {
 			if (ao.getMembers().contains(key) && ao.getClassDef().getMember(key).getAccessType() == AccessType.aPublic) {
 				ao.getMembers().getMap().put(key, mp.getValue().get(key));
 			} else {
-				boolean ffound = false;
-				for (String fname : ao.getClassDef().getFuncts().keySet()) {
-					// Find setter.
-					if (key.length() > 1 && fname.equals("set" + key.substring(0, 1).toUpperCase() + key.substring(1))) {
-						astFunctDef def = (astFunctDef) ao.getClassDef().getFunct(fname);
-						if (def.getAccessType() == AccessType.aPublic) {
-							AussomList args = new AussomList();
-							args.add(mp.getValue().get(key));
-							Environment tenv = env.clone(ao);
-							tenv.setClassInstance(ao);
-							AussomType tret = def.call(tenv, getRef, args, ao.getClassDef().getFileName());
-							if (tret.isEx()) {
-								return tret;
-							}
-							ffound = true;
-							break;
-						}
-					}
+				// Compute the setter name once and route through the
+				// overload dispatcher; it picks the matching 1-arg
+				// overload (any signature) for us.
+				if (key.length() < 2) {
+					AussomException e = new AussomException(exType.exRuntime);
+					e.setException(this.getLineNum(), "INIT_VAL_NOT_FOUND", "astExpression.init(): The provided init value '" + key + "' not found in object '" + ao.getClassDef().getName() + "'.", env.getCallStack().getStackTrace());
+					return e;
 				}
-				if (!ffound) {
+				String setterName = "set" + key.substring(0, 1).toUpperCase() + key.substring(1);
+				astClass cls = ao.getClassDef();
+				if (cls.hasAnyFunctionByName(setterName)) {
+					AussomList args = new AussomList();
+					args.add(mp.getValue().get(key));
+					Environment tenv = env.clone(ao);
+					tenv.setClassInstance(ao);
+					AussomType tret = cls.call(tenv, getRef, setterName, args);
+					if (tret.isEx()) {
+						return tret;
+					}
+				} else {
 					AussomException e = new AussomException(exType.exRuntime);
 					e.setException(this.getLineNum(), "INIT_VAL_NOT_FOUND", "astExpression.init(): The provided init value '" + key + "' not found in object '" + ao.getClassDef().getName() + "'.", env.getCallStack().getStackTrace());
 					return e;

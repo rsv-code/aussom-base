@@ -78,67 +78,47 @@ public class astFunctCall extends astNode implements astNodeInt {
 			return e;
 		}
 
-		if (this.functionHasAccess(env, this.getName())) {
-		  AussomType cargs;
-		  if(this.args != null) {
-			  Environment tenv = env.clone(null);
-			  cargs = this.args.eval(tenv, getRef);
-		  } else {
-			  cargs = new AussomList();
-		  }
-
-		  if(!cargs.isEx()) {
-			  astClass cls = env.getClassInstance().getClassDef();
-			  if (env.getCurObj() != null && env.getCurObj() instanceof AussomObject) {
-				  cls = ((AussomObject)env.getCurObj()).getClassDef();
-			  }
-			  if(cls != null) {
-				  CallStack cst;
-				  synchronized(env.getCallStack()) {
-					  cst = new CallStack(this.getFileName(), this.getLineNum(), ((AussomObject)env.getCurObj()).getClassDef().getName(), this.getName(), "Function called.");
-					  cst.setParent(env.getCallStack());
-				  }
-				  
-				  Environment tenv = env.clone(env.getCurObj());
-				  tenv.setEnvironment(env.getClassInstance(), env.getLocals(), cst);
-				  
-				  ret = cls.call(tenv, getRef, getName(), (AussomList)cargs);
-			  } else {
-				  AussomException e = new AussomException(exType.exInternal);
-				  e.setException(this.getLineNum(), "CLASS_DEF_NOT_FOUND", "Class '" + env.getClassInstance().getClassDef().getName() + "' has no function definition '" + getName() + "'.", "Class '" + env.getClassInstance().getClassDef().getName() + "' has no function definition '" + this.getName() + "'.", env.getCallStack().getStackTrace());
-				  ret = e;
-			  }
-		  } else {
-			  ret = cargs;
-		  }
+		// Access check happens inside astClass.call now: the
+		// dispatcher knows which overload was resolved and checks
+		// that overload's access modifier directly.
+		AussomType cargs;
+		if (this.args != null) {
+			Environment tenv = env.clone(null);
+			cargs = this.args.eval(tenv, getRef);
 		} else {
-			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(this.getLineNum(), "NO_ACCESS", "aObj.aFunctCall(): No access to function '" + this.getName() + "'.", env.getCallStack().getStackTrace());
-			return e;
+			cargs = new AussomList();
 		}
-		
+
+		if (!cargs.isEx()) {
+			astClass cls = env.getClassInstance().getClassDef();
+			if (env.getCurObj() != null && env.getCurObj() instanceof AussomObject) {
+				cls = ((AussomObject) env.getCurObj()).getClassDef();
+			}
+			if (cls != null) {
+				CallStack cst;
+				synchronized (env.getCallStack()) {
+					cst = new CallStack(this.getFileName(), this.getLineNum(), ((AussomObject) env.getCurObj()).getClassDef().getName(), this.getName(), "Function called.");
+					cst.setParent(env.getCallStack());
+				}
+
+				Environment tenv = env.clone(env.getCurObj());
+				tenv.setEnvironment(env.getClassInstance(), env.getLocals(), cst);
+
+				ret = cls.call(tenv, getRef, getName(), (AussomList) cargs);
+			} else {
+				AussomException e = new AussomException(exType.exInternal);
+				e.setException(this.getLineNum(), "CLASS_DEF_NOT_FOUND", "Class '" + env.getClassInstance().getClassDef().getName() + "' has no function definition '" + getName() + "'.", "Class '" + env.getClassInstance().getClassDef().getName() + "' has no function definition '" + this.getName() + "'.", env.getCallStack().getStackTrace());
+				ret = e;
+			}
+		} else {
+			ret = cargs;
+		}
+
 		if (this.getChild() != null && !ret.isEx()) {
 			Environment tenv = env.clone(ret);
 			ret = this.getChild().eval(tenv, getRef);
 		}
 
 		return ret;
-	}
-	
-	public boolean functionHasAccess(Environment env, String functionName) {
-		if (env.getClassInstance() != env.getCurObj()) {
-			astClass ac = ((AussomObject)env.getCurObj()).getClassDef();
-			if (ac.containsFunction(functionName)) {
-				if (ac.getFunct(functionName).getAccessType() == AccessType.aPrivate) {
-					return false;
-				} else {
-					return true;
-				}
-			} else {
-				return true;
-			}
-		} else {
-			return true;
-		}
 	}
 }

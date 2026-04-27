@@ -1999,8 +1999,8 @@ class interpreterTests {
 	@Test(name = "(lang secman) Security manager instantiate.")
 	public secmanInstantiate() { sman = new securitymanager(); return test.expect(sman instanceof 'securitymanager', true); }
 
-	@Test(name = "(lang secman) Security manager set property.")
-	public secmanSetProp() { sman = new securitymanager(); sman.setProp('secman.test', true); return test.expect(sman.getProp('secman.test'), true); }
+	@Test(name = "(lang secman) Security manager instance set property.")
+	public secmanInstSetProp() { sman = new securitymanager(); sman.setProp('secman.test', true); return test.expect(sman.getProp('secman.test'), true); }
 
 	@Test(name = "(lang secman) Security manager set map.")
 	public secmanSetMap() {

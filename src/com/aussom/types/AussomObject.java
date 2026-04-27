@@ -154,7 +154,7 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 	}
 
 	public String str(Environment env) throws aussomException {
-		if (this.getClassDef().containsFunction("toString")) {
+		if (this.getClassDef().containsFunction("toString", "")) {
 			astClass ac = this.getClassDef();
 			Environment tenv = env.clone(this);
 			AussomType ret = ac.call(tenv, false, "toString", new AussomList());
