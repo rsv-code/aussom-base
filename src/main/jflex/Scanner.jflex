@@ -151,7 +151,7 @@ new_line 		= \r\n;
 
 <YYINITIAL>
 {
-    "/**"         			{ string.setLength(0); yybegin(AUSSOM_DOC); }
+    "/**"/[^*/]   			{ string.setLength(0); yybegin(AUSSOM_DOC); }
 	"/*"         			{ yybegin(C_COMMENT); }
 	[\"]{3}					{ string.setLength(0); yybegin(STRING_FRMT); }
 	\"						{ string.setLength(0); yybegin(STRING); }

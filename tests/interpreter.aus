@@ -2083,4 +2083,67 @@ class interpreterTests {
         // Expect/Assert that the mocked function will return the value we provided.
         test.expect(name.toLower(), "TYLER DURDEN");
     }
+
+    /***********************************************************************
+     * lexer comment tests
+     *********************************************************************/
+
+    // Banner-style block comments must be lexed as plain block comments,
+    // not as AUSSOM_DOC. Otherwise a banner followed by a real doc comment
+    // emits two AUSSOM_DOC tokens in a row and the parser rejects them.
+    // Tests load source via testRunner.loadTestString which throws on
+    // parse error; passing means the load succeeded.
+
+    @Test(name = "(lexer comments) Banner divider then real doc comment then class.")
+    public lexerBannerThenDocBeforeClass() {
+        src = "/*****\n * Section divider\n *****/\n\n/**\n * Real doc comment\n */\nclass lcz { public main() { return 1; } }";
+        ok = false;
+        try {
+            r = new testRunner();
+            r.loadTestString("lc_banner_then_doc", src);
+            ok = true;
+        } catch (e) { ok = false; }
+        return test.expect(ok, true);
+    }
+
+    @Test(name = "(lexer comments) Two banner dividers in a row before class.")
+    public lexerTwoBannersBeforeClass() {
+        src = "/*****\n * A\n *****/\n\n/*****\n * B\n *****/\nclass lcw { public main() { return 1; } }";
+        ok = false;
+        try {
+            r = new testRunner();
+            r.loadTestString("lc_two_banners", src);
+            ok = true;
+        } catch (e) { ok = false; }
+        return test.expect(ok, true);
+    }
+
+    @Test(name = "(lexer comments) Inline four-star divider then real doc comment.")
+    public lexerInlineDividerThenDoc() {
+        src = "/****/\n\n/**\n * Real doc\n */\nclass lcv { public main() { return 1; } }";
+        ok = false;
+        try {
+            r = new testRunner();
+            r.loadTestString("lc_inline_divider", src);
+            ok = true;
+        } catch (e) { ok = false; }
+        return test.expect(ok, true);
+    }
+
+    @Test(name = "(lexer comments) Long realistic banner then doc comment.")
+    public lexerLongBannerThenDoc() {
+        bar = "/******************************************************************\n";
+        body = " * Section A: setup helpers\n";
+        end = " ******************************************************************/\n";
+        doc = "\n/**\n * Sets things up.\n */\n";
+        cls = "class lcu { public main() { return 1; } }";
+        src = bar + body + end + doc + cls;
+        ok = false;
+        try {
+            r = new testRunner();
+            r.loadTestString("lc_long_banner", src);
+            ok = true;
+        } catch (e) { ok = false; }
+        return test.expect(ok, true);
+    }
 }
