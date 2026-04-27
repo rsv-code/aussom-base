@@ -129,6 +129,26 @@ class reflectInstWithDefault {
     public reflectInstWithDefault(int N = 7) { this.n = N; }
 }
 
+class cbReceiver {
+    public cb = null;
+    public cbReceiver() { }
+    public setCb(c) { this.cb = c; }
+    public fireBare() { return this.cb(); }
+    public fireDotCall() { return this.cb.call(); }
+}
+
+class cbOwner {
+    public state = "init";
+    public cbOwner() { }
+    public onPing() { this.state = "pinged"; return "result"; }
+    // Build a receiver wired to my own ::onPing.
+    public makeReceiver() {
+        r = new cbReceiver();
+        r.setCb(::onPing);
+        return r;
+    }
+}
+
 class reflectInstReadsLocal {
     public n = -1;
     public reflectInstReadsLocal() {
@@ -1309,7 +1329,28 @@ class interpreterTests {
 		ret = this.cb.call();
 		return test.expect(ret, 'callback');
 	}
-	
+
+	// Cross-class callback invoked via bare cb() syntax. Owner builds a
+	// receiver wired to its own ::onPing; the receiver invokes the stored
+	// callback via this.cb() (no .call()). The dispatcher must fall back
+	// to invoking the AussomCallback when the name resolves to a member
+	// field rather than a class function.
+	@Test(name = "(lang lang) Cross-class callback via bare cb() reaches owner.")
+	public langLangCallbackBareCallCrossClass() {
+		o = new cbOwner();
+		r = o.makeReceiver();
+		v = r.fireBare();
+		return test.expect(v, "result");
+	}
+
+	@Test(name = "(lang lang) Cross-class callback via bare cb() mutates owner state.")
+	public langLangCallbackBareCallMutatesOwner() {
+		o = new cbOwner();
+		r = o.makeReceiver();
+		r.fireBare();
+		return test.expect(o.state, "pinged");
+	}
+
 	// callback methods
 	public toCall() { return true; }
 	public toCallWithArgs(string one, string two) { return two; }

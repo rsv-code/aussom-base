@@ -338,6 +338,18 @@ public class astClass extends astNode implements astNodeInt {
 				cobj.getMock().addSpyRecord(functName, spyRecord);
 			}
 		} else {
+			// Fallback: if the receiver has a member field with this
+			// name that holds an AussomCallback, dispatch through it.
+			// Allows bare cb() syntax for stored callbacks instead of
+			// requiring the explicit cb.call() form.
+			AussomObject cobj = (env.getCurObj() instanceof AussomObject)
+				? (AussomObject) env.getCurObj() : null;
+			if (cobj != null && cobj.getMembers().contains(functName)) {
+				AussomType member = cobj.getMembers().get(functName);
+				if (member instanceof AussomCallback) {
+					return ((AussomCallback) member).call(env, args);
+				}
+			}
 			AussomException ce = new AussomException(exType.exRuntime);
 			ce.setException(this.getLineNum(), "FUNCT_NOT_FOUND", "Object '" + this.getName() + "' doesn't have function '" + functName + "'.", env.getCallStack().getStackTrace());
 			ret = ce;
