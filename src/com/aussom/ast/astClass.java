@@ -211,7 +211,7 @@ public class astClass extends astNode implements astNodeInt {
 	 * Run functions
 	 */
 	public AussomType instantiate(Environment env) throws aussomException {
-		return this.instantiate(env, true, new AussomList());
+		return this.instantiate(env, false, new AussomList());
 	}
 	
 	public AussomType instantiate(Environment env, boolean getRef, AussomList args) throws aussomException {

@@ -657,8 +657,13 @@ public class Engine {
 			Environment tenv = new Environment(this);
 			Members locals = new Members();
 			tenv.setEnvironment(this.mainClassInstance, locals, this.mainCallStack);
-			
-			return (AussomObject) this.classes.get(Name).instantiate(tenv);
+
+			AussomType result = this.classes.get(Name).instantiate(tenv);
+			if (result.isEx()) {
+				throw new aussomException("instantiateObject('" + Name + "') failed: "
+					+ ((AussomException) result).stackTraceToString());
+			}
+			return (AussomObject) result;
 		} else {
 			throw new aussomException("Attempting to instantiate object of type '" + Name + "' but class not found!");
 		}

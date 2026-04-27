@@ -19,6 +19,7 @@ include math;
 include sys;
 include util;
 include inctest;
+include reflect;
 
 enum numName {
 	one;
@@ -121,6 +122,19 @@ class needsArg {
 
 class childOfMissing : missingBaseClass {
     public childOfMissing() { }
+}
+
+class reflectInstWithDefault {
+    public n = -1;
+    public reflectInstWithDefault(int N = 7) { this.n = N; }
+}
+
+class reflectInstReadsLocal {
+    public n = -1;
+    public reflectInstReadsLocal() {
+        v = 42;
+        this.n = v;
+    }
 }
 
 @Test(name = "Interpreter Tests")
@@ -884,6 +898,18 @@ class interpreterTests {
 	        thrown = true;
 	    }
 	    return test.expect(thrown, true);
+	 }
+
+	 @Test(name = "(object operations) reflect.instantiate runs default-parameter constructor.")
+	 public reflectInstantiateDefaultParam() {
+	    o = reflect.instantiate("reflectInstWithDefault");
+	    return test.expect(o.n, 7);
+	 }
+
+	 @Test(name = "(object operations) reflect.instantiate constructor body reads local correctly.")
+	 public reflectInstantiateReadsLocalInCtor() {
+	    o = reflect.instantiate("reflectInstReadsLocal");
+	    return test.expect(o.n, 42);
 	 }
 
 	 // access public/private
