@@ -557,6 +557,10 @@ public class astExpression extends astNode implements astNodeInt {
 				else ret = new AussomBool(false);
 			}
 		}
+		else if (r_left instanceof AussomString && r_right instanceof AussomString) {
+			int cmp = ((AussomString) r_left).getValue().compareTo(((AussomString) r_right).getValue());
+			ret = new AussomBool(cmp < 0);
+		}
 		else {
 		  AussomException e = new AussomException(exType.exRuntime);
 		  e.setException(getLineNum(), "INVALID_COMPARISON", "astExpression.evalLessThan(): Less than comparison of non-number.", env.getCallStack().getStackTrace());
@@ -581,6 +585,10 @@ public class astExpression extends astNode implements astNodeInt {
 				else ret = new AussomBool(false);
 			}
 		}
+		else if (r_left instanceof AussomString && r_right instanceof AussomString) {
+			int cmp = ((AussomString) r_left).getValue().compareTo(((AussomString) r_right).getValue());
+			ret = new AussomBool(cmp > 0);
+		}
 		else {
 		  AussomException e = new AussomException(exType.exRuntime);
 		  e.setException(getLineNum(), "INVALID_COMPARISON", "astExpression.evalGreaterThan(): Greater than comparison of non-number.", env.getCallStack().getStackTrace());
@@ -604,7 +612,12 @@ public class astExpression extends astNode implements astNodeInt {
 				if (this.getValueDouble(r_left) <= this.getValueDouble(r_right)) ret = new AussomBool(true);
 				else ret = new AussomBool(false);
 			}
-		} else {
+		}
+		else if (r_left instanceof AussomString && r_right instanceof AussomString) {
+			int cmp = ((AussomString) r_left).getValue().compareTo(((AussomString) r_right).getValue());
+			ret = new AussomBool(cmp <= 0);
+		}
+		else {
 		  AussomException e = new AussomException(exType.exRuntime);
 		  e.setException(getLineNum(), "INVALID_COMPARISON", "astExpression.evalLessThanEquals(): Less than equals comparison of non-number.", env.getCallStack().getStackTrace());
 		  return e;
@@ -627,6 +640,10 @@ public class astExpression extends astNode implements astNodeInt {
 				if (this.getValueDouble(r_left) >= this.getValueDouble(r_right)) ret = new AussomBool(true);
 				else ret = new AussomBool(false);
 			}
+		}
+		else if (r_left instanceof AussomString && r_right instanceof AussomString) {
+			int cmp = ((AussomString) r_left).getValue().compareTo(((AussomString) r_right).getValue());
+			ret = new AussomBool(cmp >= 0);
 		}
 		else {
 		  AussomException e = new AussomException(exType.exRuntime);

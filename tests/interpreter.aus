@@ -1727,6 +1727,66 @@ class interpreterTests {
 	@Test(name = "(lang string) String to JSON.")
 	public stringToJson() { return test.expect("Tyler Durdon".toJson(), "\"Tyler Durdon\""); }
 
+	/***********************************************************************
+	 * String comparison operators (<, >, <=, >=).
+	 *
+	 * Two AussomString operands are compared lexicographically with
+	 * String.compareTo (Unicode code unit order), matching string.compare().
+	 * Mixed-type operands still raise INVALID_COMPARISON.
+	 *********************************************************************/
+
+	// Less than (<)
+	@Test(name = "(string compare) Less than true when left precedes right.")
+	public stringLtTrue() { return test.expect("apple" < "banana", true); }
+
+	@Test(name = "(string compare) Less than false when left follows right.")
+	public stringLtFalseWhenAfter() { return test.expect("banana" < "apple", false); }
+
+	@Test(name = "(string compare) Less than false when strings are equal.")
+	public stringLtFalseWhenEqual() { return test.expect("apple" < "apple", false); }
+
+	@Test(name = "(string compare) Less than orders ISO date strings.")
+	public stringLtIsoDates() { return test.expect("2026-01-15" < "2026-04-27", true); }
+
+	@Test(name = "(string compare) Less than treats empty string as smallest.")
+	public stringLtEmpty() { return test.expect("" < "a", true); }
+
+	@Test(name = "(string compare) Less than is case sensitive.")
+	public stringLtCaseSensitive() { return test.expect("Z" < "a", true); }
+
+	// Greater than (>)
+	@Test(name = "(string compare) Greater than true when left follows right.")
+	public stringGtTrue() { return test.expect("banana" > "apple", true); }
+
+	@Test(name = "(string compare) Greater than false when left precedes right.")
+	public stringGtFalseWhenBefore() { return test.expect("apple" > "banana", false); }
+
+	@Test(name = "(string compare) Greater than false when strings are equal.")
+	public stringGtFalseWhenEqual() { return test.expect("apple" > "apple", false); }
+
+	@Test(name = "(string compare) Greater than orders ISO date strings.")
+	public stringGtIsoDates() { return test.expect("2026-04-27" > "2026-01-15", true); }
+
+	// Less than or equal (<=)
+	@Test(name = "(string compare) Less than equal true when strings are equal.")
+	public stringLeTrueWhenEqual() { return test.expect("apple" <= "apple", true); }
+
+	@Test(name = "(string compare) Less than equal true when left precedes right.")
+	public stringLeTrueWhenBefore() { return test.expect("apple" <= "banana", true); }
+
+	@Test(name = "(string compare) Less than equal false when left follows right.")
+	public stringLeFalseWhenAfter() { return test.expect("banana" <= "apple", false); }
+
+	// Greater than or equal (>=)
+	@Test(name = "(string compare) Greater than equal true when strings are equal.")
+	public stringGeTrueWhenEqual() { return test.expect("apple" >= "apple", true); }
+
+	@Test(name = "(string compare) Greater than equal true when left follows right.")
+	public stringGeTrueWhenAfter() { return test.expect("banana" >= "apple", true); }
+
+	@Test(name = "(string compare) Greater than equal false when left precedes right.")
+	public stringGeFalseWhenBefore() { return test.expect("apple" >= "banana", false); }
+
 	// Unicode \uXXXX escape in string literals. The lexer should decode
 	// \uXXXX to the matching code point in all string forms. Without the
 	// fix the backslash is silently dropped and the literal "u" plus the
