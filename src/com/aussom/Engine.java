@@ -629,12 +629,24 @@ public class Engine {
 		{
 			this.mainClassInstance = (AussomObject) tci;
 			tenv.setClassInstance(this.mainClassInstance);
+
 			/*
-			 * Main is expecting a list of args, but the function is expecting
-			 * a list as well, so list inside of list.
+			 * Pick the entry-point shape. Prefer main(list args) when the
+			 * user declared it; fall back to main() otherwise. Without the
+			 * fallback a script that defines only main() would always
+			 * surface a confusing trailing FUNCT_NOT_FOUND because
+			 * callMain previously passed the args list unconditionally.
 			 */
 			AussomList margs = new AussomList();
-			margs.add(this.mainFunctArgs);
+			if (this.mainClassDef.getFunct("main", "l") != null) {
+				/*
+				 * main(list args) is declared. Pass the CLI args list as
+				 * the single argument. Note the dispatcher is expecting
+				 * a list-of-args, so the args list itself is wrapped in
+				 * a list.
+				 */
+				margs.add(this.mainFunctArgs);
+			}
 
 			/*
 			 * Call main.
