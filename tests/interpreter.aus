@@ -3204,3 +3204,329 @@ class aunitHookFilterTests {
         return test.expect(r.getTestTimeoutMs("toSrcC", "t"), 0);
     }
 }
+
+// Helpers for the indexed list/map assignment tests.
+class assignPoint {
+    public x = 0;
+    public y = 0;
+    public assignPoint(int X, int Y) { this.x = X; this.y = Y; }
+}
+
+class assignContainer {
+    public lst = [];
+    public mp = {};
+    public p = null;
+    public x = 0;
+    public assignContainer() {
+        this.lst = [10, 20, 30];
+        this.mp = {"a": 1, "b": 2};
+        this.p = new assignPoint(0, 0);
+        this.x = 5;
+    }
+}
+
+/***************************************************************************
+ * Indexed list/map assignment matrix.
+ *
+ * Covers the full compound-lvalue surface: list-rooted, map-rooted, and
+ * object-member-rooted chains, including 2- and 3-level nesting, mixed
+ * list/map/object intermediates, terminal vs chained writes, compound
+ * op-assigns (+=) and increments (++), variable-key writes, and
+ * regression guards on the cases that already worked before the fix.
+ *
+ * Pre-fix:
+ *   - Terminal list-slot writes threw ASSIGN_NOT_POSSIBLE.
+ *   - Any chain that descended through a map intermediate silently
+ *     overwrote the outer map slot instead of the inner key (the
+ *     throw users sometimes saw fired on the next read of the
+ *     corrupted state, not on the assignment itself).
+ *
+ * See design/indexed-list-and-map-assignment.md for the matrix and
+ * the underlying Fix A / Fix B in astObj.evalObj.
+ ***************************************************************************/
+@Test(name = "indexed list/map assignment")
+class indexedAssignTests {
+
+    @Before
+    public toRunBefore() {
+        c.info("Ran unit test @Before function 'toRunBefore()'.");
+    }
+
+    @After
+    public toRunAfter() {
+        c.info("Ran unit test @After function 'toRunAfter()'.");
+    }
+
+    /* --- List-rooted --- */
+
+    @Test(name = "(idx assign) Terminal list slot.")
+    public listIdxTerminal() {
+        lst = ["a","b","c"]; lst[0] = "x";
+        return test.expect(lst[0], "x");
+    }
+
+    @Test(name = "(idx assign) Terminal list slot preserves siblings.")
+    public listIdxPreserves() {
+        lst = ["a","b","c"]; lst[1] = "y";
+        return test.expect(lst[0] + lst[1] + lst[2], "ayc");
+    }
+
+    @Test(name = "(idx assign) Terminal list slot with variable index.")
+    public listIdxVarIndex() {
+        lst = [10,20,30]; i = 2; lst[i] = 99;
+        return test.expect(lst[2], 99);
+    }
+
+    @Test(name = "(idx assign) List out-of-bounds write throws.")
+    public listIdxOob() {
+        lst = ["a"]; threw = false;
+        try { lst[5] = "z"; } catch (e) { threw = true; }
+        return test.expect(threw, true);
+    }
+
+    @Test(name = "(idx assign) Nested list slot.")
+    public listOfList() {
+        lst = [[1,2,3],[4,5,6]]; lst[0][1] = 99;
+        return test.expect(lst[0][1], 99);
+    }
+
+    @Test(name = "(idx assign) List of map terminal key still works.")
+    public listOfMap() {
+        lst = [{"k": 1}, {"k": 2}]; lst[0]["k"] = 99;
+        return test.expect(lst[0]["k"], 99);
+    }
+
+    @Test(name = "(idx assign) List of object terminal member still works.")
+    public listOfObj() {
+        lst = [new assignPoint(1,2), new assignPoint(3,4)]; lst[0].x = 99;
+        return test.expect(lst[0].x, 99);
+    }
+
+    @Test(name = "(idx assign) Three-level nested list.")
+    public threeLevelList() {
+        lst = [[[1]]]; lst[0][0][0] = 99;
+        return test.expect(lst[0][0][0], 99);
+    }
+
+    @Test(name = "(idx assign) List of map of map, deep key.")
+    public listMapMap() {
+        lst = [{"a": {"b": 1}}]; lst[0]["a"]["b"] = 99;
+        return test.expect(lst[0]["a"]["b"], 99);
+    }
+
+    @Test(name = "(idx assign) List of map of list, inner index.")
+    public listMapList() {
+        lst = [{"a": [1,2,3]}]; lst[0]["a"][1] = 99;
+        return test.expect(lst[0]["a"][1], 99);
+    }
+
+    @Test(name = "(idx assign) += on list slot.")
+    public listSlotPlusEq() {
+        lst = [10,20,30]; lst[1] += 5;
+        return test.expect(lst[1], 25);
+    }
+
+    @Test(name = "(idx assign) ++ on list slot.")
+    public listSlotPlusPlus() {
+        lst = [10,20,30]; lst[1]++;
+        return test.expect(lst[1], 21);
+    }
+
+    /* --- Map-rooted --- */
+
+    @Test(name = "(idx assign) Terminal map key still works.")
+    public mapTerminal() {
+        mp = {"a": 1}; mp["a"] = 99;
+        return test.expect(mp["a"], 99);
+    }
+
+    @Test(name = "(idx assign) Variable-key terminal map write.")
+    public mapVarKey() {
+        mp = {}; k = "name"; mp[k] = 99;
+        return test.expect(mp[k], 99);
+    }
+
+    @Test(name = "(idx assign) += on terminal map slot still works.")
+    public mapTerminalPlusEq() {
+        mp = {"a": 10}; mp["a"] += 5;
+        return test.expect(mp["a"], 15);
+    }
+
+    @Test(name = "(idx assign) ++ on terminal map slot still works.")
+    public mapTerminalPlusPlus() {
+        mp = {"a": 10}; mp["a"]++;
+        return test.expect(mp["a"], 11);
+    }
+
+    @Test(name = "(idx assign) Map of map, nested key.")
+    public mapOfMap() {
+        mp = {"a": {"b": 1}}; mp["a"]["b"] = 99;
+        return test.expect(mp["a"]["b"], 99);
+    }
+
+    @Test(name = "(idx assign) Map of map preserves inner type.")
+    public mapOfMapPreservesType() {
+        mp = {"a": {"b": 1, "c": 2}}; mp["a"]["b"] = 99;
+        return test.expect(mp["a"]["c"], 2);
+    }
+
+    @Test(name = "(idx assign) Three-level map.")
+    public threeLevelMap() {
+        mp = {"a": {"b": {"c": 1}}}; mp["a"]["b"]["c"] = 99;
+        return test.expect(mp["a"]["b"]["c"], 99);
+    }
+
+    @Test(name = "(idx assign) Map of list, inner index.")
+    public mapOfList() {
+        mp = {"a": [1,2,3]}; mp["a"][1] = 99;
+        return test.expect(mp["a"][1], 99);
+    }
+
+    @Test(name = "(idx assign) Map of list preserves siblings.")
+    public mapOfListPreservesSiblings() {
+        mp = {"a": [10,20,30]}; mp["a"][1] = 99;
+        return test.expect(mp["a"][0] + "," + mp["a"][2], "10,30");
+    }
+
+    @Test(name = "(idx assign) Map of object, member.")
+    public mapOfObj() {
+        mp = {"a": new assignPoint(1,2)}; mp["a"].x = 99;
+        return test.expect(mp["a"].x, 99);
+    }
+
+    @Test(name = "(idx assign) += on nested map keys.")
+    public mapNestedPlusEq() {
+        mp = {"a": {"b": 10}}; mp["a"]["b"] += 5;
+        return test.expect(mp["a"]["b"], 15);
+    }
+
+    @Test(name = "(idx assign) += on map of list inner index.")
+    public mapListPlusEq() {
+        mp = {"a": [10,20]}; mp["a"][0] += 5;
+        return test.expect(mp["a"][0], 15);
+    }
+
+    @Test(name = "(idx assign) Map of object, chained member.")
+    public mapObjMember() {
+        o = new assignContainer();
+        mp = {"a": o};
+        mp["a"].p.x = 99;
+        return test.expect(mp["a"].p.x, 99);
+    }
+
+    @Test(name = "(idx assign) Map of object, member list slot.")
+    public mapObjMemberList() {
+        o = new assignContainer();
+        mp = {"a": o};
+        mp["a"].lst[0] = 99;
+        return test.expect(mp["a"].lst[0], 99);
+    }
+
+    @Test(name = "(idx assign) Map of object, member map key.")
+    public mapObjMemberMap() {
+        o = new assignContainer();
+        mp = {"a": o};
+        mp["a"].mp["a"] = 99;
+        return test.expect(mp["a"].mp["a"], 99);
+    }
+
+    @Test(name = "(idx assign) Missing intermediate map key throws.")
+    public missingIntermediate() {
+        mp = {}; threw = false;
+        try { mp["a"]["b"] = 99; } catch (e) { threw = true; }
+        return test.expect(threw, true);
+    }
+
+    @Test(name = "(idx assign) Missing intermediate leaves outer map empty.")
+    public missingIntermediateNoCorrupt() {
+        mp = {};
+        try { mp["a"]["b"] = 99; } catch (e) { }
+        return test.expect(#mp.keySet(), 0);
+    }
+
+    /* --- Object-member-rooted --- */
+
+    @Test(name = "(idx assign) Terminal object member still works.")
+    public objTerminalMember() {
+        o = new assignContainer(); o.x = 99;
+        return test.expect(o.x, 99);
+    }
+
+    @Test(name = "(idx assign) += on object member.")
+    public objMemberPlusEq() {
+        o = new assignContainer(); o.x += 1;
+        return test.expect(o.x, 6);
+    }
+
+    @Test(name = "(idx assign) ++ on object member.")
+    public objMemberPlusPlus() {
+        o = new assignContainer(); o.x++;
+        return test.expect(o.x, 6);
+    }
+
+    @Test(name = "(idx assign) Chained members still work.")
+    public chainedMembers() {
+        o = new assignContainer(); o.p.x = 99;
+        return test.expect(o.p.x, 99);
+    }
+
+    @Test(name = "(idx assign) Member map terminal key still works.")
+    public memberMapTerminal() {
+        o = new assignContainer(); o.mp["a"] = 99;
+        return test.expect(o.mp["a"], 99);
+    }
+
+    @Test(name = "(idx assign) += on member map terminal slot.")
+    public memberMapTerminalPlusEq() {
+        o = new assignContainer(); o.mp["a"] += 5;
+        return test.expect(o.mp["a"], 6);
+    }
+
+    @Test(name = "(idx assign) Member list terminal slot.")
+    public memberListTerminal() {
+        o = new assignContainer(); o.lst[0] = 99;
+        return test.expect(o.lst[0], 99);
+    }
+
+    @Test(name = "(idx assign) Member list-of-list, inner slot.")
+    public memberListOfList() {
+        o = new assignContainer();
+        o.lst = [[1,2],[3,4]]; o.lst[0][1] = 99;
+        return test.expect(o.lst[0][1], 99);
+    }
+
+    @Test(name = "(idx assign) Member list of map terminal key still works.")
+    public memberListOfMap() {
+        o = new assignContainer();
+        o.lst = [{"k": 1}]; o.lst[0]["k"] = 99;
+        return test.expect(o.lst[0]["k"], 99);
+    }
+
+    @Test(name = "(idx assign) Member list of object terminal member still works.")
+    public memberListOfObj() {
+        o = new assignContainer();
+        o.lst = [new assignPoint(1,2)]; o.lst[0].x = 99;
+        return test.expect(o.lst[0].x, 99);
+    }
+
+    @Test(name = "(idx assign) Member map of map, nested key.")
+    public memberMapOfMap() {
+        o = new assignContainer();
+        o.mp = {"a": {"b": 1}}; o.mp["a"]["b"] = 99;
+        return test.expect(o.mp["a"]["b"], 99);
+    }
+
+    @Test(name = "(idx assign) Member map of list, inner index.")
+    public memberMapOfList() {
+        o = new assignContainer();
+        o.mp = {"a": [1,2,3]}; o.mp["a"][1] = 99;
+        return test.expect(o.mp["a"][1], 99);
+    }
+
+    @Test(name = "(idx assign) Member map of object, member.")
+    public memberMapOfObj() {
+        o = new assignContainer();
+        o.mp = {"a": new assignPoint(1,2)}; o.mp["a"].x = 99;
+        return test.expect(o.mp["a"].x, 99);
+    }
+}

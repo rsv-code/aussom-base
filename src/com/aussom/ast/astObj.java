@@ -165,20 +165,29 @@ public class astObj  extends astNode implements astNodeInt {
 				}
 				key = ((AussomTypeInt)indRet).str();
 			}
-			
-			if (getRef) {
-				// Not found, but we're going to return a ref anyway.
-				AussomRef ref = new AussomRef();
-				ref.setMap(key, ((AussomMap)env.getCurObj()).getValue());
-				ret = ref;
-			} else if (((AussomMap)env.getCurObj()).contains(key)) {
-				// Found that it exists in this map.
-				if (this.getChild() != null) {
-					Environment tenv = env.clone(((AussomMap)env.getCurObj()).getValue().get(key));
-					ret = this.getChild().eval(tenv, getRef);
-				} else {
-					ret = ((AussomMap)env.getCurObj()).getValue().get(key);
+			AussomMap mp = (AussomMap)env.getCurObj();
+
+			// Descend through child first, regardless of getRef. The
+			// leaf node decides whether to return a ref or a value.
+			// This is what makes chained writes like
+			// mp['a']['b'] = v reach the inner key instead of silently
+			// overwriting the outer slot.
+			if (this.getChild() != null) {
+				if (!mp.contains(key)) {
+					AussomException e = new AussomException(exType.exRuntime);
+					e.setException(this.getLineNum(), "MAP_MISSING_KEY", "aObj.callObj(): Map doesn't have key '" + key + "'.", env.getCallStack().getStackTrace());
+					return e;
 				}
+				Environment tenv = env.clone(mp.getValue().get(key));
+				ret = this.getChild().eval(tenv, getRef);
+			} else if (getRef) {
+				// Terminal map-slot write. Slot may or may not exist;
+				// assignment.assign() will create or overwrite it.
+				AussomRef ref = new AussomRef();
+				ref.setMap(key, mp.getValue());
+				ret = ref;
+			} else if (mp.contains(key)) {
+				ret = mp.getValue().get(key);
 			} else {
 				AussomException e = new AussomException(exType.exRuntime);
 				e.setException(this.getLineNum(), "MAP_MISSING_KEY", "aObj.callObj(): Map doesn't have key '" + key + "'.", env.getCallStack().getStackTrace());
@@ -188,7 +197,6 @@ public class astObj  extends astNode implements astNodeInt {
 		
 		// Found in current list object.
 		else if (env.getCurObj().getType() == cType.cList) {
-		  // Found that it exists in this map.
 		  if (this.index != null) {
 			Environment ienv = env.clone(null);
 			AussomType ctindex = this.index.eval(ienv, false);
@@ -199,11 +207,17 @@ public class astObj  extends astNode implements astNodeInt {
 			  long ind = ((AussomInt)ctindex).getValue();
 			  AussomList lst = (AussomList)env.getCurObj();
 			  if (ind >= 0 && ((long)ind) < lst.getValue().size()) {
-				if (this.getChild() == null) {
-				  ret = lst.getValue().get((int)ind);
-				} else {
+				if (this.getChild() != null) {
 				  Environment tenv = env.clone(lst.getValue().get((int)ind));
 				  ret = this.getChild().eval(tenv, getRef);
+				} else if (getRef) {
+				  // Terminal list-slot write. Return a ref so the
+				  // assignment path can write to the existing slot.
+				  AussomRef ref = new AussomRef();
+				  ref.setList((int)ind, lst.getValue());
+				  ret = ref;
+				} else {
+				  ret = lst.getValue().get((int)ind);
 				}
 			  } else {
 				AussomException e = new AussomException(exType.exRuntime);
