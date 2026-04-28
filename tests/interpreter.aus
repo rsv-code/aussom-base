@@ -640,6 +640,47 @@ class interpreterTests {
 	 // Chained modulus (left-associative)
 	 @Test(name = "(% operator) Int modulus int modulus int.")
 	 public operIntModulusIntModulusInt() { var = 100 % 30 % 7; return test.expect(var, 3.0); }
+	 // Numeric ~/ (floor-divide), and integer-typed % preservation.
+	 @Test(name = "(int math) ~/ on positive ints returns int.")
+	 public floorDivPosInts() { return test.expect(10 ~/ 3, 3); }
+
+	 @Test(name = "(int math) ~/ result is int type.")
+	 public floorDivResultIsInt() { return test.expect((10 ~/ 3) instanceof "int", true); }
+
+	 @Test(name = "(int math) ~/ on negative dividend floors toward -inf.")
+	 public floorDivNegFloor() { return test.expect(-7 ~/ 2, -4); }
+
+	 @Test(name = "(int math) ~/ exact division.")
+	 public floorDivExact() { return test.expect(10 ~/ 5, 2); }
+
+	 @Test(name = "(int math) ~/ with double operand returns double.")
+	 public floorDivWithDouble() { return test.expect(7.5 ~/ 2, 3.0); }
+
+	 @Test(name = "(int math) ~/ by zero throws.")
+	 public floorDivByZero() {
+		 threw = false;
+		 try { x = 7 ~/ 0; } catch (e) { threw = true; }
+		 return test.expect(threw, true);
+	 }
+
+	 @Test(name = "(int math) % on ints returns int.")
+	 public modIntsReturnsInt() { return test.expect((10 % 3) instanceof "int", true); }
+
+	 @Test(name = "(int math) % value on positive ints.")
+	 public modIntsValue() { return test.expect(10 % 3, 1); }
+
+	 @Test(name = "(int math) % preserves existing double behavior on mixed.")
+	 public modMixedReturnsDouble() { return test.expect((10.0 % 3) instanceof "double", true); }
+
+	 @Test(name = "(int math) % by zero throws.")
+	 public modByZero() {
+		 threw = false;
+		 try { x = 7 % 0; } catch (e) { threw = true; }
+		 return test.expect(threw, true);
+	 }
+
+	 @Test(name = "(int math) / on ints still returns double.")
+	 public divIntsStillDouble() { return test.expect((10 / 5) instanceof "double", true); }
 	 // Count #
 	 @Test(name = "(# operator) Local list count.")
 	 public operLocalListCount() { var = []; var @= "Tyler"; return test.expect(#var - 1, 0); }
