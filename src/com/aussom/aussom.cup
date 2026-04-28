@@ -123,7 +123,7 @@ terminal String         AUSSOM_DOC;
 
 terminal				EQ;
 terminal				PLEQ, MIEQ, MUEQ, DIEQ, MODULUSEQ, PLPL, MIMI;
-terminal				PL, MI, MU, DI, MODULUS;
+terminal				PL, MI, MU, DI, MODULUS, FLOORDIV;
 terminal				UMINUS, MISSNULL;
 
 terminal				EQEQ;
@@ -227,7 +227,7 @@ precedence right MIEQ, PLEQ, DIEQ, MODULUSEQ, MUEQ, INSERT;
 precedence left AND, OR;
 precedence left EQEQ, NOTEQ, LT, GT, LTEQ, GTEQ;
 precedence left MI, PL;
-precedence left DI, MU, MODULUS;
+precedence left DI, MU, MODULUS, FLOORDIV;
 precedence left NOT, MISSNULL;
 precedence right COUNT;
 precedence right INSTANCEOF;
@@ -985,6 +985,14 @@ operExp ::=
 		e.setParserInfo(this.parser.fileName, erleft, erright);
 		e.setRight(er);
 		e.seteType(expType.MODULUS);
+		RESULT = e;
+	:}
+|	expression:el FLOORDIV expression:er
+	{:
+		astExpression e = new astExpression(el);
+		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setRight(er);
+		e.seteType(expType.FLOORDIV);
 		RESULT = e;
 	:}
 |   expression:el SET expression:er

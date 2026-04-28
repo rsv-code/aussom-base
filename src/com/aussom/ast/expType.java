@@ -23,6 +23,7 @@ public enum expType {
 	SUBTRACT,
 	MULTIPLY,
 	DIVIDE,
+	FLOORDIV,
 	MODULUS,
 	EQEQ,
 	NOTEQ,

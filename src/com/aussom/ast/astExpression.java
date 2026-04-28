@@ -121,6 +121,9 @@ public class astExpression extends astNode implements astNodeInt {
 				} case DIVIDE: {
 					ret = this.oper(env, getRef);
 					break;
+				} case FLOORDIV: {
+					ret = this.oper(env, getRef);
+					break;
 				} case MODULUS: {
 					ret = this.oper(env, getRef);
 					break;
@@ -308,6 +311,9 @@ public class astExpression extends astNode implements astNodeInt {
 					} case DIVIDE: {
 						ret = evalDiv(env, r_left, r_right);
 						break;
+					} case FLOORDIV: {
+						ret = evalFloorDiv(env, r_left, r_right);
+						break;
 					} case MODULUS: {
 						ret = evalModulus(env, r_left, r_right);
 						break;
@@ -490,7 +496,7 @@ public class astExpression extends astNode implements astNodeInt {
 			return e;
 		  } else {
 			if (this.isInt(r_left) && this.isInt(r_right)) {
-			  ret = new AussomDouble((double)this.getValueInt(r_left) % (double)this.getValueInt(r_right));
+			  ret = new AussomInt(this.getValueInt(r_left) % this.getValueInt(r_right));
 			} else if (this.isInt(r_left)) {
 			  ret = new AussomDouble((double)this.getValueInt(r_left) % ((AussomDouble)r_right).getValue());
 			} else if (this.isInt(r_right)) {
@@ -513,7 +519,45 @@ public class astExpression extends astNode implements astNodeInt {
 
 		return ret;
 	}
-	
+
+	private AussomType evalFloorDiv(Environment env, AussomType r_left, AussomType r_right) {
+		AussomType ret = new AussomNull();
+
+		if (this.isNumber(r_left) && this.isNumber(r_right)) {
+		  if (r_right.getType() == cType.cInt && this.getValueInt(r_right) == 0) {
+			AussomException e = new AussomException(exType.exRuntime);
+			e.setException(getLineNum(), "DIV_BY_0", "astExpression.evalFloorDiv(): Division by 0 exception.", env.getCallStack().getStackTrace());
+			return e;
+		  } else if (r_right.getType() == cType.cDouble && ((AussomDouble)r_right).getValue() == 0.0) {
+			AussomException e = new AussomException(exType.exRuntime);
+			e.setException(getLineNum(), "DIV_BY_0", "astExpression.evalFloorDiv(): Division by 0 exception.", env.getCallStack().getStackTrace());
+			return e;
+		  } else {
+			if (this.isInt(r_left) && this.isInt(r_right)) {
+			  ret = new AussomInt(Math.floorDiv(this.getValueInt(r_left), this.getValueInt(r_right)));
+			} else if (this.isInt(r_left)) {
+			  ret = new AussomDouble(Math.floor((double)this.getValueInt(r_left) / ((AussomDouble)r_right).getValue()));
+			} else if (this.isInt(r_right)) {
+			  ret = new AussomDouble(Math.floor(((AussomDouble)r_left).getValue() / (double)this.getValueInt(r_right)));
+			} else {
+			  ret = new AussomDouble(Math.floor(((AussomDouble)r_left).getValue() / ((AussomDouble)r_right).getValue()));
+			}
+		  }
+		} else {
+		  if (!this.isNumber(r_left)) {
+			AussomException e = new AussomException(exType.exRuntime);
+			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalFloorDiv(): Left side of expression isn't a number.", env.getCallStack().getStackTrace());
+			return e;
+		  } else {
+			AussomException e = new AussomException(exType.exRuntime);
+			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalFloorDiv(): Right side of expression isn't a number.", env.getCallStack().getStackTrace());
+			return e;
+		  }
+		}
+
+		return ret;
+	}
+
 	private AussomType evalEqualsEquals(Environment env, AussomType r_left, AussomType r_right) {
 		AussomType ret = new AussomNull();
 
