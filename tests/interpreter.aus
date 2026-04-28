@@ -157,6 +157,165 @@ class reflectInstReadsLocal {
     }
 }
 
+// ============================================================
+// Method-overloading helpers. Used by the
+// "method overloading" section of the interpreterTests class.
+// ============================================================
+
+// Plain arity overloads: same name, different counts.
+class shape {
+    public draw() { return "no-args"; }
+    public draw(int x, int y) { return "two-ints"; }
+    public draw(int x, int y, int z) { return "three-ints"; }
+}
+
+// Type-based overloads: same arity, different types.
+class location {
+    public set(int x, int y) { return "int-int"; }
+    public set(double x, double y) { return "double-double"; }
+    public set(string label) { return "string"; }
+    public set(int x) { return "int"; }
+}
+
+// Required arg + default trailing arg. One def, [min..max] = [1..2].
+class greeter {
+    public greet(string name, string greeting = "hi") { return greeting + " " + name; }
+}
+
+// Single class with default null + typed slot.
+class nullable {
+    public take(int x = null) {
+        if (x == null) { return "got-null"; }
+        return "got-int-" + x;
+    }
+}
+
+// Wildcard variations. Untyped slots are bare names with no type
+// prefix - the parser treats them as cUndef wildcards.
+class wildy {
+    public f(int a, int b) { return "ii"; }
+    public f(int a, b) { return "i*"; }
+    public f(a, int b) { return "*i"; }
+    public f(a, b) { return "**"; }
+}
+
+// Wildcard + typed coexist for ambiguity tests (no f(int,int)).
+class ambiguous {
+    public f(int a, b) { return "i*"; }
+    public f(a, int b) { return "*i"; }
+}
+
+// Variadic + exact coexist.
+class variadicMix {
+    public f(int a, int b) { return "ii-exact"; }
+    public f(int a, ...) { return "i-variadic-" + #etc; }
+}
+
+// Typed variadic.
+class typedVar {
+    public sum(int...) {
+        total = 0;
+        for (i = 0; i < #etc; i++) { total += etc[i]; }
+        return total;
+    }
+}
+
+// Constructor overloading.
+class point {
+    public x = 0;
+    public y = 0;
+    public point() { this.x = 0; this.y = 0; }
+    public point(int X, int Y) { this.x = X; this.y = Y; }
+    public point(string label) { this.x = -1; this.y = -1; }
+}
+
+// Inheritance with overloads.
+class baseDrawer {
+    public draw() { return "base-no-args"; }
+    public draw(int x, int y) { return "base-two-ints"; }
+}
+class childDrawer : baseDrawer {
+    public draw(int x, int y) { return "child-two-ints"; }
+    public draw(string label) { return "child-string"; }
+}
+
+// Null-matching: ref types accept null, primitive types do not.
+class nullMatch {
+    public takeStr(string s) {
+        if (s == null) { return "null-string"; }
+        return "string:" + s;
+    }
+    public takePrim(int n) { return "int:" + n; }
+}
+
+// Promotion ambiguity: two equally-good 1-promotion paths.
+class promoteAmbig {
+    public f(int a, double b) { return "id"; }
+    public f(double a, int b) { return "di"; }
+}
+
+// Promotion exists (no exact int overload, only double).
+class promoteOnly {
+    public f(double x) { return "double:" + x; }
+}
+
+// Multi-arg promotion: only an all-double overload exists. Both
+// args of an int call should promote.
+class promoteBoth {
+    public f(double x, double y) { return x + y; }
+}
+
+// Three-level inheritance with different overloads at each level.
+class shape3GP {
+    public draw() { return "gp-no-args"; }
+}
+class shape3Parent : shape3GP {
+    public draw(int x) { return "parent-int"; }
+}
+class shape3Child : shape3Parent {
+    public draw(string s) { return "child-string"; }
+}
+
+// Variadic with a typed required head plus untyped trailing args.
+class headVar {
+    public log(string level, ...) { return level + ":" + #etc; }
+}
+
+// Public + private overloads at the same name. Only the private
+// one should reject calls from outside the instance.
+class privAccess {
+    public callPriv() { return this.f(1); }
+    public f(string s) { return "pub:" + s; }
+    private f(int n) { return "priv:" + n; }
+}
+
+// Recursive call into the same overload. Confirms the dispatcher
+// behaves identically for `this.f(...)` invocations.
+class recursiveOverload {
+    public f(int n) {
+        if (n <= 0) { return "base"; }
+        return "n:" + this.f(n - 1);
+    }
+    public f(string s) { return "str:" + s; }
+}
+
+// Wildcard and variadic at the same name. Wildcard wins at
+// matching arity; variadic catches arities outside the wildcard.
+class mixWildVar {
+    public f(int a, b) { return "wild:" + a + "/" + b; }
+    public f(int a, ...) { return "var:" + a + "/" + #etc; }
+}
+
+// Typed-double variadic. All-int call should be accepted via
+// numeric promotion at the dispatcher level.
+class doubleVar {
+    public sum(double...) {
+        total = 0.0;
+        for (i = 0; i < #etc; i++) { total += etc[i]; }
+        return total;
+    }
+}
+
 @Test(name = "Interpreter Tests")
 class interpreterTests {
 	// public member used for testing
@@ -2241,5 +2400,361 @@ class interpreterTests {
             ok = true;
         } catch (e) { ok = false; }
         return test.expect(ok, true);
+    }
+
+    /***********************************************************************
+     * Method overloading by signature.
+     *
+     * Covers arity overloads, type-discrimination, numeric promotion
+     * (int -> double), wildcards (full and partial), specificity,
+     * ambiguity policy, variadic dispatch, default arguments, null
+     * matching, multi-level inheritance, constructor overloading,
+     * per-overload access modifiers, recursive self-calls through
+     * overloaded names, mixed wildcard + variadic interaction, and
+     * typed-variadic promotion.
+     *
+     * Negative tests use try/catch to capture exception text.
+     * Helper classes are declared at the top of this file.
+     *********************************************************************/
+
+    // ---------- Arity overloading ----------
+
+    @Test(name = "(arity) Zero-arg overload selected on no-arg call.")
+    public arityZero() {
+        s = new shape();
+        return test.expect(s.draw(), "no-args");
+    }
+
+    @Test(name = "(arity) Two-arg overload selected on 2-arg call.")
+    public arityTwo() {
+        s = new shape();
+        return test.expect(s.draw(1, 2), "two-ints");
+    }
+
+    @Test(name = "(arity) Three-arg overload selected on 3-arg call.")
+    public arityThree() {
+        s = new shape();
+        return test.expect(s.draw(1, 2, 3), "three-ints");
+    }
+
+    @Test(name = "(arity) Wrong-arity call raises FUNCT_NOT_FOUND.")
+    public arityNoMatch() {
+        s = new shape();
+        ex = "";
+        try { s.draw(1, 2, 3, 4); } catch (e) { ex = e.getText(); }
+        return test.expect(ex.contains("no overload"), true);
+    }
+
+    // ---------- Type-based overloading ----------
+
+    @Test(name = "(types) Int overload selected on int call.")
+    public typesInt() {
+        l = new location();
+        return test.expect(l.set(1, 2), "int-int");
+    }
+
+    @Test(name = "(types) Double overload selected on double call.")
+    public typesDouble() {
+        l = new location();
+        return test.expect(l.set(1.0, 2.0), "double-double");
+    }
+
+    @Test(name = "(types) String overload selected on string call.")
+    public typesString() {
+        l = new location();
+        return test.expect(l.set("origin"), "string");
+    }
+
+    @Test(name = "(types) Single-int overload distinct from two-int.")
+    public typesSingleInt() {
+        l = new location();
+        return test.expect(l.set(42), "int");
+    }
+
+    // ---------- Numeric promotion (int -> double) ----------
+
+    @Test(name = "(promotion) Int call promoted to double when no int overload exists.")
+    public promotionIntToDouble() {
+        p = new promoteOnly();
+        return test.expect(p.f(7), "double:7.0");
+    }
+
+    @Test(name = "(promotion) Exact int overload beats promoted double.")
+    public promotionExactBeats() {
+        l = new location();
+        return test.expect(l.set(1, 2), "int-int");
+    }
+
+    @Test(name = "(promotion) Mixed int/double call promotes int -> double.")
+    public promotionMixed() {
+        l = new location();
+        // (int, double) - no exact overload; one promotion -> "double-double".
+        return test.expect(l.set(1, 2.5), "double-double");
+    }
+
+    @Test(name = "(promotion) Equally-specific promoted matches raise AMBIGUOUS_OVERLOAD.")
+    public promotionAmbiguity() {
+        a = new promoteAmbig();
+        ex = "";
+        try { a.f(1, 2); } catch (e) { ex = e.getText(); }
+        return test.expect(ex.contains("ambiguous"), true);
+    }
+
+    @Test(name = "(promotion) Double argument does not narrow to int slot.")
+    public promotionNoNarrow() {
+        // location.set(int, int) and (double, double) exist; (1.5, 2)
+        // should promote the int (2 -> 2.0) and resolve to double-double,
+        // not narrow 1.5 to an int.
+        l = new location();
+        return test.expect(l.set(1.5, 2), "double-double");
+    }
+
+    @Test(name = "(promotion) All int args promote when only an all-double overload exists.")
+    public promotionBothArgs() {
+        pb = new promoteBoth();
+        return test.expect(pb.f(3, 4), 7.0);
+    }
+
+    // ---------- Wildcards ----------
+
+    @Test(name = "(wildcard) Fully-typed beats partial wildcard.")
+    public wildcardTypedWins() {
+        w = new wildy();
+        return test.expect(w.f(1, 2), "ii");
+    }
+
+    @Test(name = "(wildcard) Partial wildcard selected when typed slot mismatches.")
+    public wildcardPartialFirst() {
+        w = new wildy();
+        return test.expect(w.f(1, "hi"), "i*");
+    }
+
+    @Test(name = "(wildcard) Partial wildcard on the other side.")
+    public wildcardPartialSecond() {
+        w = new wildy();
+        return test.expect(w.f("hi", 1), "*i");
+    }
+
+    @Test(name = "(wildcard) All-wildcard catches everything else.")
+    public wildcardAll() {
+        w = new wildy();
+        return test.expect(w.f("a", "b"), "**");
+    }
+
+    @Test(name = "(wildcard) Equal-specificity ambiguity raises AMBIGUOUS_OVERLOAD.")
+    public wildcardAmbiguity() {
+        a = new ambiguous();
+        ex = "";
+        try { a.f(1, 2); } catch (e) { ex = e.getText(); }
+        return test.expect(ex.contains("ambiguous"), true);
+    }
+
+    // ---------- Variadic ----------
+
+    @Test(name = "(variadic) Exact two-arg beats variadic on arity-2 call.")
+    public variadicExactWins() {
+        v = new variadicMix();
+        return test.expect(v.f(1, 2), "ii-exact");
+    }
+
+    @Test(name = "(variadic) Variadic catches arity-3 call when no exact match.")
+    public variadicTrailing() {
+        v = new variadicMix();
+        return test.expect(v.f(1, 2, 3), "i-variadic-2");
+    }
+
+    @Test(name = "(variadic) Typed variadic accepts only declared type.")
+    public variadicTypedOk() {
+        t = new typedVar();
+        return test.expect(t.sum(1, 2, 3), 6);
+    }
+
+    @Test(name = "(variadic) Typed variadic rejects mismatched-type arg.")
+    public variadicTypedReject() {
+        t = new typedVar();
+        ex = "";
+        try { t.sum(1, "two", 3); } catch (e) { ex = e.getText(); }
+        return test.expect(ex != "", true);
+    }
+
+    @Test(name = "(variadic) Typed required head plus variadic tail.")
+    public variadicTypedHead() {
+        h = new headVar();
+        return test.expect(h.log("info", "a", "b"), "info:2");
+    }
+
+    @Test(name = "(variadic) Typed-head variadic with empty tail.")
+    public variadicTypedHeadEmpty() {
+        h = new headVar();
+        return test.expect(h.log("warn"), "warn:0");
+    }
+
+    @Test(name = "(variadic-promotion) Typed double variadic accepts int args.")
+    public variadicPromotion() {
+        dv = new doubleVar();
+        return test.expect(dv.sum(1, 2, 3), 6.0);
+    }
+
+    // ---------- Default arguments ----------
+
+    @Test(name = "(default) Default fills in trailing arg.")
+    public defaultsTrailing() {
+        g = new greeter();
+        return test.expect(g.greet("ada"), "hi ada");
+    }
+
+    @Test(name = "(default) Two-arg overload still callable with explicit value.")
+    public defaultsExplicit() {
+        g = new greeter();
+        return test.expect(g.greet("ada", "howdy"), "howdy ada");
+    }
+
+    @Test(name = "(default) Null default accepts null call.")
+    public defaultNullAcceptsNull() {
+        n = new nullable();
+        return test.expect(n.take(null), "got-null");
+    }
+
+    @Test(name = "(default) Null default still accepts declared type.")
+    public defaultNullAcceptsTyped() {
+        n = new nullable();
+        return test.expect(n.take(7), "got-int-7");
+    }
+
+    @Test(name = "(default) Null default callable with no args.")
+    public defaultNullNoArgs() {
+        n = new nullable();
+        return test.expect(n.take(), "got-null");
+    }
+
+    // ---------- Null matching ----------
+
+    @Test(name = "(null) Null matches string slot.")
+    public nullMatchesString() {
+        n = new nullMatch();
+        return test.expect(n.takeStr(null), "null-string");
+    }
+
+    @Test(name = "(null) Null does NOT match int slot.")
+    public nullDoesNotMatchInt() {
+        n = new nullMatch();
+        ex = "";
+        try { n.takePrim(null); } catch (e) { ex = e.getText(); }
+        return test.expect(ex != "", true);
+    }
+
+    // ---------- Inheritance ----------
+
+    @Test(name = "(inheritance) Parent zero-arg inherited when child only adds 2-arg.")
+    public inheritedZeroArgKept() {
+        cd = new childDrawer();
+        return test.expect(cd.draw(), "base-no-args");
+    }
+
+    @Test(name = "(inheritance) Child overrides at exact (name, signature).")
+    public inheritedOverridden() {
+        cd = new childDrawer();
+        return test.expect(cd.draw(1, 2), "child-two-ints");
+    }
+
+    @Test(name = "(inheritance) Child can add overload at a new signature.")
+    public inheritedAddedSig() {
+        cd = new childDrawer();
+        return test.expect(cd.draw("triangle"), "child-string");
+    }
+
+    @Test(name = "(inheritance) Three-level chain dispatches across all ancestors.")
+    public inheritedThreeLevel() {
+        c3 = new shape3Child();
+        return test.expect(
+            c3.draw() + "/" + c3.draw(5) + "/" + c3.draw("hi"),
+            "gp-no-args/parent-int/child-string");
+    }
+
+    // ---------- Constructors ----------
+
+    @Test(name = "(constructor) Zero-arg ctor selected when no args.")
+    public ctorZeroArg() {
+        p = new point();
+        return test.expect(p.x, 0);
+    }
+
+    @Test(name = "(constructor) Two-int ctor selected.")
+    public ctorTwoInt() {
+        p = new point(3, 4);
+        return test.expect(p.x + p.y, 7);
+    }
+
+    @Test(name = "(constructor) String ctor selected.")
+    public ctorString() {
+        p = new point("origin");
+        return test.expect(p.x, -1);
+    }
+
+    @Test(name = "(constructor) Constructor with no matching overload raises.")
+    public ctorNoMatch() {
+        ex = "";
+        try { p = new point(1, 2, 3); } catch (e) { ex = e.getText(); }
+        return test.expect(ex != "", true);
+    }
+
+    // ---------- Per-overload access modifiers ----------
+
+    @Test(name = "(access) Private overload denies calls from outside the instance.")
+    public accessPrivateDenied() {
+        p = new privAccess();
+        ex = "";
+        try { p.f(1); } catch (e) { ex = e.getText(); }
+        return test.expect(ex.contains("No access"), true);
+    }
+
+    @Test(name = "(access) Public overload at same name remains callable.")
+    public accessPublicCallable() {
+        p = new privAccess();
+        return test.expect(p.f("hi"), "pub:hi");
+    }
+
+    @Test(name = "(access) Internal call to private overload succeeds.")
+    public accessInternalCall() {
+        p = new privAccess();
+        return test.expect(p.callPriv(), "priv:1");
+    }
+
+    // ---------- Recursive self-call into overloaded method ----------
+
+    @Test(name = "(recursive) Self-call through an overloaded name dispatches identically.")
+    public recursiveSelfCall() {
+        r = new recursiveOverload();
+        return test.expect(r.f(2), "n:n:base");
+    }
+
+    // ---------- Wildcard + variadic mixed on same name ----------
+
+    @Test(name = "(mixed) Wildcard wins over variadic when arity matches.")
+    public mixedWildcardWins() {
+        m = new mixWildVar();
+        return test.expect(m.f(1, "x"), "wild:1/x");
+    }
+
+    @Test(name = "(mixed) Variadic catches arity below wildcard's range.")
+    public mixedVariadicLow() {
+        m = new mixWildVar();
+        return test.expect(m.f(1), "var:1/0");
+    }
+
+    @Test(name = "(mixed) Variadic catches arity above wildcard's range.")
+    public mixedVariadicHigh() {
+        m = new mixWildVar();
+        return test.expect(m.f(1, 2, 3), "var:1/2");
+    }
+
+    // ---------- End-to-end multi-overload dispatch ----------
+
+    @Test(name = "(end-to-end) Multiple overloads on one name dispatch by tag.")
+    public endToEndDispatch() {
+        l = new location();
+        return test.expect(
+            l.set(1, 2) + "/" + l.set(1.0, 2.0) + "/" + l.set("z") + "/" + l.set(5),
+            "int-int/double-double/string/int");
     }
 }
