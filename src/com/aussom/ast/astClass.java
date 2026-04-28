@@ -24,17 +24,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.aussom.CallStack;
-import com.aussom.Engine;
 import com.aussom.Environment;
-import com.aussom.Universe;
-import com.aussom.stdlib.Lang;
 import com.aussom.stdlib.UnitTest;
 import com.aussom.stdlib.UnitTestClass;
-import com.aussom.stdlib.console;
 import com.aussom.types.*;
 import com.aussom.types.AussomException.exType;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 
 public class astClass extends astNode implements astNodeInt {
 	// Has the class init ran yet? Init does things like link to
@@ -65,12 +59,22 @@ public class astClass extends astNode implements astNodeInt {
 	private List<String> membList = new ArrayList<String>();
 	private Map<String, astNode> membDefs = new ConcurrentHashMap<String, astNode>();
 
-	// Class functions, organized by name into overload groups. The
-	// flat functList preserves declaration order (one entry per
-	// overload) for iterators that need to walk every defined
-	// method.
+	// Class functions. The dispatch hot path is a single flat
+	// HashMap keyed on "name#sig" (e.g. "setFirstName#s",
+	// "draw#i,i"). Each exact-typed overload is pre-registered
+	// under every (arity, tag-variant) combination it can match,
+	// so a typical call resolves in one HashMap.get + one
+	// composite-key build. Wildcard and variadic overloads can't
+	// be enumerated as flat keys (they accept arbitrary tags), so
+	// they live in separate small lists walked only on the slow
+	// path. functList preserves declaration order for iterators
+	// that walk every defined method. declaredNames lets
+	// hasAnyFunctionByName answer in O(1).
 	private List<astFunctDef> functList = new ArrayList<>();
-	private Map<String, OverloadGroup> functDefs = new ConcurrentHashMap<>();
+	private Map<String, astFunctDef> dispatchMap = new ConcurrentHashMap<>();
+	private List<astFunctDef> wildcardOverloads = new ArrayList<>();
+	private List<astFunctDef> variadicOverloads = new ArrayList<>();
+	private java.util.Set<String> declaredNames = ConcurrentHashMap.newKeySet();
 
 	// Inherited members and functions are kept track of so we can
 	// reproduce the AST later.
@@ -78,46 +82,19 @@ public class astClass extends astNode implements astNodeInt {
 	private List<String> inheritedFuncts = new ArrayList<String>();
 
 	/**
-	 * Per-name container for declared overloads. Three buckets:
-	 *  - exact: fully-typed overloads keyed by mangled signature
-	 *    (e.g. "i,i", "d,d"). The dispatcher's fast path.
-	 *  - wildcardCandidates: overloads with at least one cUndef
-	 *    position, sorted by specificity descending so the
-	 *    dispatcher walks most-specific first.
-	 *  - variadic: overloads whose trailing arg is ETCETERA,
-	 *    keyed by the head signature (everything before "...").
+	 * Counts non-wildcard, non-ETCETERA positions in the declared
+	 * signature. Higher value = more specific. Used by the
+	 * wildcard slow-path matcher to break ties.
 	 */
-	public static class OverloadGroup {
-		public Map<String, astFunctDef> exact = new ConcurrentHashMap<>();
-		public List<astFunctDef> wildcardCandidates = new ArrayList<>();
-		public Map<String, astFunctDef> variadic = new ConcurrentHashMap<>();
-
-		public int size() {
-			return exact.size() + wildcardCandidates.size() + variadic.size();
+	private static int specificity(astFunctDef d) {
+		int spec = 0;
+		List<astNode> as = d.getArgList().getArgs();
+		for (astNode arg : as) {
+			if (arg.getType() == astNodeType.ETCETERA) continue;
+			cType t = astFunctDef.effectiveArgType(arg);
+			if (t != cType.cUndef) spec++;
 		}
-
-		public boolean isEmpty() {
-			return size() == 0;
-		}
-
-		/**
-		 * Counts non-wildcard, non-ETCETERA positions in the
-		 * declared signature. Higher value = more specific.
-		 */
-		public static int specificity(astFunctDef d) {
-			int spec = 0;
-			List<astNode> as = d.getArgList().getArgs();
-			for (astNode arg : as) {
-				if (arg.getType() == astNodeType.ETCETERA) continue;
-				cType t = astFunctDef.effectiveArgType(arg);
-				if (t != cType.cUndef) spec++;
-			}
-			return spec;
-		}
-
-		public void sortWildcards() {
-			wildcardCandidates.sort(Comparator.comparingInt((astFunctDef d) -> -specificity(d)));
-		}
+		return spec;
 	}
 
 	/**
@@ -164,35 +141,36 @@ public class astClass extends astNode implements astNodeInt {
 		}
 		astFunctDef def = (astFunctDef) Value;
 		this.functList.add(def);
-		OverloadGroup group = this.functDefs.computeIfAbsent(Name, k -> new OverloadGroup());
-		this.classifyAndAdd(Name, group, def);
+		this.declaredNames.add(Name);
+		this.classifyAndAdd(Name, def);
 	}
 
-	private void classifyAndAdd(String name, OverloadGroup group, astFunctDef def) {
+	private void classifyAndAdd(String name, astFunctDef def) {
 		String sig = def.getSignature();
 		if (def.isVariadic()) {
 			String head = headSignature(sig);
-			astFunctDef prior = group.variadic.get(head);
-			if (prior != null) {
-				throw duplicateSignatureError(name, head.isEmpty() ? "..." : head + ",...", prior, def);
+			for (astFunctDef existing : this.variadicOverloads) {
+				if (existing.getName().equals(name)
+					&& headSignature(existing.getSignature()).equals(head)) {
+					throw duplicateSignatureError(name, head.isEmpty() ? "..." : head + ",...", existing, def);
+				}
 			}
-			group.variadic.put(head, def);
+			this.variadicOverloads.add(def);
 		} else if (def.hasWildcard()) {
-			for (astFunctDef existing : group.wildcardCandidates) {
-				if (existing.getSignature().equals(sig)) {
+			for (astFunctDef existing : this.wildcardOverloads) {
+				if (existing.getName().equals(name) && existing.getSignature().equals(sig)) {
 					throw duplicateSignatureError(name, sig, existing, def);
 				}
 			}
-			group.wildcardCandidates.add(def);
-			group.sortWildcards();
+			this.wildcardOverloads.add(def);
 		} else {
 			// Register the def at every valid (arity, tag-variant)
-			// combination. A def with trailing default-value args
-			// accepts calls of any length in [min..max]. Each slot
-			// can also accept multiple tags: ref-shape slots accept
-			// 'n' (null) in addition to their type, and slots with
-			// a null default accept 'n' regardless of declared type.
-			// Pre-registering every variant keeps dispatch O(1).
+			// combination in the flat dispatchMap with "name#sig"
+			// keys. Each slot can accept multiple tags: ref-shape
+			// slots accept 'n' (null) in addition to their type,
+			// and slots with a null default accept 'n' regardless
+			// of declared type. Pre-registering every variant
+			// keeps the dispatch hot path to a single HashMap.get.
 			List<astNode> declared = def.getArgList().getArgs();
 			int min = def.getMinArity();
 			int max = def.getMaxArity();
@@ -201,7 +179,7 @@ public class astClass extends astNode implements astNodeInt {
 				tagsPerPos[i] = computeSlotTags(declared.get(i));
 			}
 			for (int arity = min; arity <= max; arity++) {
-				registerSigVariants(name, group, def, tagsPerPos, arity);
+				registerSigVariants(name, def, tagsPerPos, arity);
 			}
 		}
 	}
@@ -256,15 +234,17 @@ public class astClass extends astNode implements astNodeInt {
 	}
 
 	/**
-	 * Registers the def at every signature variant of the given
-	 * arity, computed as the cartesian product of per-slot tag
-	 * sets for the first `arity` positions.
+	 * Registers the def in dispatchMap at every "name#sig"
+	 * variant for the given arity, computed as the cartesian
+	 * product of per-slot tag sets for the first `arity`
+	 * positions.
 	 */
-	private void registerSigVariants(String name, OverloadGroup group, astFunctDef def, char[][] tagsPerPos, int arity) {
+	private void registerSigVariants(String name, astFunctDef def, char[][] tagsPerPos, int arity) {
 		int variantCount = 1;
 		for (int i = 0; i < arity; i++) variantCount *= tagsPerPos[i].length;
 		for (int v = 0; v < variantCount; v++) {
-			StringBuilder sb = new StringBuilder();
+			StringBuilder sb = new StringBuilder(name.length() + 1 + arity * 2);
+			sb.append(name).append('#');
 			int rem = v;
 			for (int i = 0; i < arity; i++) {
 				int idx = rem % tagsPerPos[i].length;
@@ -272,12 +252,13 @@ public class astClass extends astNode implements astNodeInt {
 				if (i > 0) sb.append(',');
 				sb.append(tagsPerPos[i][idx]);
 			}
-			String sig = sb.toString();
-			astFunctDef prior = group.exact.get(sig);
+			String key = sb.toString();
+			astFunctDef prior = this.dispatchMap.get(key);
 			if (prior != null && prior != def) {
-				throw duplicateSignatureError(name, sig, prior, def);
+				String displaySig = key.substring(name.length() + 1);
+				throw duplicateSignatureError(name, displaySig, prior, def);
 			}
-			group.exact.put(sig, def);
+			this.dispatchMap.put(key, def);
 		}
 	}
 
@@ -302,10 +283,8 @@ public class astClass extends astNode implements astNodeInt {
 	 * @param Signature Mangled positional signature; "" for zero-arg.
 	 */
 	public boolean containsFunction(String Name, String Signature) {
-		OverloadGroup g = this.functDefs.get(Name);
-		if (g == null) return false;
 		if (Signature == null) Signature = "";
-		return g.exact.containsKey(Signature);
+		return this.dispatchMap.containsKey(Name + "#" + Signature);
 	}
 
 	/**
@@ -314,10 +293,8 @@ public class astClass extends astNode implements astNodeInt {
 	 * with that signature.
 	 */
 	public astFunctDef getFunct(String Name, String Signature) {
-		OverloadGroup g = this.functDefs.get(Name);
-		if (g == null) return null;
 		if (Signature == null) Signature = "";
-		return g.exact.get(Signature);
+		return this.dispatchMap.get(Name + "#" + Signature);
 	}
 
 	/**
@@ -340,8 +317,7 @@ public class astClass extends astNode implements astNodeInt {
 	 * existence).
 	 */
 	public boolean hasAnyFunctionByName(String Name) {
-		OverloadGroup g = this.functDefs.get(Name);
-		return g != null && !g.isEmpty();
+		return this.declaredNames.contains(Name);
 	}
 
 	/**
@@ -350,15 +326,6 @@ public class astClass extends astNode implements astNodeInt {
 	 */
 	public List<astFunctDef> getAllFunctions() {
 		return this.functList;
-	}
-
-	/**
-	 * Package-private internal access to the overload group for
-	 * the dispatcher and tests. Embedders should use the public
-	 * APIs above.
-	 */
-	OverloadGroup getOverloadGroup(String Name) {
-		return this.functDefs.get(Name);
 	}
 
 	public boolean containsTests() {
@@ -562,10 +529,21 @@ public class astClass extends astNode implements astNodeInt {
 		}
 
 		if (ret == null) {
-			ResolveResult rr = resolveOverload(env, functName, args);
-			if (rr.error != null) return rr.error;
-			astFunctDef fdef = rr.def;
-			AussomList useArgs = rr.args;
+			astFunctDef fdef = null;
+			AussomList useArgs = args;
+
+			// Hot path: build "name#sig" composite key, single
+			// HashMap.get on the flat dispatch map. Slow paths
+			// (numeric promotion, wildcards, variadic) only run
+			// when this misses.
+			String key = makeDispatchKey(functName, args);
+			fdef = this.dispatchMap.get(key);
+			if (fdef == null && this.declaredNames.contains(functName)) {
+				ResolveResult rr = resolveSlowPaths(functName, args, key, env);
+				if (rr.error != null) return rr.error;
+				fdef = rr.def;
+				useArgs = rr.args;
+			}
 
 			if (fdef == null) {
 				// Fallback: stored callback member with this name.
@@ -628,37 +606,49 @@ public class astClass extends astNode implements astNodeInt {
 		AussomException error;
 	}
 
-	private ResolveResult resolveOverload(Environment env, String functName, AussomList args) throws aussomException {
-		ResolveResult rr = new ResolveResult();
-		rr.args = args;
+	/**
+	 * Builds the composite dispatch key "name#tagsig" used by the
+	 * flat dispatchMap. Allocation: one StringBuilder + one
+	 * String per call.
+	 */
+	private static String makeDispatchKey(String name, AussomList args) {
+		int n = (args == null) ? 0 : args.size();
+		StringBuilder sb = new StringBuilder(name.length() + 1 + n * 2);
+		sb.append(name).append('#');
+		if (n > 0) {
+			List<AussomType> vals = args.getValue();
+			sb.append(astFunctDef.mangleChar(vals.get(0).getType()));
+			for (int i = 1; i < n; i++) {
+				sb.append(',').append(astFunctDef.mangleChar(vals.get(i).getType()));
+			}
+		}
+		return sb.toString();
+	}
 
-		OverloadGroup g = this.functDefs.get(functName);
-		if (g == null) return rr;
-
+	/**
+	 * Slow-path resolution. The caller has already missed in the
+	 * exact dispatchMap; this routine walks numeric-promotion,
+	 * wildcard-candidate, and variadic matchers. Allocating a
+	 * ResolveResult here is amortized by being only on the cold
+	 * path.
+	 */
+	private ResolveResult resolveSlowPaths(String functName, AussomList args, String missedKey, Environment env) throws aussomException {
 		String callSig = mangleCallSig(args);
 
-		// 1. Exact match — fast HashMap.get path.
-		astFunctDef ex = g.exact.get(callSig);
-		if (ex != null) {
-			rr.def = ex;
-			return rr;
-		}
-
-		// 2. Numeric promotion (int -> double).
-		ResolveResult promoted = matchPromoted(g, args, callSig, env);
+		ResolveResult promoted = matchPromoted(functName, args, callSig, env);
 		if (promoted.error != null) return promoted;
 		if (promoted.def != null) return promoted;
 
-		// 3. Wildcard candidates.
-		ResolveResult wildcard = matchWildcards(g, args, env);
+		ResolveResult wildcard = matchWildcards(functName, args, env);
 		if (wildcard.error != null) return wildcard;
 		if (wildcard.def != null) return wildcard;
 
-		// 4. Variadic.
-		ResolveResult variadic = matchVariadic(g, args, env);
+		ResolveResult variadic = matchVariadic(functName, args, env);
 		if (variadic.error != null) return variadic;
 		if (variadic.def != null) return variadic;
 
+		ResolveResult rr = new ResolveResult();
+		rr.args = args;
 		return rr;
 	}
 
@@ -683,7 +673,7 @@ public class astClass extends astNode implements astNodeInt {
 	 * lowest-count match. Multiple matches at the same count are
 	 * AMBIGUOUS_OVERLOAD.
 	 */
-	private ResolveResult matchPromoted(OverloadGroup g, AussomList args, String callSig, Environment env) {
+	private ResolveResult matchPromoted(String functName, AussomList args, String callSig, Environment env) {
 		ResolveResult rr = new ResolveResult();
 		rr.args = args;
 		if (callSig.isEmpty()) return rr;
@@ -715,8 +705,8 @@ public class astClass extends astNode implements astNodeInt {
 					promoted[intPositions[j]] = "d";
 				}
 			}
-			String promotedSig = String.join(",", promoted);
-			astFunctDef hit = g.exact.get(promotedSig);
+			String promotedKey = functName + "#" + String.join(",", promoted);
+			astFunctDef hit = this.dispatchMap.get(promotedKey);
 			if (hit != null) {
 				if (bestCount == -1) {
 					bestCount = popcount;
@@ -754,32 +744,34 @@ public class astClass extends astNode implements astNodeInt {
 		return out;
 	}
 
-	private ResolveResult matchWildcards(OverloadGroup g, AussomList args, Environment env) {
+	private ResolveResult matchWildcards(String functName, AussomList args, Environment env) {
 		ResolveResult rr = new ResolveResult();
 		rr.args = args;
-		if (g.wildcardCandidates.isEmpty()) return rr;
+		if (this.wildcardOverloads.isEmpty()) return rr;
 
+		// Walk the per-class wildcard list filtered by name.
+		// Pick the most-specific match; AMBIGUOUS_OVERLOAD on ties.
 		int bestSpec = -1;
-		List<astFunctDef> bestMatches = new ArrayList<>();
-		for (astFunctDef cand : g.wildcardCandidates) {
-			int spec = OverloadGroup.specificity(cand);
-			if (bestSpec != -1 && spec < bestSpec) break; // sorted desc
-			if (overloadMatchesCall(cand, args)) {
-				if (bestSpec == -1) {
-					bestSpec = spec;
-					bestMatches.add(cand);
-				} else if (spec == bestSpec) {
-					bestMatches.add(cand);
-				}
+		List<astFunctDef> bestMatches = null;
+		for (astFunctDef cand : this.wildcardOverloads) {
+			if (!cand.getName().equals(functName)) continue;
+			if (!overloadMatchesCall(cand, args)) continue;
+			int spec = specificity(cand);
+			if (spec > bestSpec) {
+				bestSpec = spec;
+				bestMatches = new ArrayList<>();
+				bestMatches.add(cand);
+			} else if (spec == bestSpec) {
+				bestMatches.add(cand);
 			}
 		}
 
+		if (bestMatches == null) return rr;
 		if (bestMatches.size() == 1) {
 			rr.def = bestMatches.get(0);
 			return rr;
-		} else if (bestMatches.size() > 1) {
-			rr.error = ambiguityError("AMBIGUOUS_OVERLOAD", bestMatches, env);
 		}
+		rr.error = ambiguityError("AMBIGUOUS_OVERLOAD", bestMatches, env);
 		return rr;
 	}
 
@@ -822,41 +814,41 @@ public class astClass extends astNode implements astNodeInt {
 		return false;
 	}
 
-	private ResolveResult matchVariadic(OverloadGroup g, AussomList args, Environment env) {
+	private ResolveResult matchVariadic(String functName, AussomList args, Environment env) {
 		ResolveResult rr = new ResolveResult();
 		rr.args = args;
-		if (g.variadic.isEmpty()) return rr;
+		if (this.variadicOverloads.isEmpty()) return rr;
 
-		List<astFunctDef> matches = new ArrayList<>();
-		for (Map.Entry<String, astFunctDef> e : g.variadic.entrySet()) {
-			astFunctDef def = e.getValue();
-			if (variadicMatches(def, args)) {
-				matches.add(def);
-			}
+		List<astFunctDef> matches = null;
+		for (astFunctDef def : this.variadicOverloads) {
+			if (!def.getName().equals(functName)) continue;
+			if (!variadicMatches(def, args)) continue;
+			if (matches == null) matches = new ArrayList<>();
+			matches.add(def);
 		}
 
+		if (matches == null) return rr;
 		if (matches.size() == 1) {
 			rr.def = matches.get(0);
 			return rr;
-		} else if (matches.size() > 1) {
-			// Pick the most-specific variadic head (longest head sig
-			// with fewest wildcards). If still tied, raise ambiguity.
-			matches.sort(Comparator.comparingInt((astFunctDef d) -> -OverloadGroup.specificity(d)));
-			int topSpec = OverloadGroup.specificity(matches.get(0));
-			int topHeadLen = matches.get(0).getArgList().getArgs().size();
-			List<astFunctDef> top = new ArrayList<>();
-			for (astFunctDef d : matches) {
-				if (OverloadGroup.specificity(d) == topSpec
-					&& d.getArgList().getArgs().size() == topHeadLen) {
-					top.add(d);
-				}
-			}
-			if (top.size() == 1) {
-				rr.def = top.get(0);
-				return rr;
-			}
-			rr.error = ambiguityError("AMBIGUOUS_OVERLOAD", top, env);
 		}
+		// Pick the most-specific variadic head (longest head sig
+		// with fewest wildcards). If still tied, raise ambiguity.
+		matches.sort(Comparator.comparingInt((astFunctDef d) -> -specificity(d)));
+		int topSpec = specificity(matches.get(0));
+		int topHeadLen = matches.get(0).getArgList().getArgs().size();
+		List<astFunctDef> top = new ArrayList<>();
+		for (astFunctDef d : matches) {
+			if (specificity(d) == topSpec
+				&& d.getArgList().getArgs().size() == topHeadLen) {
+				top.add(d);
+			}
+		}
+		if (top.size() == 1) {
+			rr.def = top.get(0);
+			return rr;
+		}
+		rr.error = ambiguityError("AMBIGUOUS_OVERLOAD", top, env);
 		return rr;
 	}
 
@@ -947,49 +939,55 @@ public class astClass extends astNode implements astNodeInt {
 
 				ac.instantiateMembers(env, cobj);
 
-				// Per-overload merge: for each parent name, copy
-				// each parent overload (by signature) into the
-				// child only when the child has no overload with
-				// the same exact mangle.
-				for (Map.Entry<String, OverloadGroup> e : ac.functDefs.entrySet()) {
-					String name = e.getKey();
-					OverloadGroup parentG = e.getValue();
-					OverloadGroup childG = this.functDefs.computeIfAbsent(name, k -> new OverloadGroup());
-
-					for (Map.Entry<String, astFunctDef> ee : parentG.exact.entrySet()) {
-						if (!childG.exact.containsKey(ee.getKey())) {
-							childG.exact.put(ee.getKey(), ee.getValue());
-							this.inheritedFuncts.add(name + "(" + ee.getKey() + ")");
-							if (!this.functList.contains(ee.getValue())) {
-								this.functList.add(ee.getValue());
-							}
+				// Per-overload merge across the flat dispatchMap and
+				// the wildcard / variadic lists. Child entries
+				// shadow parent entries at the same key (or same
+				// name + signature for wildcards / variadic).
+				for (Map.Entry<String, astFunctDef> ee : ac.dispatchMap.entrySet()) {
+					if (!this.dispatchMap.containsKey(ee.getKey())) {
+						this.dispatchMap.put(ee.getKey(), ee.getValue());
+						this.inheritedFuncts.add(ee.getKey());
+						if (!this.functList.contains(ee.getValue())) {
+							this.functList.add(ee.getValue());
+						}
+						this.declaredNames.add(ee.getValue().getName());
+					}
+				}
+				for (astFunctDef pdef : ac.wildcardOverloads) {
+					boolean shadowed = false;
+					for (astFunctDef cdef : this.wildcardOverloads) {
+						if (cdef.getName().equals(pdef.getName())
+							&& cdef.getSignature().equals(pdef.getSignature())) {
+							shadowed = true;
+							break;
 						}
 					}
-					for (astFunctDef pdef : parentG.wildcardCandidates) {
-						boolean shadowed = false;
-						for (astFunctDef cdef : childG.wildcardCandidates) {
-							if (cdef.getSignature().equals(pdef.getSignature())) {
-								shadowed = true;
-								break;
-							}
+					if (!shadowed) {
+						this.wildcardOverloads.add(pdef);
+						this.inheritedFuncts.add(pdef.getName() + "(" + pdef.getSignature() + ")");
+						if (!this.functList.contains(pdef)) {
+							this.functList.add(pdef);
 						}
-						if (!shadowed) {
-							childG.wildcardCandidates.add(pdef);
-							this.inheritedFuncts.add(name + "(" + pdef.getSignature() + ")");
-							if (!this.functList.contains(pdef)) {
-								this.functList.add(pdef);
-							}
+						this.declaredNames.add(pdef.getName());
+					}
+				}
+				for (astFunctDef pdef : ac.variadicOverloads) {
+					String pHead = headSignature(pdef.getSignature());
+					boolean shadowed = false;
+					for (astFunctDef cdef : this.variadicOverloads) {
+						if (cdef.getName().equals(pdef.getName())
+							&& headSignature(cdef.getSignature()).equals(pHead)) {
+							shadowed = true;
+							break;
 						}
 					}
-					childG.sortWildcards();
-					for (Map.Entry<String, astFunctDef> ee : parentG.variadic.entrySet()) {
-						if (!childG.variadic.containsKey(ee.getKey())) {
-							childG.variadic.put(ee.getKey(), ee.getValue());
-							this.inheritedFuncts.add(name + "(" + ee.getKey() + ",...)");
-							if (!this.functList.contains(ee.getValue())) {
-								this.functList.add(ee.getValue());
-							}
+					if (!shadowed) {
+						this.variadicOverloads.add(pdef);
+						this.inheritedFuncts.add(pdef.getName() + "(" + pHead + ",...)");
+						if (!this.functList.contains(pdef)) {
+							this.functList.add(pdef);
 						}
+						this.declaredNames.add(pdef.getName());
 					}
 				}
 
