@@ -377,6 +377,98 @@ static extern class testRunner : com.aussom.stdlib.ATestRunner {
     public extern hasAfter(string TestClassName);
 
     /**
+     * Checks to see if the @BeforeEach function is set. @BeforeEach
+     * fires before every individual @Test method.
+     * @p TestClassName is a string with the test class to use.
+     * @r A bool with true for set and false for not.
+     */
+    public extern hasBeforeEach(string TestClassName);
+
+    /**
+     * Checks to see if the @AfterEach function is set. @AfterEach
+     * fires after every individual @Test method, regardless of pass
+     * or fail.
+     * @p TestClassName is a string with the test class to use.
+     * @r A bool with true for set and false for not.
+     */
+    public extern hasAfterEach(string TestClassName);
+
+    /**
+     * Checks to see if the @OnTestFail function is set. @OnTestFail
+     * fires after a @Test method that failed or threw, before any
+     * @AfterEach hook runs.
+     * @p TestClassName is a string with the test class to use.
+     * @r A bool with true for set and false for not.
+     */
+    public extern hasOnTestFail(string TestClassName);
+
+    /**
+     * Returns the parsed tag list for a single @Test method. Tags
+     * come from the comma-separated tags arg on @Test, e.g.
+     * @Test(name = "...", tags = "slow,db").
+     * @p TestClassName is a string with the test class to use.
+     * @p TestFunctionName is the name of the @Test function.
+     * @r A list of strings with the tags (empty when none).
+     */
+    public extern getTestTags(string TestClassName, string TestFunctionName);
+
+    /**
+     * Returns the parsed timeoutMs value for a single @Test method.
+     * 0 means "no timeout". The base runner does not enforce this;
+     * a downstream runner (e.g. the aussom CLI) reads the value
+     * here and applies a watchdog. See design/aunit-upgrade-eval.md
+     * (M8b).
+     * @p TestClassName is a string with the test class to use.
+     * @p TestFunctionName is the name of the @Test function.
+     * @r An int with the timeout in milliseconds.
+     */
+    public extern getTestTimeoutMs(string TestClassName, string TestFunctionName);
+
+    /**
+     * Sets the include-tag filter. When non-empty, only tests whose
+     * tag set intersects the provided list are run. Untagged tests
+     * are skipped under an include filter.
+     * @p Tags is a list of strings with the tags to include. Pass
+     * an empty list to clear the filter.
+     * @r this object.
+     */
+    public extern setIncludeTags(list Tags);
+
+    /**
+     * Sets the exclude-tag filter. Tests whose tag set intersects
+     * the provided list are skipped. Exclude wins over include when
+     * a test matches both.
+     * @p Tags is a list of strings with the tags to exclude. Pass
+     * an empty list to clear the filter.
+     * @r this object.
+     */
+    public extern setExcludeTags(list Tags);
+
+    /**
+     * Returns whether a single @Test method would run under the
+     * current include/exclude tag filters. Useful for verifying
+     * filter logic without actually running the test.
+     * @p TestClassName is a string with the test class to use.
+     * @p TestFunctionName is the name of the @Test function.
+     * @r A bool with true if the test would run, false if filtered out.
+     */
+    public extern shouldRun(string TestClassName, string TestFunctionName);
+
+    /**
+     * Runs every @Test method in the named test class through the
+     * full per-test loop (so @BeforeEach, @AfterEach, @OnTestFail,
+     * and tag filters all apply). Returns a result map with keys
+     * total, skipped, passed, failed. Useful for tests that need to
+     * observe how the runner handles failing tests, hook errors,
+     * or filtered tests without polluting the outer test suite's
+     * pass/fail counts.
+     * @p TestClassName is a string with the test class to use.
+     * @r A map with int values for keys 'total', 'skipped',
+     * 'passed', and 'failed'.
+     */
+    public extern runClassTests(string TestClassName);
+
+    /**
      * Runs the @Before function.
      * @p TestClassName is a string with the test class to use.
      * @r this object

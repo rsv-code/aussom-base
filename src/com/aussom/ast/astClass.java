@@ -363,11 +363,31 @@ public class astClass extends astNode implements astNodeInt {
 					if (skipVal != null && skipVal.equals("true")) {
 						test.setSkip(true);
 					}
+					String tagsVal = ann.getAnnotationArgValueByName("tags");
+					if (tagsVal != null && !tagsVal.equals("")) {
+						for (String t : tagsVal.split(",")) {
+							test.addTag(t.trim());
+						}
+					}
+					String timeoutVal = ann.getAnnotationArgValueByName("timeoutMs");
+					if (timeoutVal != null && !timeoutVal.trim().equals("")) {
+						try {
+							test.setTimeoutMs(Long.parseLong(timeoutVal.trim()));
+						} catch (NumberFormatException nfe) {
+							// Leave timeoutMs at 0 (no timeout) for unparseable values.
+						}
+					}
 					testClass.addTest(test);
 				} else if (ann.getAnnotationName().equals("Before")) {
 					testClass.setBeforeFunctionName(funct.getName());
-				}  else if (ann.getAnnotationName().equals("After")) {
+				} else if (ann.getAnnotationName().equals("After")) {
 					testClass.setAfterFunctionName(funct.getName());
+				} else if (ann.getAnnotationName().equals("BeforeEach")) {
+					testClass.setBeforeEachFunctionName(funct.getName());
+				} else if (ann.getAnnotationName().equals("AfterEach")) {
+					testClass.setAfterEachFunctionName(funct.getName());
+				} else if (ann.getAnnotationName().equals("OnTestFail")) {
+					testClass.setOnTestFailFunctionName(funct.getName());
 				}
 			}
 		}

@@ -9,12 +9,23 @@ import com.aussom.types.*;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public class UnitTestRunner extends Engine {
     protected String name = "";
     protected String description = "";
     protected List<UnitTestClass> testClasses = new ArrayList<UnitTestClass>();
+
+    // When non-empty, only tests whose tag set intersects includeTags
+    // are run. Untagged tests are excluded. Empty means "no include
+    // filter" — i.e. all tests are eligible.
+    protected Set<String> includeTags = new LinkedHashSet<String>();
+
+    // When non-empty, tests whose tag set intersects excludeTags are
+    // skipped. Exclude wins over include if both match.
+    protected Set<String> excludeTags = new LinkedHashSet<String>();
 
     public UnitTestRunner(SecurityManagerInt SecurityManager) throws Exception {
         super(SecurityManager);
@@ -64,6 +75,43 @@ public class UnitTestRunner extends Engine {
             if (testClass.getClassName().equals(className)) return testClass;
         }
         return null;
+    }
+
+    public Set<String> getIncludeTags() {
+        return this.includeTags;
+    }
+    public void setIncludeTags(Set<String> includeTags) {
+        this.includeTags = (includeTags == null) ? new LinkedHashSet<String>() : includeTags;
+    }
+    public Set<String> getExcludeTags() {
+        return this.excludeTags;
+    }
+    public void setExcludeTags(Set<String> excludeTags) {
+        this.excludeTags = (excludeTags == null) ? new LinkedHashSet<String>() : excludeTags;
+    }
+
+    /**
+     * Returns true when a test should run given the current
+     * include/exclude tag filters. When excludeTags is non-empty and
+     * the test has at least one tag in it, the test is skipped.
+     * When includeTags is non-empty, the test must have at least one
+     * matching tag (untagged tests are skipped). When both filters
+     * are empty, all tests run.
+     */
+    public boolean shouldRun(UnitTest test) {
+        Set<String> testTags = test.getTags();
+        if (!this.excludeTags.isEmpty()) {
+            for (String t : testTags) {
+                if (this.excludeTags.contains(t)) return false;
+            }
+        }
+        if (!this.includeTags.isEmpty()) {
+            for (String t : testTags) {
+                if (this.includeTags.contains(t)) return true;
+            }
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -198,22 +246,65 @@ public class UnitTestRunner extends Engine {
                 if (test.getSkip()) {
                     result.skipped++;
                     testLogStr += "SKIPPED";
+                } else if (!this.shouldRun(test)) {
+                    result.skipped++;
+                    testLogStr += "SKIPPED (filtered)";
                 } else {
-                    int tret = 0;
+                    boolean passed = false;
+                    String failMsg = "";
 
-                    try {
-                        tret = this.runFunction(testClass, tenv, cls, test.getFunctionName());
-
-                        if (tret != 0) {
-                            result.failed++;
-                            testLogStr += "FAILED";
-                        } else {
-                            result.passed++;
-                            testLogStr += "PASSED";
+                    // @BeforeEach: failure here marks the test failed and
+                    // skips the test body, but @OnTestFail and @AfterEach
+                    // still run.
+                    boolean beforeEachOk = true;
+                    if (testClass.hasBeforeEach()) {
+                        try {
+                            this.runFunction(testClass, tenv, cls, testClass.getBeforeEachFunctionName());
+                        } catch (aussomException e) {
+                            beforeEachOk = false;
+                            failMsg = "@BeforeEach threw: " + e.getMessage();
                         }
-                    } catch (aussomException e) {
+                    }
+
+                    if (beforeEachOk) {
+                        try {
+                            int tret = this.runFunction(testClass, tenv, cls, test.getFunctionName());
+                            passed = (tret == 0);
+                            if (!passed) failMsg = "test returned non-zero";
+                        } catch (aussomException e) {
+                            passed = false;
+                            failMsg = e.getMessage();
+                        }
+                    }
+
+                    // @OnTestFail: best-effort. A throw here is logged
+                    // but does not change the recorded result.
+                    if (!passed && testClass.hasOnTestFail()) {
+                        try {
+                            this.runFunction(testClass, tenv, cls, testClass.getOnTestFailFunctionName());
+                        } catch (aussomException e) {
+                            console.get().err("@OnTestFail threw: " + e.getMessage());
+                        }
+                    }
+
+                    // @AfterEach: best-effort. Always runs.
+                    if (testClass.hasAfterEach()) {
+                        try {
+                            this.runFunction(testClass, tenv, cls, testClass.getAfterEachFunctionName());
+                        } catch (aussomException e) {
+                            console.get().err("@AfterEach threw: " + e.getMessage());
+                        }
+                    }
+
+                    if (passed) {
+                        result.passed++;
+                        testLogStr += "PASSED";
+                    } else {
                         result.failed++;
-                        testLogStr += "FAILED\n" + e.getMessage();
+                        testLogStr += "FAILED";
+                        if (failMsg != null && !failMsg.equals("")) {
+                            testLogStr += "\n" + failMsg;
+                        }
                     }
                 }
                 console.get().info(testLogStr);

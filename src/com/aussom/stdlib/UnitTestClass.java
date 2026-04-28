@@ -7,8 +7,14 @@ public class UnitTestClass {
     protected String name = "";
     protected String className = "";
 
+    // Class-level hooks fire once per class.
     protected String beforeFunctionName = "";
     protected String afterFunctionName = "";
+
+    // Per-test hooks fire around every individual @Test method.
+    protected String beforeEachFunctionName = "";
+    protected String afterEachFunctionName = "";
+    protected String onTestFailFunctionName = "";
 
     protected List<UnitTest> tests = new ArrayList<UnitTest>();
 
@@ -75,5 +81,41 @@ public class UnitTestClass {
 
     public boolean hasAfter() {
         return !this.afterFunctionName.trim().equals("");
+    }
+
+    public void setBeforeEachFunctionName(String beforeEachFunctionName) {
+        this.beforeEachFunctionName = beforeEachFunctionName;
+    }
+
+    public String getBeforeEachFunctionName() {
+        return beforeEachFunctionName;
+    }
+
+    public void setAfterEachFunctionName(String afterEachFunctionName) {
+        this.afterEachFunctionName = afterEachFunctionName;
+    }
+
+    public String getAfterEachFunctionName() {
+        return afterEachFunctionName;
+    }
+
+    public void setOnTestFailFunctionName(String onTestFailFunctionName) {
+        this.onTestFailFunctionName = onTestFailFunctionName;
+    }
+
+    public String getOnTestFailFunctionName() {
+        return onTestFailFunctionName;
+    }
+
+    public boolean hasBeforeEach() {
+        return !this.beforeEachFunctionName.trim().equals("");
+    }
+
+    public boolean hasAfterEach() {
+        return !this.afterEachFunctionName.trim().equals("");
+    }
+
+    public boolean hasOnTestFail() {
+        return !this.onTestFailFunctionName.trim().equals("");
     }
 }

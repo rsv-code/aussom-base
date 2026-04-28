@@ -1,9 +1,19 @@
 package com.aussom.stdlib;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 public class UnitTest {
     protected String name = "";
     protected String functionName = "";
     protected boolean skip = false;
+    protected Set<String> tags = new LinkedHashSet<String>();
+
+    // Per-test timeout in milliseconds. 0 means no timeout. The base
+    // runner does not enforce this; the value is captured here so a
+    // downstream runner (the aussom CLI) can drive a watchdog. See
+    // design/aunit-upgrade-eval.md (M8b).
+    protected long timeoutMs = 0;
 
     public UnitTest() { }
     public UnitTest(String functionName) {
@@ -31,6 +41,26 @@ public class UnitTest {
     }
     public void setSkip(boolean skip) {
         this.skip = skip;
+    }
+
+    public Set<String> getTags() {
+        return tags;
+    }
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
+    }
+    public void addTag(String tag) {
+        if (tag != null && !tag.equals("")) this.tags.add(tag);
+    }
+    public boolean hasTag(String tag) {
+        return this.tags.contains(tag);
+    }
+
+    public long getTimeoutMs() {
+        return timeoutMs;
+    }
+    public void setTimeoutMs(long timeoutMs) {
+        this.timeoutMs = timeoutMs;
     }
 
     public String getTestDisplayString() {

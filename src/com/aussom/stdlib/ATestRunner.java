@@ -10,7 +10,9 @@ import com.aussom.types.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class ATestRunner {
     protected UnitTestRunner runner = null;
@@ -195,6 +197,109 @@ public class ATestRunner {
         // Reset the class objects
         this.classObjects = new HashMap<String, AussomType>();
         return env.getClassInstance();
+    }
+
+    public AussomType hasBeforeEach(Environment env, ArrayList<AussomType> args) throws Exception {
+        String className = ((AussomString)args.get(0)).getValue();
+        UnitTestClass testClass = this.runner.getTestClassByName(className);
+        if (testClass != null) {
+            return new AussomBool(testClass.hasBeforeEach());
+        } else {
+            return new AussomException("testRunner.hasBeforeEach(): Provided class '" + className + "' not found.");
+        }
+    }
+
+    public AussomType hasAfterEach(Environment env, ArrayList<AussomType> args) throws Exception {
+        String className = ((AussomString)args.get(0)).getValue();
+        UnitTestClass testClass = this.runner.getTestClassByName(className);
+        if (testClass != null) {
+            return new AussomBool(testClass.hasAfterEach());
+        } else {
+            return new AussomException("testRunner.hasAfterEach(): Provided class '" + className + "' not found.");
+        }
+    }
+
+    public AussomType hasOnTestFail(Environment env, ArrayList<AussomType> args) throws Exception {
+        String className = ((AussomString)args.get(0)).getValue();
+        UnitTestClass testClass = this.runner.getTestClassByName(className);
+        if (testClass != null) {
+            return new AussomBool(testClass.hasOnTestFail());
+        } else {
+            return new AussomException("testRunner.hasOnTestFail(): Provided class '" + className + "' not found.");
+        }
+    }
+
+    public AussomType getTestTags(Environment env, ArrayList<AussomType> args) throws Exception {
+        String className = ((AussomString)args.get(0)).getValue();
+        String functName = ((AussomString)args.get(1)).getValue();
+        UnitTestClass testClass = this.runner.getTestClassByName(className);
+        if (testClass == null) {
+            return new AussomException("testRunner.getTestTags(): Provided class '" + className + "' not found.");
+        }
+        for (UnitTest t : testClass.getTests()) {
+            if (t.getFunctionName().equals(functName)) {
+                AussomList ret = new AussomList();
+                for (String tag : t.getTags()) ret.add(new AussomString(tag));
+                return ret;
+            }
+        }
+        return new AussomException("testRunner.getTestTags(): Function '" + functName + "' not found on class '" + className + "'.");
+    }
+
+    public AussomType getTestTimeoutMs(Environment env, ArrayList<AussomType> args) throws Exception {
+        String className = ((AussomString)args.get(0)).getValue();
+        String functName = ((AussomString)args.get(1)).getValue();
+        UnitTestClass testClass = this.runner.getTestClassByName(className);
+        if (testClass == null) {
+            return new AussomException("testRunner.getTestTimeoutMs(): Provided class '" + className + "' not found.");
+        }
+        for (UnitTest t : testClass.getTests()) {
+            if (t.getFunctionName().equals(functName)) {
+                return new AussomInt(t.getTimeoutMs());
+            }
+        }
+        return new AussomException("testRunner.getTestTimeoutMs(): Function '" + functName + "' not found on class '" + className + "'.");
+    }
+
+    public AussomType setIncludeTags(Environment env, ArrayList<AussomType> args) throws Exception {
+        AussomList tags = (AussomList)args.get(0);
+        Set<String> set = new LinkedHashSet<String>();
+        for (AussomType t : tags.getValue()) set.add(((AussomString)t).getValue());
+        this.runner.setIncludeTags(set);
+        return env.getClassInstance();
+    }
+
+    public AussomType setExcludeTags(Environment env, ArrayList<AussomType> args) throws Exception {
+        AussomList tags = (AussomList)args.get(0);
+        Set<String> set = new LinkedHashSet<String>();
+        for (AussomType t : tags.getValue()) set.add(((AussomString)t).getValue());
+        this.runner.setExcludeTags(set);
+        return env.getClassInstance();
+    }
+
+    public AussomType runClassTests(Environment env, ArrayList<AussomType> args) throws Exception {
+        String className = ((AussomString)args.get(0)).getValue();
+        UnitTestClass testClass = this.runner.getTestClassByName(className);
+        if (testClass == null) {
+            return new AussomException("testRunner.runClassTests(): Provided class '" + className + "' not found.");
+        }
+        UnitTestResult result = this.runner.runClass(testClass);
+        return result.toAussomType();
+    }
+
+    public AussomType shouldRun(Environment env, ArrayList<AussomType> args) throws Exception {
+        String className = ((AussomString)args.get(0)).getValue();
+        String functName = ((AussomString)args.get(1)).getValue();
+        UnitTestClass testClass = this.runner.getTestClassByName(className);
+        if (testClass == null) {
+            return new AussomException("testRunner.shouldRun(): Provided class '" + className + "' not found.");
+        }
+        for (UnitTest t : testClass.getTests()) {
+            if (t.getFunctionName().equals(functName)) {
+                return new AussomBool(this.runner.shouldRun(t));
+            }
+        }
+        return new AussomException("testRunner.shouldRun(): Function '" + functName + "' not found on class '" + className + "'.");
     }
 
     protected AussomType getClassObject(astClass cls) throws aussomException {

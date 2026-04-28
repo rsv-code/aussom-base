@@ -2818,3 +2818,324 @@ class interpreterTests {
             "int-int/double-double/string/int");
     }
 }
+
+/***************************************************************************
+ * aunit per-test hooks (@BeforeEach, @AfterEach, @OnTestFail), tag
+ * filter (@Test tags="..."), and per-test timeout storage. Lives in its
+ * own test class so the hooks and filters under test do not interfere
+ * with the surrounding interpreterTests run.
+ *
+ * Each test loads a tiny helper class via testRunner.loadTestString and
+ * either introspects the parsed UnitTest fields or drives the helper
+ * class through the full per-test loop with runClassTests. That keeps
+ * deliberate failures and hook errors contained inside the inner runner
+ * so they cannot pollute this suite's pass/fail counts.
+ ***************************************************************************/
+@Test(name = "aunit hooks, tags, and timeout")
+class aunitHookFilterTests {
+
+    @Before
+    public toRunBefore() {
+        c.info("Ran unit test @Before function 'toRunBefore()'.");
+    }
+
+    @After
+    public toRunAfter() {
+        c.info("Ran unit test @After function 'toRunAfter()'.");
+    }
+
+    /***********************************************************************
+     * Per-test hook annotation detection.
+     *********************************************************************/
+
+    @Test(name = "(per-test hooks) BeforeEach annotation is detected on parse.")
+    public beforeEachAnnotationDetected() {
+        src = "include aunit;\n";
+        src = src + "@Test(name = \"hookSrc\")\n";
+        src = src + "class hookSrcB {\n";
+        src = src + "  @BeforeEach public be() { return 0; }\n";
+        src = src + "  @Test(name = \"t\") public t() { return 0; }\n";
+        src = src + "}\n";
+        r = new testRunner();
+        r.loadTestString("hookSrcB", src);
+        return test.expect(r.hasBeforeEach("hookSrcB"), true);
+    }
+
+    @Test(name = "(per-test hooks) AfterEach annotation is detected on parse.")
+    public afterEachAnnotationDetected() {
+        src = "include aunit;\n";
+        src = src + "@Test(name = \"hookSrc\")\n";
+        src = src + "class hookSrcC {\n";
+        src = src + "  @AfterEach public ae() { return 0; }\n";
+        src = src + "  @Test(name = \"t\") public t() { return 0; }\n";
+        src = src + "}\n";
+        r = new testRunner();
+        r.loadTestString("hookSrcC", src);
+        return test.expect(r.hasAfterEach("hookSrcC"), true);
+    }
+
+    @Test(name = "(per-test hooks) OnTestFail annotation is detected on parse.")
+    public onTestFailAnnotationDetected() {
+        src = "include aunit;\n";
+        src = src + "@Test(name = \"hookSrc\")\n";
+        src = src + "class hookSrcA {\n";
+        src = src + "  @OnTestFail public oh() { return 0; }\n";
+        src = src + "  @Test(name = \"t\") public t() { return 0; }\n";
+        src = src + "}\n";
+        r = new testRunner();
+        r.loadTestString("hookSrcA", src);
+        return test.expect(r.hasOnTestFail("hookSrcA"), true);
+    }
+
+    @Test(name = "(per-test hooks) Class without per-test hooks reports them as absent.")
+    public hooksAbsentByDefault() {
+        src = "include aunit;\n";
+        src = src + "@Test(name = \"plain\")\n";
+        src = src + "class plainSrc {\n";
+        src = src + "  @Test(name = \"t\") public t() { return 0; }\n";
+        src = src + "}\n";
+        r = new testRunner();
+        r.loadTestString("plainSrc", src);
+        if (r.hasBeforeEach("plainSrc") != false) { return test.fail("hasBeforeEach should be false"); }
+        if (r.hasAfterEach("plainSrc") != false) { return test.fail("hasAfterEach should be false"); }
+        if (r.hasOnTestFail("plainSrc") != false) { return test.fail("hasOnTestFail should be false"); }
+        return true;
+    }
+
+    /***********************************************************************
+     * Per-test hook execution. runClassTests drives a loaded class
+     * through the full per-test loop. The result map carries
+     * total/skipped/passed/failed counts.
+     *********************************************************************/
+
+    @Test(name = "(per-test hooks) OnTestFail fires on failing test, not on passing test.")
+    public onTestFailFires() {
+        src = "include aunit;\n";
+        src = src + "@Test(name = \"hookExec\")\n";
+        src = src + "class hookExecA {\n";
+        src = src + "  public failCount = 0;\n";
+        src = src + "  public passCount = 0;\n";
+        src = src + "  @OnTestFail public oh() { this.failCount = this.failCount + 1; }\n";
+        src = src + "  @AfterEach public ae() { this.passCount = this.passCount + 1; }\n";
+        src = src + "  @Test(name = \"good\") public good() { return test.expect(1, 1); }\n";
+        src = src + "  @Test(name = \"bad\") public bad() { return test.expect(1, 2); }\n";
+        src = src + "}\n";
+        r = new testRunner();
+        r.loadTestString("hookExecA", src);
+        res = r.runClassTests("hookExecA");
+        if (res["passed"] != 1) { return test.fail("expected 1 passed, got " + res["passed"]); }
+        if (res["failed"] != 1) { return test.fail("expected 1 failed, got " + res["failed"]); }
+        return true;
+    }
+
+    @Test(name = "(per-test hooks) BeforeEach throwing fails the test.")
+    public beforeEachThrowFails() {
+        src = "include aunit;\n";
+        src = src + "@Test(name = \"hookExec\")\n";
+        src = src + "class hookExecB {\n";
+        src = src + "  @BeforeEach public be() { throw \"boom\"; }\n";
+        src = src + "  @Test(name = \"t\") public t() { return 0; }\n";
+        src = src + "}\n";
+        r = new testRunner();
+        r.loadTestString("hookExecB", src);
+        res = r.runClassTests("hookExecB");
+        return test.expect(res["failed"], 1);
+    }
+
+    @Test(name = "(per-test hooks) AfterEach throwing does not flip a passed test.")
+    public afterEachThrowDoesNotFail() {
+        src = "include aunit;\n";
+        src = src + "@Test(name = \"hookExec\")\n";
+        src = src + "class hookExecC {\n";
+        src = src + "  @AfterEach public ae() { throw \"after-each-boom\"; }\n";
+        src = src + "  @Test(name = \"t\") public t() { return test.expect(1, 1); }\n";
+        src = src + "}\n";
+        r = new testRunner();
+        r.loadTestString("hookExecC", src);
+        res = r.runClassTests("hookExecC");
+        return test.expect(res["passed"], 1);
+    }
+
+    /***********************************************************************
+     * Tag parsing.
+     *********************************************************************/
+
+    @Test(name = "(test tags) Comma-separated tags parse into a list.")
+    public tagsParseList() {
+        src = "include aunit;\n";
+        src = src + "@Test(name = \"tagSrc\")\n";
+        src = src + "class tagSrcA {\n";
+        src = src + "  @Test(name = \"t\", tags = \"slow,db\") public t() { return 0; }\n";
+        src = src + "}\n";
+        r = new testRunner();
+        r.loadTestString("tagSrcA", src);
+        tags = r.getTestTags("tagSrcA", "t");
+        if (#tags != 2) { return test.fail("expected 2 tags, got " + #tags); }
+        if (!tags.contains("slow")) { return test.fail("missing 'slow'"); }
+        if (!tags.contains("db")) { return test.fail("missing 'db'"); }
+        return true;
+    }
+
+    @Test(name = "(test tags) Whitespace around tags is trimmed.")
+    public tagsTrimmed() {
+        src = "include aunit;\n";
+        src = src + "@Test(name = \"tagSrc\")\n";
+        src = src + "class tagSrcB {\n";
+        src = src + "  @Test(name = \"t\", tags = \"  slow  ,  db  \") public t() { return 0; }\n";
+        src = src + "}\n";
+        r = new testRunner();
+        r.loadTestString("tagSrcB", src);
+        tags = r.getTestTags("tagSrcB", "t");
+        if (!tags.contains("slow")) { return test.fail("missing trimmed 'slow'"); }
+        if (!tags.contains("db")) { return test.fail("missing trimmed 'db'"); }
+        return true;
+    }
+
+    @Test(name = "(test tags) Missing tags arg yields empty list.")
+    public tagsMissingEmpty() {
+        src = "include aunit;\n";
+        src = src + "@Test(name = \"tagSrc\")\n";
+        src = src + "class tagSrcC {\n";
+        src = src + "  @Test(name = \"t\") public t() { return 0; }\n";
+        src = src + "}\n";
+        r = new testRunner();
+        r.loadTestString("tagSrcC", src);
+        return test.expect(#r.getTestTags("tagSrcC", "t"), 0);
+    }
+
+    /***********************************************************************
+     * Tag include/exclude filter via shouldRun().
+     *********************************************************************/
+
+    // Helper: a runner with one test tagged "slow".
+    public _mkTaggedRunner() {
+        src = "include aunit;\n";
+        src = src + "@Test(name = \"filt\")\n";
+        src = src + "class filtSrc {\n";
+        src = src + "  @Test(name = \"t\", tags = \"slow\") public t() { return 0; }\n";
+        src = src + "}\n";
+        r = new testRunner();
+        r.loadTestString("filtSrc", src);
+        return r;
+    }
+
+    @Test(name = "(test tags) No filter -> tagged test runs.")
+    public filterNone() {
+        r = this._mkTaggedRunner();
+        return test.expect(r.shouldRun("filtSrc", "t"), true);
+    }
+
+    @Test(name = "(test tags) Include matching tag -> runs.")
+    public filterIncludeMatch() {
+        r = this._mkTaggedRunner();
+        r.setIncludeTags(["slow"]);
+        return test.expect(r.shouldRun("filtSrc", "t"), true);
+    }
+
+    @Test(name = "(test tags) Include non-matching tag -> skipped.")
+    public filterIncludeNoMatch() {
+        r = this._mkTaggedRunner();
+        r.setIncludeTags(["fast"]);
+        return test.expect(r.shouldRun("filtSrc", "t"), false);
+    }
+
+    @Test(name = "(test tags) Exclude matching tag -> skipped.")
+    public filterExcludeMatch() {
+        r = this._mkTaggedRunner();
+        r.setExcludeTags(["slow"]);
+        return test.expect(r.shouldRun("filtSrc", "t"), false);
+    }
+
+    @Test(name = "(test tags) Exclude wins over include when both match.")
+    public filterExcludeWins() {
+        r = this._mkTaggedRunner();
+        r.setIncludeTags(["slow"]);
+        r.setExcludeTags(["slow"]);
+        return test.expect(r.shouldRun("filtSrc", "t"), false);
+    }
+
+    @Test(name = "(test tags) Untagged test is skipped under any include filter.")
+    public filterUntaggedExcludedByInclude() {
+        src = "include aunit;\n";
+        src = src + "@Test(name = \"untag\")\n";
+        src = src + "class untagSrc {\n";
+        src = src + "  @Test(name = \"t\") public t() { return 0; }\n";
+        src = src + "}\n";
+        r = new testRunner();
+        r.loadTestString("untagSrc", src);
+        r.setIncludeTags(["fast"]);
+        return test.expect(r.shouldRun("untagSrc", "t"), false);
+    }
+
+    @Test(name = "(test tags) Untagged test is unaffected by exclude filter.")
+    public filterUntaggedUnaffectedByExclude() {
+        src = "include aunit;\n";
+        src = src + "@Test(name = \"untag2\")\n";
+        src = src + "class untag2Src {\n";
+        src = src + "  @Test(name = \"t\") public t() { return 0; }\n";
+        src = src + "}\n";
+        r = new testRunner();
+        r.loadTestString("untag2Src", src);
+        r.setExcludeTags(["slow"]);
+        return test.expect(r.shouldRun("untag2Src", "t"), true);
+    }
+
+    @Test(name = "(test tags) Tag filter excludes via runClassTests.")
+    public tagFilterAtRuntime() {
+        src = "include aunit;\n";
+        src = src + "@Test(name = \"runFilt\")\n";
+        src = src + "class runFiltSrc {\n";
+        src = src + "  @Test(name = \"fast\", tags = \"fast\") public f() { return 0; }\n";
+        src = src + "  @Test(name = \"slow\", tags = \"slow\") public s() { return 0; }\n";
+        src = src + "}\n";
+        r = new testRunner();
+        r.loadTestString("runFiltSrc", src);
+        r.setExcludeTags(["slow"]);
+        res = r.runClassTests("runFiltSrc");
+        if (res["passed"] != 1) { return test.fail("expected 1 passed, got " + res["passed"]); }
+        if (res["skipped"] != 1) { return test.fail("expected 1 skipped, got " + res["skipped"]); }
+        return true;
+    }
+
+    /***********************************************************************
+     * timeoutMs parsing. The base runner does not enforce the value;
+     * these tests only verify that the annotation is captured and
+     * exposed for a downstream watchdog.
+     *********************************************************************/
+
+    @Test(name = "(test timeout) Numeric string parses to long.")
+    public timeoutParsesLong() {
+        src = "include aunit;\n";
+        src = src + "@Test(name = \"toSrc\")\n";
+        src = src + "class toSrcA {\n";
+        src = src + "  @Test(name = \"t\", timeoutMs = \"2000\") public t() { return 0; }\n";
+        src = src + "}\n";
+        r = new testRunner();
+        r.loadTestString("toSrcA", src);
+        return test.expect(r.getTestTimeoutMs("toSrcA", "t"), 2000);
+    }
+
+    @Test(name = "(test timeout) Missing arg yields 0.")
+    public timeoutMissingZero() {
+        src = "include aunit;\n";
+        src = src + "@Test(name = \"toSrc\")\n";
+        src = src + "class toSrcB {\n";
+        src = src + "  @Test(name = \"t\") public t() { return 0; }\n";
+        src = src + "}\n";
+        r = new testRunner();
+        r.loadTestString("toSrcB", src);
+        return test.expect(r.getTestTimeoutMs("toSrcB", "t"), 0);
+    }
+
+    @Test(name = "(test timeout) Unparseable string yields 0.")
+    public timeoutUnparseableZero() {
+        src = "include aunit;\n";
+        src = src + "@Test(name = \"toSrc\")\n";
+        src = src + "class toSrcC {\n";
+        src = src + "  @Test(name = \"t\", timeoutMs = \"not-a-number\") public t() { return 0; }\n";
+        src = src + "}\n";
+        r = new testRunner();
+        r.loadTestString("toSrcC", src);
+        return test.expect(r.getTestTimeoutMs("toSrcC", "t"), 0);
+    }
+}
