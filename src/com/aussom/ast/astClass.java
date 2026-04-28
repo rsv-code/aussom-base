@@ -135,9 +135,9 @@ public class astClass extends astNode implements astNodeInt {
 	 * classified by signature shape (exact, wildcard, variadic)
 	 * and rejects same-mangle duplicates with a class-init error.
 	 */
-	public void addFunction(String Name, astNode Value) {
+	public void addFunction(String Name, astNode Value) throws aussomException {
 		if (!(Value instanceof astFunctDef)) {
-			throw new RuntimeException("astClass.addFunction: expected astFunctDef, got " + Value.getClass().getName());
+			throw new aussomException(this, "astClass.addFunction: expected astFunctDef, got " + Value.getClass().getName(), "");
 		}
 		astFunctDef def = (astFunctDef) Value;
 		this.functList.add(def);
@@ -145,7 +145,7 @@ public class astClass extends astNode implements astNodeInt {
 		this.classifyAndAdd(Name, def);
 	}
 
-	private void classifyAndAdd(String name, astFunctDef def) {
+	private void classifyAndAdd(String name, astFunctDef def) throws aussomException {
 		String sig = def.getSignature();
 		if (def.isVariadic()) {
 			String head = headSignature(sig);
@@ -239,7 +239,7 @@ public class astClass extends astNode implements astNodeInt {
 	 * product of per-slot tag sets for the first `arity`
 	 * positions.
 	 */
-	private void registerSigVariants(String name, astFunctDef def, char[][] tagsPerPos, int arity) {
+	private void registerSigVariants(String name, astFunctDef def, char[][] tagsPerPos, int arity) throws aussomException {
 		int variantCount = 1;
 		for (int i = 0; i < arity; i++) variantCount *= tagsPerPos[i].length;
 		for (int v = 0; v < variantCount; v++) {
@@ -262,12 +262,12 @@ public class astClass extends astNode implements astNodeInt {
 		}
 	}
 
-	private static RuntimeException duplicateSignatureError(String name, String sig, astFunctDef prior, astFunctDef next) {
+	private aussomException duplicateSignatureError(String name, String sig, astFunctDef prior, astFunctDef next) {
 		String priorLoc = prior.getFileName() + ":" + prior.getLineNum();
 		String nextLoc = next.getFileName() + ":" + next.getLineNum();
 		String displaySig = sig.isEmpty() ? "()" : "(" + sig + ")";
-		return new RuntimeException("Duplicate method overload '" + name + displaySig
-			+ "' declared at " + nextLoc + "; first declared at " + priorLoc + ".");
+		return new aussomException(this, "Duplicate method overload '" + name + displaySig
+			+ "' declared at " + nextLoc + "; first declared at " + priorLoc + ".", "");
 	}
 
 	private static String headSignature(String fullSig) {
