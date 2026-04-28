@@ -132,23 +132,31 @@ public class Main {
 		logger.setLevel(DefaultLoggingImpl.INFO);
 		console.get().register(logger);
 
-		// Create a new Aussom engine.
-		Engine eng = new Engine(new DefaultSecurityManagerImpl());
+		int result = 0;
+		try {
+			// Create a new Aussom engine.
+			Engine eng = new Engine(new DefaultSecurityManagerImpl());
 
-		// Sets debug output to true.
-		// eng.setDebug(true);
+			// Sets debug output to true.
+			// eng.setDebug(true);
 
-		// Add resource include path for testing.
-		eng.addResourceIncludePath("/com/aussom/stdlib/aus/");
+			// Add resource include path for testing.
+			eng.addResourceIncludePath("/com/aussom/stdlib/aus/");
 
-		// Parse the provided file name.
-		eng.parseFile(ScriptFile);
+			// Parse the provided file name.
+			eng.parseFile(ScriptFile);
 
-		// Prints the full parsed abastract syntax tree of all the sources.
-		//System.out.println(eng.toString());
-
-		// Attempt to run the code.
-		int result = eng.run();
+			// Attempt to run the code.
+			result = eng.run();
+		} catch (aussomException e) {
+			// P3: route engine-level failures through the console
+			// rather than letting them surface as a Java stack trace.
+			console.get().err(e.getAussomStackTrace());
+			result = 1;
+		} catch (Exception e) {
+			console.get().err(Util.stackTraceToString(e));
+			result = 1;
+		}
 
 		// Exit with the code now.
 		System.exit(result);

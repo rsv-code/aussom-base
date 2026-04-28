@@ -450,11 +450,11 @@ public class astExpression extends astNode implements astNodeInt {
 		if (this.isNumber(r_left) && this.isNumber(r_right)) {
 		  if (r_right.getType() == cType.cInt && this.getValueInt(r_right) == 0) {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(getLineNum(), "DIV_BY_0", "astExpression.evailDiv(): Division by 0 exception.", env.getCallStack().getStackTrace());
+			e.setException(getLineNum(), "DIV_BY_0", "astExpression.evalDiv(): Division by 0 exception.", env.getCallStack().getStackTrace());
 			return e;
 		  } else if (r_right.getType() == cType.cDouble && ((AussomDouble)r_right).getValue() == 0.0) {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(getLineNum(), "DIV_BY_0", "astExpression.evailDiv(): Division by 0 exception.", env.getCallStack().getStackTrace());
+			e.setException(getLineNum(), "DIV_BY_0", "astExpression.evalDiv(): Division by 0 exception.", env.getCallStack().getStackTrace());
 			return e;
 		  } else {
 			if (this.isInt(r_left) && this.isInt(r_right)) {
@@ -470,11 +470,11 @@ public class astExpression extends astNode implements astNodeInt {
 		} else {
 		  if (!this.isNumber(r_left)) {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evailDiv(): Left side of expression isn't a number.", env.getCallStack().getStackTrace());
+			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalDiv(): Left side of expression isn't a number.", env.getCallStack().getStackTrace());
 			return e;
 		  } else {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evailDiv(): Right side of expression isn't a number.", env.getCallStack().getStackTrace());
+			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalDiv(): Right side of expression isn't a number.", env.getCallStack().getStackTrace());
 			return e;
 		  }
 		}
@@ -488,11 +488,11 @@ public class astExpression extends astNode implements astNodeInt {
 		if (this.isNumber(r_left) && this.isNumber(r_right)) {
 		  if (r_right.getType() == cType.cInt && this.getValueInt(r_right) == 0) {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(getLineNum(), "DIV_BY_0", "astExpression.evailModulus(): Division by 0 exception.", env.getCallStack().getStackTrace());
+			e.setException(getLineNum(), "DIV_BY_0", "astExpression.evalModulus(): Division by 0 exception.", env.getCallStack().getStackTrace());
 			return e;
 		  } else if (r_right.getType() == cType.cDouble && ((AussomDouble)r_right).getValue() == 0.0) {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(getLineNum(), "DIV_BY_0", "astExpression.evailModulus(): Division by 0 exception.", env.getCallStack().getStackTrace());
+			e.setException(getLineNum(), "DIV_BY_0", "astExpression.evalModulus(): Division by 0 exception.", env.getCallStack().getStackTrace());
 			return e;
 		  } else {
 			if (this.isInt(r_left) && this.isInt(r_right)) {
@@ -508,11 +508,11 @@ public class astExpression extends astNode implements astNodeInt {
 		} else {
 		  if (!this.isNumber(r_left)) {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evailModulus(): Left side of expression isn't a number.", env.getCallStack().getStackTrace());
+			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalModulus(): Left side of expression isn't a number.", env.getCallStack().getStackTrace());
 			return e;
 		  } else {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evailModulus(): Right side of expression isn't a number.", env.getCallStack().getStackTrace());
+			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalModulus(): Right side of expression isn't a number.", env.getCallStack().getStackTrace());
 			return e;
 		  }
 		}

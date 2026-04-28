@@ -36,18 +36,24 @@ import com.aussom.stdlib.console;
 %{
   StringBuffer string = new StringBuffer();
   String fileName = "<unknown>";
+  boolean hasErrors = false;
 
   private Symbol symbol(int sym) {
     return new Symbol(sym, yyline+1, yycolumn+1);
   }
-  
+
   private Symbol symbol(int sym, Object val) {
     return new Symbol(sym, yyline+1, yycolumn+1, val);
   }
-  
+
   private void error(String message) {
+    this.hasErrors = true;
     console.get().err(this.fileName + " [" + (yyline+1) + "]: Error at line "
       + (yyline+1) + ", column " + (yycolumn+1) + " : " + message);
+  }
+
+  public boolean hasErrors() {
+    return this.hasErrors;
   }
 
   Lexer(java.io.Reader in, String FileName) {

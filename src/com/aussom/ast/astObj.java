@@ -93,12 +93,12 @@ public class astObj  extends astNode implements astNodeInt {
 					ret = this.getChild().eval(tenv, getRef);
 				} else {
 					AussomException e = new AussomException(exType.exInternal);
-					e.setException(getLineNum(), "NOT_IMPLEMENTED", "aObj.callObjStart(): Static class with child of '" + this.getChild().getType().name() + "' found.", env.getCallStack().getStackTrace());
+					e.setException(getLineNum(), "NOT_IMPLEMENTED", "astObj.evalObjStart(): Static class with child of '" + this.getChild().getType().name() + "' found.", env.getCallStack().getStackTrace());
 					return e;
 				}
 			} else {
 				AussomException e = new AussomException(exType.exRuntime);
-				e.setException(getLineNum(), "NO_OPERATION", "aObj.callObjStart(): Static class object found but no child function or property provided.", env.getCallStack().getStackTrace());
+				e.setException(getLineNum(), "NO_OPERATION", "astObj.evalObjStart(): Static class object found but no child function or property provided.", env.getCallStack().getStackTrace());
 				return e;
 			}
 		}
@@ -118,10 +118,11 @@ public class astObj  extends astNode implements astNodeInt {
 		  ret = this.getChild().eval(tenv, getRef);
 		}
 		
-		// Else, don't know what to do here.
+		// Else, the name didn't match a class, static class, or local
+		// variable in scope. Treat as undefined.
 		else {
-		  AussomException e = new AussomException(exType.exInternal);
-		  e.setException(getLineNum(), "NOT_IMPLEMENTED", "aObj.callObjStart(): Unmatched object type for '" + this.getName() + "'.", env.getCallStack().getStackTrace());
+		  AussomException e = new AussomException(exType.exRuntime);
+		  e.setException(getLineNum(), "UNDEFINED_NAME", "astObj.evalObjStart(): Undefined name '" + this.getName() + "'.", env.getCallStack().getStackTrace());
 		  return e;
 		}
 		
@@ -149,7 +150,7 @@ public class astObj  extends astNode implements astNodeInt {
 			}
 		  } else {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(getLineNum(), "NO_ACCESS", "aObj.callObj(): No access to member '" + this.getName() + "'.", env.getCallStack().getStackTrace());
+			e.setException(getLineNum(), "NO_ACCESS", "astObj.evalObj(): No access to member '" + this.getName() + "'.", env.getCallStack().getStackTrace());
 			return e;
 		  }
 		}
@@ -175,7 +176,7 @@ public class astObj  extends astNode implements astNodeInt {
 			if (this.getChild() != null) {
 				if (!mp.contains(key)) {
 					AussomException e = new AussomException(exType.exRuntime);
-					e.setException(this.getLineNum(), "MAP_MISSING_KEY", "aObj.callObj(): Map doesn't have key '" + key + "'.", env.getCallStack().getStackTrace());
+					e.setException(this.getLineNum(), "MAP_MISSING_KEY", "astObj.evalObj(): Map doesn't have key '" + key + "'.", env.getCallStack().getStackTrace());
 					return e;
 				}
 				Environment tenv = env.clone(mp.getValue().get(key));
@@ -190,7 +191,7 @@ public class astObj  extends astNode implements astNodeInt {
 				ret = mp.getValue().get(key);
 			} else {
 				AussomException e = new AussomException(exType.exRuntime);
-				e.setException(this.getLineNum(), "MAP_MISSING_KEY", "aObj.callObj(): Map doesn't have key '" + key + "'.", env.getCallStack().getStackTrace());
+				e.setException(this.getLineNum(), "MAP_MISSING_KEY", "astObj.evalObj(): Map doesn't have key '" + key + "'.", env.getCallStack().getStackTrace());
 				return e;
 			}
 		}
@@ -221,17 +222,17 @@ public class astObj  extends astNode implements astNodeInt {
 				}
 			  } else {
 				AussomException e = new AussomException(exType.exRuntime);
-				e.setException(this.getLineNum(), "INDEX_OUT_OF_BOUNDS", "aObj.callObj(): Index out of bounds.", env.getCallStack().getStackTrace());
+				e.setException(this.getLineNum(), "INDEX_OUT_OF_BOUNDS", "astObj.evalObj(): Index out of bounds.", env.getCallStack().getStackTrace());
 				return e;
 			  }
 			} else {
 			  AussomException e = new AussomException(exType.exRuntime);
-			  e.setException(this.getLineNum(), "INDEX_NOT_FOUND", "aObj.callObj(): Provided index isn't an integer value.", env.getCallStack().getStackTrace());
+			  e.setException(this.getLineNum(), "INDEX_NOT_FOUND", "astObj.evalObj(): Provided index isn't an integer value.", env.getCallStack().getStackTrace());
 			  return e;
 			}
 		  } else {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(this.getLineNum(), "INDEX_NOT_FOUND", "aObj.callObj(): List found but no index found.", env.getCallStack().getStackTrace());
+			e.setException(this.getLineNum(), "INDEX_NOT_FOUND", "astObj.evalObj(): List found but no index found.", env.getCallStack().getStackTrace());
 			return e;
 		  }
 		}
@@ -254,7 +255,7 @@ public class astObj  extends astNode implements astNodeInt {
 							ret = this.getChild().eval(tenv, getRef);
 						} else {
 							AussomException e = new AussomException(exType.exRuntime);
-							e.setException(this.getLineNum(), "INVALID_EXPRESSION", "aObj.callObj(): Expecting type Map but found '" + ((AussomObject) env.getCurObj()).getType() + "' instead.", env.getCallStack().getStackTrace());
+							e.setException(this.getLineNum(), "INVALID_EXPRESSION", "astObj.evalObj(): Expecting type Map but found '" + ((AussomObject) env.getCurObj()).getType() + "' instead.", env.getCallStack().getStackTrace());
 							return e;
 						}
 					} else {
@@ -262,19 +263,19 @@ public class astObj  extends astNode implements astNodeInt {
 					}
 				} else {
 					AussomException e = new AussomException(exType.exRuntime);
-					e.setException(this.getLineNum(), "NO_MEMBER_FOUND", "aObj.callObj(): Object doesn't have member '" + ind + "'.", env.getCallStack().getStackTrace());
+					e.setException(this.getLineNum(), "NO_MEMBER_FOUND", "astObj.evalObj(): Object doesn't have member '" + ind + "'.", env.getCallStack().getStackTrace());
 					return e;
 				}
 			} else {
 				AussomException e = new AussomException(exType.exRuntime);
-				e.setException(this.getLineNum(), "INDEX_NOT_FOUND", "aObj.callObj(): Provided index isn't a string value.", env.getCallStack().getStackTrace());
+				e.setException(this.getLineNum(), "INDEX_NOT_FOUND", "astObj.evalObj(): Provided index isn't a string value.", env.getCallStack().getStackTrace());
 				return e;
 			}
 		}
 
 		else {
 		  AussomException e = new AussomException(exType.exInternal);
-		  e.setException(this.getLineNum(), "NO_MEMBER_FOUND", "aObj.callObj(): Unmatched object type for '" + this.getName() + "'.", env.getCallStack().getStackTrace());
+		  e.setException(this.getLineNum(), "NO_MEMBER_FOUND", "astObj.evalObj(): Unmatched object type for '" + this.getName() + "'.", env.getCallStack().getStackTrace());
 		  return e;
 		}
 		

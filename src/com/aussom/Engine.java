@@ -487,6 +487,13 @@ public class Engine {
 		Lexer scanner = new Lexer(new StringReader(Contents), FileName);
 		parser p = new parser(scanner, this, FileName, this.loadExternClasses);
 		p.parse();
+		// P2: lexer errors (e.g. illegal characters) are reported via
+		// console.err but historically did not halt parsing. Promote
+		// them to parse errors so the engine refuses to run code that
+		// the lexer could not fully tokenize.
+		if (scanner.hasErrors()) {
+			this.setParseError();
+		}
 		this.fileNames.add(FileName);
 	}
 	
@@ -636,14 +643,14 @@ public class Engine {
 			ret = this.mainClassDef.call(tenv, false, "main", margs);
 			if(ret.isEx()) {
 				AussomException ex = (AussomException) ret;
-				System.err.println(((AussomTypeInt) ex).str());
+				console.get().err(((AussomTypeInt) ex).str());
 				return 1;
 			} else if (ret instanceof AussomInt) {
 				return (int)((AussomInt)ret).getNumericInt();
 			}
 		} else {
 			AussomException ex = (AussomException)tci;
-			System.err.println(ex.toString());
+			console.get().err(ex.toString());
 			return 1;
 		}
 		return 0;

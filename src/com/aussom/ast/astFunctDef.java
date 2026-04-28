@@ -410,14 +410,44 @@ public class astFunctDef extends astNode implements astNodeInt {
 				ex.setException(this.getLineNum(), "EXTERN_EXCEPTION", e.getMessage(), env.getCallStack().getStackTrace());
 				return ex;
 			} catch (Exception e) {
-				e.printStackTrace();
+				// P5: previously this catch silently swallowed Java exceptions
+				// (printStackTrace + fall through to return null). Surface as a
+				// proper Aussom exception with the call-site line and stack so
+				// the user can see what went wrong.
+				AussomException ex = new AussomException(exType.exRuntime);
+				ex.setException(this.getLineNum(), "EXTERN_UNCAUGHT_JAVA",
+					"External call, uncaught Java exception in method '" + this.getName()
+						+ "': " + e.getClass().getSimpleName()
+						+ (e.getMessage() != null ? ": " + e.getMessage() : ""),
+					env.getCallStack().getStackTrace());
+				return ex;
 			}
 		} else {
 			AussomException ex = new AussomException(exType.exRuntime);
 			ex.setException(this.getLineNum(), "EXTERN_OBJECT_NOT_FOUND", "External object not found when calling '" + this.getName() + "'.", env.getCallStack().getStackTrace());
 			return ex;
 		}
-		
+
+		// P1: enrich any AussomException returned by stdlib code with
+		// line, id, and stack trace from the call site. Stdlib methods
+		// commonly construct exceptions via the single-arg
+		// AussomException(text) constructor which leaves lineNumber=-1,
+		// id="", and stackTrace="". This wrap is gated on lineNumber==-1
+		// so any stdlib site that already populated those fields is
+		// left alone.
+		if (ret instanceof AussomException) {
+			AussomException ex = (AussomException) ret;
+			if (ex.getLineNumber() == -1) {
+				ex.setLineNumber(this.getLineNum());
+			}
+			if (ex.getStackTrace() == null || ex.getStackTrace().isEmpty()) {
+				ex.setStackTrace(env.getCallStack().getStackTrace());
+			}
+			if (ex.getId() == null || ex.getId().isEmpty()) {
+				ex.setId("EXTERN_RUNTIME");
+			}
+		}
+
 		return ret;
 	}
 	

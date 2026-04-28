@@ -141,16 +141,21 @@ public class AussomException extends AussomObject implements AussomTypeInt {
 		isLocalObject = localObject;
 	}
 
+	/**
+	 * Canonical Aussom exception formatter used everywhere user-visible
+	 * exception output is produced. Emits the multi-line indented block
+	 * with line, type, id, text, details, and stack trace.
+	 *
+	 * P4: previously stackTraceToString() returned a one-line summary
+	 * while toString(int) returned the multi-line form; different code
+	 * paths surfaced different shapes for the same error. Both helpers
+	 * now route through the same formatter so the user sees one
+	 * consistent layout.
+	 */
 	public String stackTraceToString() {
-		String rstr = "line ";
-		rstr += this.lineNumber;
-		rstr += ": ";
-		rstr += this.et.name();
-		rstr += " Exception. [" + this.id + "] :: " + text + "\n";
-		rstr += this.stackTrace;
-		return rstr;
+		return this.toString(0);
 	}
-	
+
 	@Override
 	public String toString(int Level) {
 		String rstr = "";
