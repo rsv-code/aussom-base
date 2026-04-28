@@ -1727,6 +1727,71 @@ class interpreterTests {
 	@Test(name = "(lang string) String to JSON.")
 	public stringToJson() { return test.expect("Tyler Durdon".toJson(), "\"Tyler Durdon\""); }
 
+	@Test(name = "(lang string) String parseInt.")
+	public stringParseInt() { return test.expect("42".parseInt(), 42); }
+
+	@Test(name = "(lang string) String parseInt negative.")
+	public stringParseIntNeg() { return test.expect("-7".parseInt(), -7); }
+
+	@Test(name = "(lang string) String parseInt with radix.")
+	public stringParseIntRadix() { return test.expect("ff".parseInt(16), 255); }
+
+	@Test(name = "(lang string) String parseInt throws on non-numeric.")
+	public stringParseIntThrows() {
+		threw = false;
+		try { x = "abc".parseInt(); } catch (e) { threw = true; }
+		return test.expect(threw, true);
+	}
+
+	@Test(name = "(lang string) String parseDouble.")
+	public stringParseDouble() { return test.expect("3.14".parseDouble(), 3.14); }
+
+	@Test(name = "(lang string) String parseDouble negative.")
+	public stringParseDoubleNeg() { return test.expect("-2.5".parseDouble(), -2.5); }
+
+	@Test(name = "(lang string) String parseDouble throws on non-numeric.")
+	public stringParseDoubleThrows() {
+		threw = false;
+		try { x = "abc".parseDouble(); } catch (e) { threw = true; }
+		return test.expect(threw, true);
+	}
+
+	@Test(name = "(lang string) String parseBool true.")
+	public stringParseBoolTrue() { return test.expect("true".parseBool(), true); }
+
+	@Test(name = "(lang string) String parseBool false.")
+	public stringParseBoolFalse() { return test.expect("false".parseBool(), false); }
+
+	/***********************************************************************
+	 * Scientific-notation numeric literals.
+	 *
+	 * The lexer's number rule accepts an optional [eE][+-]?[0-9]+ exponent.
+	 * Any literal containing 'e', 'E', or '.' becomes a DOUBLE token; bare
+	 * integers stay INT. Identifiers that happen to start with a letter
+	 * (e1, e_value) still tokenize as identifiers.
+	 *********************************************************************/
+
+	@Test(name = "(scientific notation) Lower-case e literal.")
+	public sciLower() { return test.expect(1e3, 1000.0); }
+
+	@Test(name = "(scientific notation) Upper-case E literal.")
+	public sciUpper() { return test.expect(1E3, 1000.0); }
+
+	@Test(name = "(scientific notation) Decimal mantissa with exponent.")
+	public sciDecimal() { return test.expect(1.5e2, 150.0); }
+
+	@Test(name = "(scientific notation) Negative exponent.")
+	public sciNegExp() { return test.expectClose(1e-4, 0.0001, 1e-9); }
+
+	@Test(name = "(scientific notation) Explicit positive exponent.")
+	public sciPosExp() { return test.expect(1e+3, 1000.0); }
+
+	@Test(name = "(scientific notation) Large value.")
+	public sciLarge() { return test.expectClose(1.0E30, 1.0E30, 1.0E21); }
+
+	@Test(name = "(scientific notation) Identifier starting with letter still parses.")
+	public sciIdentUnaffected() { e1 = 7; return test.expect(e1, 7); }
+
 	/***********************************************************************
 	 * String comparison operators (<, >, <=, >=).
 	 *

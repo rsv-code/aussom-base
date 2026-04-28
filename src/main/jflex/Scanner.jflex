@@ -58,7 +58,8 @@ import com.aussom.stdlib.console;
 
 white_space 	= [ \t\f]
 /* number 			= "-"? ({white_space}*)? [0-9]+ ("." [0-9]+)? */
-number 			= [0-9]+ ("." [0-9]+)?
+exponent 		= [eE] [+\-]? [0-9]+
+number 			= [0-9]+ ("." [0-9]+)? {exponent}?
 letter			= [A-Za-z]
 digit			= [0-9]
 underscore		= [_]
@@ -162,23 +163,24 @@ new_line 		= \r\n;
 	"\r\n"					{ /* ignore */ }
 	{white_space}			{ /* ignore */ }
 	{number}				{
-								if(yytext().contains("."))
+								String ntxt = yytext();
+								if(ntxt.contains(".") || ntxt.contains("e") || ntxt.contains("E"))
 								{
 									BigDecimal val = null;
-									try{ val = new BigDecimal(yytext()); }
+									try{ val = new BigDecimal(ntxt); }
 									catch(NumberFormatException e)
 									{
-										error("Number format exception <" + yytext() + ">");
+										error("Number format exception <" + ntxt + ">");
 									}
 									return symbol(sym.DOUBLE, val);
 								}
 								else
 								{
 									BigInteger val = null;
-									try{ val = new BigInteger(yytext()); }
+									try{ val = new BigInteger(ntxt); }
 									catch(NumberFormatException e)
 									{
-										error("Number format exception <" + yytext() + ">");
+										error("Number format exception <" + ntxt + ">");
 									}
 									return symbol(sym.INT, val);
 								}

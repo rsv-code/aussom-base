@@ -735,6 +735,33 @@ extern class string : com.aussom.types.AussomString {
 	public extern toJson();
 
 	/**
+     * Parses this string as an int. Convenience method that delegates
+     * to Int.parse. Throws on parse failure with the same contract as
+     * Int.parse — wrap the call in try/catch when the input may be
+     * invalid.
+     * @p Radix is an optional int with the numeric base to parse in
+     * (e.g. 16 for hex). When omitted, base 10 is used.
+     * @r An int with the parsed value.
+     */
+	public parseInt(int Radix = null) { return Int.parse(this, Radix); }
+
+	/**
+     * Parses this string as a double. Convenience method that
+     * delegates to Double.parse. Throws on parse failure — wrap the
+     * call in try/catch when the input may be invalid.
+     * @r A double with the parsed value.
+     */
+	public parseDouble() { return Double.parse(this); }
+
+	/**
+     * Parses this string as a bool. Convenience method that delegates
+     * to Bool.parse. Throws on parse failure — wrap the call in
+     * try/catch when the input may be invalid.
+     * @r A bool with the parsed value.
+     */
+	public parseBool() { return Bool.parse(this); }
+
+	/**
      * Serializes the data into a structure.
      * @r A packed string.
      */
