@@ -631,20 +631,23 @@ public class Engine {
 			tenv.setClassInstance(this.mainClassInstance);
 
 			/*
-			 * Pick the entry-point shape. Prefer main(list args) when the
-			 * user declared it; fall back to main() otherwise. Without the
-			 * fallback a script that defines only main() would always
-			 * surface a confusing trailing FUNCT_NOT_FOUND because
-			 * callMain previously passed the args list unconditionally.
+			 * Pick the entry-point shape. Pass the CLI args list when
+			 * the user declared any 1-arg main overload — this covers
+			 * `main(list args)` (sig "l"), `main(args)` (untyped, sig
+			 * "*"), variadic `main(...)`, optional `main(args = null)`,
+			 * or any other 1-arg form. Otherwise call with no args so
+			 * a script that defines only `main()` doesn't trip
+			 * FUNCT_NOT_FOUND.
 			 */
 			AussomList margs = new AussomList();
-			if (this.mainClassDef.getFunct("main", "l") != null) {
-				/*
-				 * main(list args) is declared. Pass the CLI args list as
-				 * the single argument. Note the dispatcher is expecting
-				 * a list-of-args, so the args list itself is wrapped in
-				 * a list.
-				 */
+			boolean hasOneArgMain = false;
+			for (astFunctDef def : this.mainClassDef.getFunctionsByName("main")) {
+				if (def.getMinArity() <= 1 && def.getMaxArity() >= 1) {
+					hasOneArgMain = true;
+					break;
+				}
+			}
+			if (hasOneArgMain) {
 				margs.add(this.mainFunctArgs);
 			}
 
