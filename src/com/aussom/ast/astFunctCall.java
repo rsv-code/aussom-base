@@ -68,7 +68,7 @@ public class astFunctCall extends astNode implements astNodeInt {
 	}
 	
 	public AussomType evalImpl(Environment env, boolean getRef) throws aussomException {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 
 		// First, check there's a current object we're working
 		// with. If not, they forgot 'this' likely.

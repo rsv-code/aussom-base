@@ -60,7 +60,7 @@ public class astNewInst extends astNode implements astNodeInt {
 
 	@Override
 	public AussomType evalImpl(Environment env, boolean getref) throws aussomException {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 		
 		if(env.getEngine().containsClass(this.getName())) {
             AussomType targs = null;

@@ -19,8 +19,7 @@ package com.aussom.types;
 import com.aussom.Environment;
 import com.aussom.Universe;
 import com.aussom.Util;
-import com.aussom.ast.aussomException;
-import com.aussom.stdlib.console;
+import com.aussom.ast.astClass;
 import com.aussom.types.AussomListComparator.SortOrder;
 
 import java.util.ArrayList;
@@ -43,11 +42,8 @@ public class AussomList extends AussomObject implements AussomTypeInt, AussomTyp
 		if (LinkClass) {
 			// Setup linkage for string object.
 			this.setExternObject(this);
-			try {
-				this.setClassDef(Universe.get().getClassDef("list"));
-			} catch (aussomException e) {
-				console.get().err("AussomList(): Unexpected exception getting class definition: " + e.getMessage());
-			}
+			astClass def = Universe.get().LIST_CLASS_DEF;
+			if (def != null) this.setClassDef(def);
 		}
 	}
 

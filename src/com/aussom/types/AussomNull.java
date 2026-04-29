@@ -19,22 +19,18 @@ package com.aussom.types;
 import com.aussom.Environment;
 import com.aussom.Universe;
 import com.aussom.Util;
-import com.aussom.ast.aussomException;
-import com.aussom.stdlib.console;
+import com.aussom.ast.astClass;
 
 import java.util.ArrayList;
 
 public class AussomNull extends AussomObject implements AussomTypeInt, AussomTypeObjectInt {
 	public AussomNull() {
 		this.setType(cType.cNull);
-		
+
 		// Setup linkage for string object.
 		this.setExternObject(this);
-		try {
-			this.setClassDef(Universe.get().getClassDef("cnull"));
-		} catch (aussomException e) {
-			console.get().err("AussomNull(): Unexpected exception getting class definition: " + e.getMessage());
-		}
+		astClass def = Universe.get().NULL_CLASS_DEF;
+		if (def != null) this.setClassDef(def);
 	}
 
 	@Override

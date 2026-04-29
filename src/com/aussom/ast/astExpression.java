@@ -99,6 +99,11 @@ public class astExpression extends astNode implements astNodeInt {
 
 	@Override
 	public AussomType evalImpl(Environment env, boolean getRef) throws aussomException {
+		// Load-bearing init: when both `left` and `right` are null
+		// neither switch below assigns ret, but the trailing
+		// `!ret.isEx()` guard reads it. Keep this allocation; the
+		// other initializers in this file are pure waste and have
+		// been dropped under O5.
 		AussomType ret = new AussomNull();
 
 		if((this.left != null)&&(this.right != null)) {
@@ -218,7 +223,7 @@ public class astExpression extends astNode implements astNodeInt {
 	}
 
 	private AussomType assignment(Environment env, boolean getRef) throws aussomException {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 		
 		AussomType lres = this.left.eval(env, true);
 		if (!lres.isEx()) {
@@ -243,7 +248,7 @@ public class astExpression extends astNode implements astNodeInt {
 	}
 
 	private AussomType set(Environment env, boolean getRef) throws aussomException {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 
 		AussomType lres = this.left.eval(env, false);
 		if (!lres.isEx()) {
@@ -280,7 +285,7 @@ public class astExpression extends astNode implements astNodeInt {
 	}
 
 	private AussomType oper(Environment env, boolean getRef) throws aussomException {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 
 		AussomType r_left  = left.eval(env, getRef);
 		if(!r_left.isEx()) {
@@ -365,7 +370,7 @@ public class astExpression extends astNode implements astNodeInt {
 	}
 	
 	private AussomType evalPlus(Environment env, AussomType r_left, AussomType r_right) {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 
 		// Let's do actual addition.
 		if (this.isNumber(r_left) && this.isNumber(r_right)) {
@@ -389,7 +394,7 @@ public class astExpression extends astNode implements astNodeInt {
 	}
 	
 	private AussomType evalMinus(Environment env, AussomType r_left, AussomType r_right) {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 
 		if (this.isNumber(r_left) && this.isNumber(r_right)) {
 		  if (this.isInt(r_left) && this.isInt(r_right)) {
@@ -417,7 +422,7 @@ public class astExpression extends astNode implements astNodeInt {
 	}
 	
 	private AussomType evalMult(Environment env, AussomType r_left, AussomType r_right) {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 
 		if (this.isNumber(r_left) && this.isNumber(r_right)) {
 		  if (this.isInt(r_left) && this.isInt(r_right)) {
@@ -445,7 +450,7 @@ public class astExpression extends astNode implements astNodeInt {
 	}
 	
 	private AussomType evalDiv(Environment env, AussomType r_left, AussomType r_right) {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 
 		if (this.isNumber(r_left) && this.isNumber(r_right)) {
 		  if (r_right.getType() == cType.cInt && this.getValueInt(r_right) == 0) {
@@ -483,7 +488,7 @@ public class astExpression extends astNode implements astNodeInt {
 	}
 	
 	private AussomType evalModulus(Environment env, AussomType r_left, AussomType r_right) {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 
 		if (this.isNumber(r_left) && this.isNumber(r_right)) {
 		  if (r_right.getType() == cType.cInt && this.getValueInt(r_right) == 0) {
@@ -521,7 +526,7 @@ public class astExpression extends astNode implements astNodeInt {
 	}
 
 	private AussomType evalFloorDiv(Environment env, AussomType r_left, AussomType r_right) {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 
 		if (this.isNumber(r_left) && this.isNumber(r_right)) {
 		  if (r_right.getType() == cType.cInt && this.getValueInt(r_right) == 0) {
@@ -559,7 +564,7 @@ public class astExpression extends astNode implements astNodeInt {
 	}
 
 	private AussomType evalEqualsEquals(Environment env, AussomType r_left, AussomType r_right) {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 
 		if (this.isNumber(r_left) && this.isNumber(r_right)) {
 		  if (this.isInt(r_left) && this.isInt(r_right)) {
@@ -587,7 +592,7 @@ public class astExpression extends astNode implements astNodeInt {
 	}
 	
 	private AussomType evalLessThan(Environment env, AussomType r_left, AussomType r_right) {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 
 		if (this.isNumber(r_left) && this.isNumber(r_right)) {
 			// If both are int
@@ -615,7 +620,7 @@ public class astExpression extends astNode implements astNodeInt {
 	}
 	
 	private AussomType evalGreaterThan(Environment env, AussomType r_left, AussomType r_right) {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 
 		if (this.isNumber(r_left) && this.isNumber(r_right)) {
 			// If both are int
@@ -643,7 +648,7 @@ public class astExpression extends astNode implements astNodeInt {
 	}
 	
 	private AussomType evalLessThanEquals(Environment env, AussomType r_left, AussomType r_right) {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 
 		if (this.isNumber(r_left) && this.isNumber(r_right)) {
 			// If both are int
@@ -671,7 +676,7 @@ public class astExpression extends astNode implements astNodeInt {
 	}
 	
 	private AussomType evalGreaterThanEquals(Environment env, AussomType r_left, AussomType r_right) {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 
 		if (this.isNumber(r_left) && this.isNumber(r_right)) {
 			// If both are int
@@ -743,7 +748,7 @@ public class astExpression extends astNode implements astNodeInt {
 	}
 	
 	private AussomType operEquals(Environment env, boolean getRef) throws aussomException {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 
 		AussomType r_left  = left.eval(env, true);
 		if(!r_left.isEx()) {
@@ -860,7 +865,7 @@ public class astExpression extends astNode implements astNodeInt {
 	}
 	
 	private AussomType operIncDec(Environment env, boolean getRef) throws aussomException {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 
 		AussomType r_left  = left.eval(env, true);
 		if(!r_left.isEx()) {
@@ -946,7 +951,7 @@ public class astExpression extends astNode implements astNodeInt {
 	}
 	
 	private AussomType operLeft(Environment env, boolean getRef) throws aussomException {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 
 		if (this.eType == expType.MISSNULL) {
 			ret = evalMissingNull(env, getRef);
@@ -983,7 +988,7 @@ public class astExpression extends astNode implements astNodeInt {
 	}
 
 	private AussomType evalMissingNull(Environment env, boolean getRef) throws aussomException {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 
 		AussomType r_left  = left.eval(env, getRef);
 		if(
@@ -1089,6 +1094,9 @@ public class astExpression extends astNode implements astNodeInt {
 	}
 
 	public AussomType setSet(AussomObject ao, AussomMap mp, Environment env, boolean getRef) throws aussomException {
+		// Load-bearing init: the loop body never assigns ret on the
+		// happy path, only the early-return arms do. Returning the
+		// AussomNull mimics "no error".
 		AussomType ret = new AussomNull();
 		for (String key : mp.getValue().keySet()) {
 			if (ao.getMembers().contains(key) && ao.getClassDef().getMember(key).getAccessType() == AccessType.aPublic) {

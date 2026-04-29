@@ -49,6 +49,9 @@ public class astStatementList extends astNode implements astNodeInt {
 
 	@Override
 	public AussomType evalImpl(Environment env, boolean getRef) throws aussomException {
+		// Load-bearing init: an empty statement list must return a
+		// valid AussomNull rather than fall off the end with an
+		// uninitialized variable.
 		AussomType ret = new AussomNull();
 		for(int i = 0; i < this.statements.size(); i++) {
 			ret = this.statements.get(i).eval(env, getRef);

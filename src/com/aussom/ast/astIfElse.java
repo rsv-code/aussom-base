@@ -74,6 +74,9 @@ public class astIfElse extends astNode implements astNodeInt {
 
 	@Override
 	public AussomType evalImpl(Environment env, boolean getref) throws aussomException {
+		// Load-bearing init: when no branch matches and the else body
+		// is empty (or has only break/return paths), ret needs a
+		// defined fallback.
 		AussomType ret = new AussomNull();
 		AussomType etmp = this.ifCondition.getExpression().eval(env, getref);
 		if(astNode.isBreakReturnExcept(etmp)) { return etmp; }

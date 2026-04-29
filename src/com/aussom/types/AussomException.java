@@ -18,8 +18,7 @@ package com.aussom.types;
 
 import com.aussom.Environment;
 import com.aussom.Universe;
-import com.aussom.ast.aussomException;
-import com.aussom.stdlib.console;
+import com.aussom.ast.astClass;
 
 import java.util.ArrayList;
 
@@ -44,14 +43,11 @@ public class AussomException extends AussomObject implements AussomTypeInt {
 	
 	public AussomException() {
 		this.setType(cType.cException);
-		
+
 		// Setup linkage for string object.
 		this.setExternObject(this);
-		try {
-			this.setClassDef(Universe.get().getClassDef("exception"));
-		} catch (aussomException e) {
-			console.get().err("AussomException(): Unexpected exception getting class definition: " + e.getMessage());
-		}
+		astClass def = Universe.get().EXCEPTION_CLASS_DEF;
+		if (def != null) this.setClassDef(def);
 	}
 	
 	public AussomException(exType ExType) {

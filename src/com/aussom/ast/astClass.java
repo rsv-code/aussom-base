@@ -535,13 +535,16 @@ public class astClass extends astNode implements astNodeInt {
 		}
 
 		// Mock framework keys on bare name; an overload group is
-		// mocked or spied as a unit.
-		boolean spySet = (cobj != null) && cobj.getMock().isSpySet(functName);
+		// mocked or spied as a unit. The isSpySet / isMockSet /
+		// hasFunctionMock predicates short-circuit when the object
+		// has no mock allocated, so primitives (the common case)
+		// don't pay for a Mock allocation just to check.
+		boolean spySet = (cobj != null) && cobj.isSpySet(functName);
 		if (spySet && !(Boolean)env.getEngine().getSecurityManager().getProperty("test.mock.spy")) {
 			return new AussomException("astClass.call(): Security exception, action 'test.mock.spy' not permitted.");
 		}
 
-		if (cobj != null && cobj.getMock().isMockSet() && cobj.getMock().hasFunctionMock(functName)) {
+		if (cobj != null && cobj.isMockSet() && cobj.hasFunctionMock(functName)) {
 			if (!(Boolean)env.getEngine().getSecurityManager().getProperty("test.mock.inject")) {
 				return new AussomException("astClass.call(): Security exception, action 'test.mock.inject' not permitted.");
 			}
@@ -567,8 +570,8 @@ public class astClass extends astNode implements astNodeInt {
 
 			if (fdef == null) {
 				// Fallback: stored callback member with this name.
-				if (cobj != null && cobj.getMembers().contains(functName)) {
-					AussomType member = cobj.getMembers().get(functName);
+				if (cobj != null && cobj.containsMember(functName)) {
+					AussomType member = cobj.getMember(functName);
 					if (member instanceof AussomCallback) {
 						return ((AussomCallback) member).call(env, args);
 					}

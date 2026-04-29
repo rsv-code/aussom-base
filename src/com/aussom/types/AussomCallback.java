@@ -31,14 +31,11 @@ public class AussomCallback extends AussomObject implements AussomTypeInt {
 	
 	public AussomCallback() {
 		this.setType(cType.cCallback);
-		
+
 		// Setup linkage for string object.
 		this.setExternObject(this);
-		try {
-			this.setClassDef(Universe.get().getClassDef("callback"));
-		} catch (aussomException e) {
-			console.get().err("AussomCallback(): Unexpected exception getting class definition: " + e.getMessage());
-		}
+		astClass def = Universe.get().CALLBACK_CLASS_DEF;
+		if (def != null) this.setClassDef(def);
 	}
 	
 	public AussomCallback(Environment Env, AussomObject Obj, String FunctName) {
@@ -53,7 +50,7 @@ public class AussomCallback extends AussomObject implements AussomTypeInt {
 	//}
 	
 	public AussomType call(Environment env, AussomList args) {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 		
 		try {
 			ret = this.callWithException(env, args);
@@ -66,7 +63,7 @@ public class AussomCallback extends AussomObject implements AussomTypeInt {
 	}
 	
 	public AussomType callWithException(Environment env, AussomList args) throws aussomException {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 		
 		AussomObject tobj = (AussomObject) env.getCurObj();
 		env.setCurObj(this.getObj());

@@ -39,7 +39,7 @@ public class astObj  extends astNode implements astNodeInt {
 	
 	@Override
 	public AussomType evalImpl(Environment env, boolean getRef) throws aussomException {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 		
 		if (env.getCurObj() == null) {
 			ret = this.evalObjStart(env, getRef);
@@ -59,7 +59,7 @@ public class astObj  extends astNode implements astNodeInt {
 	 * @throws aussomException
 	 */
 	private AussomType evalObjStart(Environment env, boolean getRef) throws aussomException {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 		
 		// this object
 		if (this.getName().equals("this")) {
@@ -130,22 +130,28 @@ public class astObj  extends astNode implements astNodeInt {
 	}
 	
 	private AussomType evalObj (Environment env, boolean getRef) throws aussomException {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 		
-		// Found that it exists in the current object.
-		if (env.getCurObj() instanceof AussomObject && ((AussomObject)env.getCurObj()).getMembers().contains(this.getName())) {
+		// Found that it exists in the current object. Short-circuits via
+		// containsMember without forcing Members allocation on
+		// primitives that have no members.
+		if (env.getCurObj() instanceof AussomObject && ((AussomObject)env.getCurObj()).containsMember(this.getName())) {
+		  AussomObject curObj = (AussomObject) env.getCurObj();
 		  // Check member access.
 		  if (this.memberHasAccess(env, this.getName())) {
 			if (this.getChild() != null) {
-			  Environment tenv = env.clone(((AussomObject)env.getCurObj()).getMembers().get(this.getName()));
+			  Environment tenv = env.clone(curObj.getMember(this.getName()));
 			  ret = this.getChild().eval(tenv, getRef);
 			} else {
 			  if (getRef) {
 				AussomRef ref = new AussomRef();
-				ref.setMap(this.getName(), ((AussomObject)env.getCurObj()).getMembers().getMap());
+				// Members must exist here because containsMember was
+				// true above; getMembers().getMap() returns the same
+				// underlying map without re-allocation.
+				ref.setMap(this.getName(), curObj.getMembers().getMap());
 				ret = ref;
 			  } else {
-				ret = ((AussomObject)env.getCurObj()).getMembers().get(this.getName());
+				ret = curObj.getMember(this.getName());
 			  }
 			}
 		  } else {
@@ -247,7 +253,7 @@ public class astObj  extends astNode implements astNodeInt {
 			if (ctindex.getType() == cType.cString) {
 				String ind = ((AussomString)ctindex).getValue();
 				AussomObject ao = (AussomObject) env.getCurObj();
-				if (ao.getMembers().contains(ind)) {
+				if (ao.containsMember(ind)) {
 					// We found it!
 					if (this.getChild() != null) {
 						if (env.getCurObj() instanceof AussomMap) {
@@ -259,7 +265,7 @@ public class astObj  extends astNode implements astNodeInt {
 							return e;
 						}
 					} else {
-						ret = ((AussomObject)env.getCurObj()).getMembers().get(ind);
+						ret = ao.getMember(ind);
 					}
 				} else {
 					AussomException e = new AussomException(exType.exRuntime);

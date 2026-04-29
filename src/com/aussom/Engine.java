@@ -651,7 +651,7 @@ public class Engine {
 			/*
 			 * Call main.
 			 */
-			AussomType ret = new AussomNull();
+			AussomType ret;
 			ret = this.mainClassDef.call(tenv, false, "main", margs);
 			if(ret.isEx()) {
 				AussomException ex = (AussomException) ret;

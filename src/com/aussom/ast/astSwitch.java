@@ -75,6 +75,8 @@ public class astSwitch extends astNode implements astNodeInt {
 
 	@Override
 	public AussomType evalImpl(Environment env, boolean getref) throws aussomException {
+		// Load-bearing init: when no case matches and the default
+		// branch is empty, ret needs a defined value.
 		AussomType ret = new AussomNull();
 		AussomType tmp;
 		tmp = this.expr.eval(env, getref);

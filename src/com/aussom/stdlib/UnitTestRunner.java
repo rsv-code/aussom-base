@@ -330,7 +330,7 @@ public class UnitTestRunner extends Engine {
          */
         AussomList margs = new AussomList();
 
-        AussomType ret = new AussomNull();
+        AussomType ret;
         ret = cls.call(tenv, false, functName, margs);
         if(ret.isEx()) {
             AussomException ex = (AussomException) ret;

@@ -19,25 +19,22 @@ package com.aussom.types;
 import com.aussom.Environment;
 import com.aussom.Universe;
 import com.aussom.Util;
+import com.aussom.ast.astClass;
 import com.aussom.ast.aussomException;
-import com.aussom.stdlib.console;
 import org.json.simple.JSONValue;
 
 import java.util.ArrayList;
 
 public class AussomString extends AussomObject implements AussomTypeInt, AussomTypeObjectInt {
 	private String value = "";
-	
+
 	public AussomString() {
 		this.setType(cType.cString);
-		
+
 		// Setup linkage for string object.
 		this.setExternObject(this);
-		try {
-			this.setClassDef(Universe.get().getClassDef("string"));
-		} catch (aussomException e) {
-			console.get().err("AussomString(): Unexpected exception getting class definition: " + e.getMessage());
-		}
+		astClass def = Universe.get().STRING_CLASS_DEF;
+		if (def != null) this.setClassDef(def);
 	}
 
 	@Override

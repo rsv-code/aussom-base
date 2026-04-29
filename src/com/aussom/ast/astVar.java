@@ -57,6 +57,7 @@ public class astVar extends astNode implements astNodeInt {
 
 	@Override
 	public AussomType evalImpl(Environment env, boolean getref) throws aussomException {
+		// Load-bearing init: variable not in locals returns AussomNull.
 		AussomType ret = new AussomNull();
 		if (env.getLocals().contains(this.getName())) {
 		  // Return local variable.

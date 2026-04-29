@@ -60,6 +60,8 @@ public class astWhile extends astNode implements astNodeInt
 
 	@Override
 	public AussomType evalImpl(Environment env, boolean getref) throws aussomException {
+		// Load-bearing init: while-condition false on entry, or empty
+		// instruction body, must return a defined value.
 		AussomType ret = new AussomNull();
 		AussomType etemp = this.expr.eval(env, getref);
 		if (etemp.isEx()) return etemp;

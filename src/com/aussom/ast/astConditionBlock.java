@@ -62,6 +62,9 @@ public class astConditionBlock extends astNode implements astNodeInt {
 	
 	@Override
 	public AussomType evalImpl(Environment env, boolean getref) throws aussomException {
+		// Load-bearing init: ret is only assigned when a break/return/
+		// exception is encountered. Normal-flow exit returns the
+		// initial AussomNull.
 		AussomType ret = new AussomNull();
 		AussomType tmp = new AussomNull();
 		

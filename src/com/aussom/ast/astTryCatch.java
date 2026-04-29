@@ -60,6 +60,8 @@ public class astTryCatch extends astNode implements astNodeInt
 
 	@Override
 	public AussomType evalImpl(Environment env, boolean getRef) throws aussomException {
+		// Load-bearing init: ret.isEx() is read in the loop condition
+		// before any iteration runs.
 		AussomType ret = new AussomNull();
 		AussomType except = new AussomNull();
 		
@@ -108,7 +110,7 @@ public class astTryCatch extends astNode implements astNodeInt
 	}
 	
 	private AussomType initArgs(Environment env, boolean getRef, AussomException ae) throws aussomException {
-		AussomType ret = new AussomNull();
+		AussomType ret;
 
 		if(this.getName().equals("")) {
 			throw new aussomException("Malformed catch definition");

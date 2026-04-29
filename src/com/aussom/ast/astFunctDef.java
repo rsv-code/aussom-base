@@ -293,7 +293,7 @@ public class astFunctDef extends astNode implements astNodeInt {
 		if(ret.isNull()) {
 			ret = new AussomBool(true);
 		}
-		
+
 		return ret;
 	}
 	
