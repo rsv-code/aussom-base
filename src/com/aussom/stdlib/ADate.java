@@ -131,6 +131,28 @@ public class ADate implements AussomTypeObjectInt, AussomTypeInt, Serializable {
 		return env.getClassInstance();
 	}
 
+	/**
+	 * Java-side setter for the underlying epoch milliseconds.
+	 * Mirrors the {@code java.util.Date#setTime(long)} signature so
+	 * external embedders that called it before the Instant
+	 * migration keep working without going through the Aussom
+	 * dispatch wrapper.
+	 */
+	public void setTime(long mills) {
+		this.instant = Instant.ofEpochMilli(mills);
+	}
+
+	/**
+	 * Java-side getter for the underlying epoch milliseconds.
+	 * Mirrors the {@code java.util.Date#getTime()} signature so
+	 * external embedders that called it before the Instant
+	 * migration keep working without going through the Aussom
+	 * dispatch wrapper.
+	 */
+	public long getTime() {
+		return this.instant.toEpochMilli();
+	}
+
 	public AussomType toString(Environment env, ArrayList<AussomType> args) {
 		return new AussomString(this.toString());
 	}
