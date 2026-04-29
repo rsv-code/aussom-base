@@ -2,7 +2,7 @@
 
 ## class: exception
 
-[1319:14] (extern: com.aussom.types.AussomException) **extends: object** 
+[1346:14] (extern: com.aussom.types.AussomException) **extends: object** 
 
 The exception class is the object that is created or
 thrown when an exception occurs. In your catch (e) {}
@@ -70,7 +70,7 @@ block this is the object that is provided there.
 
 ## class: Buffer
 
-[1591:14] (extern: com.aussom.stdlib.ABuffer) **extends: object** 
+[1628:14] (extern: com.aussom.stdlib.ABuffer) **extends: object** 
 
 The Buffer object provides an object for handling binary
 data. Aussom doesn't natively support something like a
@@ -501,7 +501,7 @@ functionality.
 
 ## class: charset
 
-[1566:6] `static` **extends: object** 
+[1603:6] `static` **extends: object** 
 
 Defines available character set values.
 
@@ -517,7 +517,7 @@ Defines available character set values.
 
 ## class: c
 
-[1388:21] `static` (extern: com.aussom.stdlib.console) **extends: object** 
+[1415:21] `static` (extern: com.aussom.stdlib.console) **extends: object** 
 
 The static 'c' class also known as console is
 the standard object for writing to standard output.
@@ -906,6 +906,28 @@ Implements string datatype methods.
 	- **@r** `A` JSON encoded string.
 
 
+- **parseInt** (`int Radix = null`)
+
+	> Parses this string as an int. Convenience method that delegates to Int.parse. Throws on parse failure with the same contract as Int.parse — wrap the call in try/catch when the input may be invalid.
+
+	- **@p** `Radix` is an optional int with the numeric base to parse in (e.g. 16 for hex). When omitted, base 10 is used.
+	- **@r** `An` int with the parsed value.
+
+
+- **parseDouble** ()
+
+	> Parses this string as a double. Convenience method that delegates to Double.parse. Throws on parse failure — wrap the call in try/catch when the input may be invalid.
+
+	- **@r** `A` double with the parsed value.
+
+
+- **parseBool** ()
+
+	> Parses this string as a bool. Convenience method that delegates to Bool.parse. Throws on parse failure — wrap the call in try/catch when the input may be invalid.
+
+	- **@r** `A` bool with the parsed value.
+
+
 - **pack** ()
 
 	> Serializes the data into a structure.
@@ -1069,7 +1091,7 @@ functions can be used on any int value.
 
 ## class: list
 
-[790:14] (extern: com.aussom.types.AussomList) **extends: object** 
+[817:14] (extern: com.aussom.types.AussomList) **extends: object** 
 
 Implements list datatype methods.
 
@@ -1292,7 +1314,7 @@ Implements list datatype methods.
 
 ## class: cnull
 
-[1291:14] (extern: com.aussom.types.AussomNull) **extends: object** 
+[1318:14] (extern: com.aussom.types.AussomNull) **extends: object** 
 
 Implements null datatype methods.
 
@@ -1605,10 +1627,11 @@ Int.maxVal() to get the maximum integer value.
 
 ## class: Date
 
-[1455:14] (extern: com.aussom.stdlib.ADate) **extends: object** 
+[1483:14] (extern: com.aussom.stdlib.ADate) **extends: object** 
 
 The Date class holds date and time information. Internally
-it uses Java Date object.
+it stores a java.time.Instant. Hour, minute, and second
+accessors are evaluated at UTC.
 
 #### Methods
 
@@ -1625,23 +1648,23 @@ it uses Java Date object.
 
 - **getHours** ()
 
-	> Gets the hour of the day represented by a value between 0-23.
+	> Gets the hour of the day evaluated at UTC, represented by a value between 0-23.
 
 	- **@r** `An` int with the hour of the day.
 
 
 - **getMinutes** ()
 
-	> Returns the number of minutes past the hour represented by an integer value between 0-59.
+	> Returns the number of minutes past the hour evaluated at UTC, represented by an integer value between 0-59.
 
 	- **@r** `An` int with the minutes.
 
 
 - **getSeconds** ()
 
-	> Gets the number of seconds past the minute represented by an integer value between 0-61. If running on a JVM that takes into account leap seconds the values of 60 and 61 can occur.
+	> Gets the number of seconds past the minute evaluated at UTC, represented by an integer value between 0-59.
 
-	- **@r** `An` int with the secounds.
+	- **@r** `An` int with the seconds.
 
 
 - **getTime** ()
@@ -1653,23 +1676,23 @@ it uses Java Date object.
 
 - **setHours** (`int Hours`)
 
-	> Sets the hour of this object to the provided value.
+	> Sets the hour of this object to the provided value, interpreted at UTC. The underlying Instant is adjusted to match.
 
 	- **@p** `Hours` is an int with the hours to set. (0-23)
 
 
 - **setMinutes** (`int Minutes`)
 
-	> Sets the minutes of this object to the provided value.
+	> Sets the minutes of this object to the provided value, interpreted at UTC. The underlying Instant is adjusted to match.
 
 	- **@p** `Minutes` is an int with the minutes to set. (0-59)
 
 
 - **setSeconds** (`int Seconds`)
 
-	> Sets the seconds of this object to the provided value.
+	> Sets the seconds of this object to the provided value, interpreted at UTC. The underlying Instant is adjusted to match.
 
-	- **@p** `Seconds` is an int with the seconds to set. (0-61)
+	- **@p** `Seconds` is an int with the seconds to set. (0-59)
 
 
 - **setTime** (`int TimeMills`)
@@ -1681,14 +1704,14 @@ it uses Java Date object.
 
 - **toString** ()
 
-	> Returns a string representation of this object with the this format (dow mon dd hh:mm:ss zzz yyyy). For more information on the format see this URL in the Date.toString() section. https://docs.oracle.com/javase/8/docs/api/?java/util/Date.html
+	> Returns an ISO 8601 representation of this Date in UTC, formatted as yyyy-MM-dd'T'HH:mm:ss.SSSXXX. Example: 2024-02-15T08:30:00.123+00:00.
 
 	- **@r** `A` string with the formatted date value.
 
 
 - **parse** (`string DateString, string DateFormat`)
 
-	> Parses the provided date string with the provided format. This function uses the Java SimpleDateFormat object to convert to and from date strings. For more information on the format see this URL. https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/text/SimpleDateFormat.html This function may throw a date parse exception.
+	> Parses the provided date string with the provided format. The pattern syntax is Java DateTimeFormatter syntax, which is mostly compatible with the older SimpleDateFormat syntax but stricter on out-of-range values (e.g. 2024-02-30 will throw rather than rolling over to March 1) and on year widths (use uuuu instead of yyyy for years outside 1..9999). Strings that omit a zone are interpreted at UTC. For the full pattern reference see https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html This function may throw a date parse exception.
 
 	- **@p** `DateString` is the string with the date value to parse.
 	- **@p** `DateFormat` is a string with the format to use.
@@ -1697,7 +1720,7 @@ it uses Java Date object.
 
 - **format** (`string DateFormat = "yyyy-MM-dd HH:mm:ss.SSS Z"`)
 
-	> Converts the current date to string using the provided optional format. For more information, see the Java SimpleDateFormat reference URL here. https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/text/SimpleDateFormat.html
+	> Converts the current date to string using the provided optional format. The pattern syntax is Java DateTimeFormatter syntax. The output is rendered at UTC. For the full pattern reference see https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html
 
 	- **@p** `DateFormat` is a string with the format to use.
 	- **@r** `A` string with the formatted date result.
@@ -1714,7 +1737,7 @@ it uses Java Date object.
 
 ## class: securitymanager
 
-[2219:21] `static` (extern: com.aussom.stdlib.ASecurityManager) **extends: object** 
+[2256:21] `static` (extern: com.aussom.stdlib.ASecurityManager) **extends: object** 
 
 The securitymanager class provides an object that you can
 instantiate and provide to the Aussom engine to use.
@@ -1764,7 +1787,7 @@ instantiate and provide to the Aussom engine to use.
 
 ## class: secman
 
-[2165:21] `static` (extern: com.aussom.stdlib.ASecMan) **extends: object** 
+[2202:21] `static` (extern: com.aussom.stdlib.ASecMan) **extends: object** 
 
 The static secman class implements function for working with
 the security manager of the currently executing engine.
@@ -1834,7 +1857,7 @@ to parse a string value.
 
 ## class: callback
 
-[1234:14] (extern: com.aussom.types.AussomCallback) **extends: object** 
+[1261:14] (extern: com.aussom.types.AussomCallback) **extends: object** 
 
 Implements callback datatype methods. The callback is
 a function reference that can be passed around. This is
@@ -1892,7 +1915,7 @@ useful when needing to pass a function to call later.
 
 ## class: json
 
-[2128:21] `static` (extern: com.aussom.stdlib.AJson) **extends: object** 
+[2165:21] `static` (extern: com.aussom.stdlib.AJson) **extends: object** 
 
 The static json class implements some functions for
 working with JSON data.
@@ -1927,7 +1950,7 @@ working with JSON data.
 
 ## class: lang
 
-[2098:21] `static` (extern: com.aussom.stdlib.ALang) **extends: object** 
+[2135:21] `static` (extern: com.aussom.stdlib.ALang) **extends: object** 
 
 The staic lang object provides some standard
 functionality for the Aussom language.
@@ -1954,7 +1977,7 @@ functionality for the Aussom language.
 
 ## class: map
 
-[1014:14] (extern: com.aussom.types.AussomMap) **extends: object** 
+[1041:14] (extern: com.aussom.types.AussomMap) **extends: object** 
 
 Implements map datatype methods.
 
@@ -2115,7 +2138,7 @@ Implements map datatype methods.
 
 ## class: byteOrder
 
-[1579:6] `static` **extends: object** 
+[1616:6] `static` **extends: object** 
 
 Defines the byte order types.
 
@@ -2127,7 +2150,7 @@ Defines the byte order types.
 
 ## class: object
 
-[1172:14] (extern: com.aussom.types.AussomObject) 
+[1199:14] (extern: com.aussom.types.AussomObject) 
 
 Implements object datatype methods.
 
