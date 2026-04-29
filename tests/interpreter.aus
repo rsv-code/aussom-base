@@ -2305,7 +2305,29 @@ class interpreterTests {
 
 	@Test(name = "(lang Date) Date is epoch.")
 	public dateIsEpoch() { this.dt = new Date(0); return test.expect(this.dt.isEpoch(), true); }
-	
+
+	@Test(name = "(lang Date) JSON pack/unpack round-trip preserves epoch millis.")
+	public dateJsonRoundTrip() {
+		d = new Date();
+		d.parse("2024-02-15 08:30:00", "yyyy-MM-dd HH:mm:ss");
+		packed = d.pack();
+		unpacked = json.unpack(packed);
+		return test.expect(unpacked.getTime(), d.getTime());
+	}
+
+	@Test(name = "(lang Date) toString produces ISO 8601 with Z suffix at UTC.")
+	public dateToStringIso() {
+		d = new Date(0);
+		return test.expect(d.toString(), "1970-01-01T00:00:00.000Z");
+	}
+
+	@Test(name = "(lang Date) setHours / getHours round-trip at UTC.")
+	public dateHoursRoundTrip() {
+		d = new Date(0);
+		d.setHours(14);
+		return test.expect(d.getHours(), 14);
+	}
+
 	/***********************************************************************
 	 * security manager tests
 	 *********************************************************************/

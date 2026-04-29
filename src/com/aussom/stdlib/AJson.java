@@ -16,11 +16,11 @@
 
 package com.aussom.stdlib;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.TimeZone;
 
 import com.aussom.Engine;
 import com.aussom.ast.astClass;
@@ -268,15 +268,12 @@ public class AJson {
 			if (ac != null) {
 				AussomObject co = (AussomObject) ac.instantiate(env, false, new AussomList());
 				ADate ad = (ADate) co.getExternObject();
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
-				sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
-				Date dt = null;
 				try {
-					dt = sdf.parse((String) tobj);
-				} catch (ParseException e) {
+					Instant in = OffsetDateTime.parse((String) tobj, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant();
+					ad.setInstant(in);
+				} catch (DateTimeParseException e) {
 					throw new aussomException("json.unpack(): Getting value for key '" + key + "'. Parse exception of String (ISO 8601) with value '" + (String) tobj + "'.");
 				}
-				ad.setTime(dt.getTime());
 				return co;
 			} else {
 				throw new aussomException("json.unpack():  Class 'Date' not found." );

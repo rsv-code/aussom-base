@@ -1,12 +1,12 @@
 /*
  * Copyright 2017 Austin Lehman
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,120 +16,165 @@
 
 package com.aussom.stdlib;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
+import java.io.Serializable;
+import java.time.Instant;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
 
 import com.aussom.Util;
 import com.aussom.types.*;
 import com.aussom.Environment;
 
-public class ADate extends Date implements AussomTypeObjectInt, AussomTypeInt {
+/**
+ * Aussom Date runtime. Stores a {@link Instant} internally and
+ * uses {@link DateTimeFormatter} for parse and format. Hour /
+ * minute / second accessors interpret the Instant at UTC; see
+ * design/replace-java-date.md for the rationale.
+ *
+ * Implements {@link Serializable} so external embedders that
+ * persist ADate via Java serialization keep working across the
+ * migration. The {@code serialVersionUID} is preserved from the
+ * pre-migration value.
+ */
+public class ADate implements AussomTypeObjectInt, AussomTypeInt, Serializable {
 	private static final long serialVersionUID = 1579993228939943395L;
-	
+
+	/**
+	 * Single zone reference used by every hour/minute/second
+	 * accessor on the Date type. UTC is chosen so behaviour is
+	 * deterministic across hosts.
+	 */
+	private static final ZoneId ZONE = ZoneOffset.UTC;
+
+	/**
+	 * Canonical toString / JSON-pack output shape. Matches the
+	 * pre-migration {@code SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")}
+	 * output byte-for-byte for Instants within the supported
+	 * range.
+	 */
+	private static final DateTimeFormatter ISO_OUTPUT =
+		DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+
+	/**
+	 * The moment in time this Aussom Date represents. Defaults to
+	 * the Unix epoch so a freshly constructed Date with no
+	 * argument satisfies isEpoch().
+	 */
+	private Instant instant = Instant.EPOCH;
+
 	public ADate() { }
-	
-	public static LocalDate dateToLocalDate(Date Dt) {
-		return Dt.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+	public Instant getInstant() {
+		return this.instant;
 	}
-	
-	public static Date localDateToDate(LocalDate Ld) {
-		return new Date(Ld.toEpochDay());
+
+	public void setInstant(Instant instant) {
+		this.instant = (instant == null) ? Instant.EPOCH : instant;
 	}
-	
+
 	public AussomType newDate(Environment env, ArrayList<AussomType> args) {
-		if(!args.get(0).isNull()) {
-			long mills = ((AussomInt)args.get(0)).getValue();
+		if (!args.get(0).isNull()) {
+			long mills = ((AussomInt) args.get(0)).getValue();
 			if (mills < 0) {
-				mills = (new Date()).getTime();
+				this.instant = Instant.now();
+			} else {
+				this.instant = Instant.ofEpochMilli(mills);
 			}
-			this.setTime(mills);
 		}
 		return env.getClassInstance();
 	}
-	
-	@SuppressWarnings("deprecation")
+
 	public AussomType getHours(Environment env, ArrayList<AussomType> args) {
-		return new AussomInt(this.getHours());
+		return new AussomInt(this.instant.atZone(ZONE).getHour());
 	}
-	
-	@SuppressWarnings("deprecation")
+
 	public AussomType getMinutes(Environment env, ArrayList<AussomType> args) {
-		return new AussomInt(this.getMinutes());
+		return new AussomInt(this.instant.atZone(ZONE).getMinute());
 	}
-	
-	@SuppressWarnings("deprecation")
+
 	public AussomType getSeconds(Environment env, ArrayList<AussomType> args) {
-		return new AussomInt(this.getSeconds());
+		return new AussomInt(this.instant.atZone(ZONE).getSecond());
 	}
-	
+
 	public AussomType getTime(Environment env, ArrayList<AussomType> args) {
-		return new AussomInt(this.getTime());
+		return new AussomInt(this.instant.toEpochMilli());
 	}
-	
-	@SuppressWarnings("deprecation")
+
 	public AussomType setHours(Environment env, ArrayList<AussomType> args) {
-		this.setHours((int)((AussomInt)args.get(0)).getValue());
+		int h = (int) ((AussomInt) args.get(0)).getValue();
+		ZonedDateTime zdt = this.instant.atZone(ZONE);
+		this.instant = zdt.withHour(h).toInstant();
 		return env.getClassInstance();
 	}
-	
-	@SuppressWarnings("deprecation")
+
 	public AussomType setMinutes(Environment env, ArrayList<AussomType> args) {
-		this.setMinutes((int)((AussomInt)args.get(0)).getValue());
+		int m = (int) ((AussomInt) args.get(0)).getValue();
+		ZonedDateTime zdt = this.instant.atZone(ZONE);
+		this.instant = zdt.withMinute(m).toInstant();
 		return env.getClassInstance();
 	}
-	
-	@SuppressWarnings("deprecation")
+
 	public AussomType setSeconds(Environment env, ArrayList<AussomType> args) {
-		this.setSeconds((int)((AussomInt)args.get(0)).getValue());
+		int s = (int) ((AussomInt) args.get(0)).getValue();
+		ZonedDateTime zdt = this.instant.atZone(ZONE);
+		this.instant = zdt.withSecond(s).toInstant();
 		return env.getClassInstance();
 	}
-	
+
 	public AussomType setTime(Environment env, ArrayList<AussomType> args) {
-		this.setTime(((AussomInt)args.get(0)).getValue());
+		this.instant = Instant.ofEpochMilli(((AussomInt) args.get(0)).getValue());
 		return env.getClassInstance();
 	}
-	
+
 	public AussomType toString(Environment env, ArrayList<AussomType> args) {
 		return new AussomString(this.toString());
 	}
-	
+
+	/**
+	 * Parses DateString using DateFormat. The pattern syntax is
+	 * {@link DateTimeFormatter}'s, which is mostly compatible with
+	 * the older {@code SimpleDateFormat} syntax. Stricter on
+	 * out-of-range values (e.g. 2024-02-30) and on year width
+	 * (use {@code uuuu} for years outside 1..9999).
+	 *
+	 * Strings that omit a zone are interpreted at UTC.
+	 */
 	public AussomType parse(Environment env, ArrayList<AussomType> args) {
-		SimpleDateFormat sdf = new SimpleDateFormat(((AussomString)args.get(1)).getValueString());
+		String text = ((AussomString) args.get(0)).getValueString();
+		String pattern = ((AussomString) args.get(1)).getValueString();
 		try {
-			Date td = sdf.parse(((AussomString)args.get(0)).getValueString());
-			this.setTime(td.getTime());
+			DateTimeFormatter dtf = DateTimeFormatter.ofPattern(pattern).withZone(ZONE);
+			this.instant = ZonedDateTime.parse(text, dtf).toInstant();
 			return env.getClassInstance();
-		} catch (ParseException e) {
+		} catch (DateTimeParseException e) {
 			return new AussomException("Date.parse(): Parse exception. (" + e.getMessage() + ")");
 		}
 	}
-	
+
 	public AussomType format(Environment env, ArrayList<AussomType> args) {
-		SimpleDateFormat sdf = new SimpleDateFormat(((AussomString)args.get(0)).getValueString());
-		return new AussomString(sdf.format(this));
+		String pattern = ((AussomString) args.get(0)).getValueString();
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern(pattern).withZone(ZONE);
+		return new AussomString(dtf.format(this.instant));
 	}
 
 	public AussomType isEpoch(Environment env, ArrayList<AussomType> args) {
-		if(this.getTime() == 0) {
-			return new AussomBool(true);
-		}
-		return new AussomBool(false);
+		return new AussomBool(this.instant.toEpochMilli() == 0L);
 	}
-	
-	/*
-	 * Helper functions
+
+	/**
+	 * Helper kept for backwards compatibility with any external
+	 * embedder that calls it. Returns a new ADate offset by the
+	 * provided number of days.
 	 */
-	public static Date addDays(Date dt, int numDays) {
-		Calendar c = Calendar.getInstance();
-		c.setTime(dt);
-		c.add(Calendar.DATE, numDays);
-		return c.getTime();
+	public static ADate addDays(ADate dt, int numDays) {
+		ADate result = new ADate();
+		result.setInstant(dt.getInstant().plus(numDays, ChronoUnit.DAYS));
+		return result;
 	}
 
 	@Override
@@ -147,14 +192,12 @@ public class ADate extends Date implements AussomTypeObjectInt, AussomTypeInt {
 
 	@Override
 	public String toString() {
-		return this.toString(0);
+		return ISO_OUTPUT.format(this.instant.atOffset(ZoneOffset.UTC));
 	}
 
 	@Override
 	public String toString(int Level) {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
-		sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
-		return sdf.format(this);
+		return this.toString();
 	}
 
 	@Override

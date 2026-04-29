@@ -1477,7 +1477,8 @@ static extern class c : com.aussom.stdlib.console {
 	    
 /**
  * The Date class holds date and time information. Internally
- * it uses Java Date object.
+ * it stores a java.time.Instant. Hour, minute, and second
+ * accessors are evaluated at UTC.
  */
 extern class Date : com.aussom.stdlib.ADate {
 	/**
@@ -1492,24 +1493,23 @@ extern class Date : com.aussom.stdlib.ADate {
 	private extern newDate(int Mills = null);
 
 	/**
-	 * Gets the hour of the day represented by a value between 0-23.
+	 * Gets the hour of the day evaluated at UTC, represented by
+	 * a value between 0-23.
 	 * @r An int with the hour of the day.
 	 */
 	public extern getHours();
 
 	/**
-	 * Returns the number of minutes past the hour represented
-	 * by an integer value between 0-59.
+	 * Returns the number of minutes past the hour evaluated at
+	 * UTC, represented by an integer value between 0-59.
 	 * @r An int with the minutes.
 	 */
 	public extern getMinutes();
 
 	/**
-	 * Gets the number of seconds past the minute represented
-	 * by an integer value between 0-61. If running on a JVM
-	 * that takes into account leap seconds the values of 60
-	 * and 61 can occur.
-	 * @r An int with the secounds.
+	 * Gets the number of seconds past the minute evaluated at
+	 * UTC, represented by an integer value between 0-59.
+	 * @r An int with the seconds.
 	 */
 	public extern getSeconds();
 
@@ -1522,20 +1522,26 @@ extern class Date : com.aussom.stdlib.ADate {
 	public extern getTime();
 	
 	/**
-	 * Sets the hour of this object to the provided value.
+	 * Sets the hour of this object to the provided value,
+	 * interpreted at UTC. The underlying Instant is adjusted to
+	 * match.
 	 * @p Hours is an int with the hours to set. (0-23)
 	 */
 	public extern setHours(int Hours);
 
 	/**
-	 * Sets the minutes of this object to the provided value.
+	 * Sets the minutes of this object to the provided value,
+	 * interpreted at UTC. The underlying Instant is adjusted to
+	 * match.
 	 * @p Minutes is an int with the minutes to set. (0-59)
 	 */
 	public extern setMinutes(int Minutes);
 
 	/**
-	 * Sets the seconds of this object to the provided value.
-	 * @p Seconds is an int with the seconds to set. (0-61)
+	 * Sets the seconds of this object to the provided value,
+	 * interpreted at UTC. The underlying Instant is adjusted to
+	 * match.
+	 * @p Seconds is an int with the seconds to set. (0-59)
 	 */
 	public extern setSeconds(int Seconds);
 
@@ -1547,20 +1553,23 @@ extern class Date : com.aussom.stdlib.ADate {
 	public extern setTime(int TimeMills);
 
 	/**
-	 * Returns a string representation of this object with the
-	 * this format (dow mon dd hh:mm:ss zzz yyyy). For more information
-	 * on the format see this URL in the Date.toString() section.
-	 * https://docs.oracle.com/javase/8/docs/api/?java/util/Date.html
+	 * Returns an ISO 8601 representation of this Date in UTC,
+	 * formatted as yyyy-MM-dd'T'HH:mm:ss.SSSXXX. Example:
+	 * 2024-02-15T08:30:00.123+00:00.
 	 * @r A string with the formatted date value.
 	 */
 	public extern toString();
 
 	/**
 	 * Parses the provided date string with the provided format.
-	 * This function uses the Java SimpleDateFormat object to
-	 * convert to and from date strings. For more information
-	 * on the format see this URL.
-	 * https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/text/SimpleDateFormat.html
+	 * The pattern syntax is Java DateTimeFormatter syntax, which
+	 * is mostly compatible with the older SimpleDateFormat syntax
+	 * but stricter on out-of-range values (e.g. 2024-02-30 will
+	 * throw rather than rolling over to March 1) and on year
+	 * widths (use uuuu instead of yyyy for years outside 1..9999).
+	 * Strings that omit a zone are interpreted at UTC.
+	 * For the full pattern reference see
+	 * https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html
 	 * This function may throw a date parse exception.
 	 * @p DateString is the string with the date value to parse.
 	 * @p DateFormat is a string with the format to use.
@@ -1570,9 +1579,10 @@ extern class Date : com.aussom.stdlib.ADate {
 
 	/**
 	 * Converts the current date to string using the provided
-	 * optional format. For more information, see the Java
-	 * SimpleDateFormat reference URL here.
-	 * https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/text/SimpleDateFormat.html
+	 * optional format. The pattern syntax is Java
+	 * DateTimeFormatter syntax. The output is rendered at UTC.
+	 * For the full pattern reference see
+	 * https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html
 	 * @p DateFormat is a string with the format to use.
 	 * @r A string with the formatted date result.
 	 */

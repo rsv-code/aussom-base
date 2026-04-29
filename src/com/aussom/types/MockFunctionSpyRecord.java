@@ -1,9 +1,5 @@
 package com.aussom.types;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
 public class MockFunctionSpyRecord {
     /*
      * Time in milliseconds since epoch of the spy to order
@@ -22,7 +18,7 @@ public class MockFunctionSpyRecord {
     protected AussomObject returnValue = new AussomNull();
 
     public MockFunctionSpyRecord(AussomList callArgs, AussomObject returnValue) {
-        this.timestamp = (new Date()).getTime();
+        this.timestamp = System.currentTimeMillis();
         this.callArgs = callArgs;
         this.returnValue = returnValue;
     }

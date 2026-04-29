@@ -8,7 +8,6 @@ import com.aussom.ast.aussomException;
 import com.aussom.types.*;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -170,9 +169,9 @@ public class UnitTestRunner extends Engine {
             console.get().info("**************************************************************");
 
             // Finally run the tests
-            long start = (new Date()).getTime();
+            long start = System.currentTimeMillis();
             UnitTestResult res = this.runTestClasses();
-            long end = (new Date()).getTime();
+            long end = System.currentTimeMillis();
             double elapsedSeconds = (end - start)/1000.0;
 
             console.get().log("");
