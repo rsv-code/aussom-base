@@ -64,18 +64,28 @@ public class AussomCallback extends AussomObject implements AussomTypeInt {
 	
 	public AussomType callWithException(Environment env, AussomList args) throws aussomException {
 		AussomType ret;
-		
+
+		// Restore the binding that astCallback.evalImpl captured:
+		// curObj AND classInstance are the bound owner. Without
+		// pinning classInstance the access check in astClass.call
+		// sees the env's stale ci (e.g. an extern bridge's target
+		// like Element) and rejects private callbacks bound with
+		// `this::privateFn`.
 		AussomObject tobj = (AussomObject) env.getCurObj();
+		AussomObject tci = env.getClassInstance();
 		env.setCurObj(this.getObj());
+		env.setClassInstance(this.getObj());
 		try {
 			astClass ac = this.obj.getClassDef();
 			ret = ac.call(env, false, this.getFunctName(), args);
 		} catch(aussomException e) {
 			env.setCurObj(tobj);
+			env.setClassInstance(tci);
 			throw e;
 		}
 		env.setCurObj(tobj);
-		
+		env.setClassInstance(tci);
+
 		return ret;
 	}
 	
