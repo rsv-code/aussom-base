@@ -57,6 +57,16 @@ public class console {
 	public void register(LoggingInt loggingInt) {
 		this.loggingInt = loggingInt;
 	}
+
+	/**
+	 * Returns the currently registered LoggingInt for this thread,
+	 * or null if none. Allows callers (e.g. the JSR 223 engine) to
+	 * snapshot the prior logger so they can restore it after running
+	 * a script that needs its own routing.
+	 */
+	public LoggingInt getLoggingInt() {
+		return this.loggingInt;
+	}
 	
 	public console log(String Str) {
 		if (this.loggingInt != null) {

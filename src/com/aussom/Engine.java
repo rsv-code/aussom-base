@@ -713,12 +713,21 @@ public class Engine {
 	}
 	
 	/**
-	 * Sets the parse error flag. If set prior to run being called, run will 
-	 * throw an exception because of the parse error. This is called by the 
+	 * Sets the parse error flag. If set prior to run being called, run will
+	 * throw an exception because of the parse error. This is called by the
 	 * Aussom parser generated from aussom.cup.
 	 */
 	public void setParseError() {
 		this.hasParseErrors = true;
+	}
+
+	/**
+	 * Clears the parse-error flag. Lets a long-lived embedder
+	 * (e.g. the JSR 223 engine) recover from a failed parse so the
+	 * next call to parseString / run starts from a clean slate.
+	 */
+	public void clearParseError() {
+		this.hasParseErrors = false;
 	}
 	
 	/**
