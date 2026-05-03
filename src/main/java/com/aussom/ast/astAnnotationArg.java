@@ -1,0 +1,69 @@
+/*
+ * Copyright 2026 Austin Lehman
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.aussom.ast;
+
+import com.aussom.Environment;
+import com.aussom.types.AussomNull;
+import com.aussom.types.AussomType;
+
+import javax.management.DescriptorKey;
+
+/**
+ * Holds the annotation key value pair.
+ */
+public class astAnnotationArg extends astNode implements astNodeInt {
+    protected String key = "";
+    protected String value = "";
+
+    public astAnnotationArg() {}
+
+    public astAnnotationArg(String key, String value) {
+        this.key = key;
+        this.value = value;
+    }
+
+    public String getKey() {
+        return key;
+    }
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public String getValue() {
+        return value;
+    }
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return this.toString(0);
+    }
+
+    @Override
+    public String toString(int Level) {
+        String rstr = "";
+        rstr += getTabs(Level) + "{ " + this.key + ": \"" + this.value + "\" }\n";
+        return rstr;
+    }
+
+    @Override
+    public AussomType evalImpl(Environment env, boolean getref) throws aussomException {
+        return new AussomNull();
+    }
+}

@@ -3,7 +3,7 @@
   
   <groupId>io.github.rsv-code</groupId>
   <artifactId>aussom.base</artifactId>
-  <version>1.2.2</version>
+  <version>1.2.3</version>
   <packaging>jar</packaging>
   
   <name>aussom.base</name>
@@ -40,8 +40,23 @@
 
   <properties>
 	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	<junit.jupiter.version>5.11.4</junit.jupiter.version>
   </properties>
-  
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- JUnit 5 BOM keeps junit-jupiter-api / engine / params /
+           junit-platform-* aligned at one version. -->
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>${junit.jupiter.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
   
 	<!-- https://mvnrepository.com/artifact/com.github.vbmacher/java-cup-runtime -->
@@ -51,11 +66,21 @@
 	  <version>11b-20160615</version>
 	</dependency>
 	
-	<!-- https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple -->
+	<!-- https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple
+	     json-simple 1.1.1 declares junit:4.10 as a compile-scope (not
+	     test-scope) transitive dependency, which would pull a known-
+	     vulnerable junit + hamcrest into our jar-with-dependencies.
+	     We don't use junit, so exclude it entirely. -->
 	<dependency>
 	    <groupId>com.googlecode.json-simple</groupId>
 	    <artifactId>json-simple</artifactId>
 	    <version>1.1.1</version>
+	    <exclusions>
+	        <exclusion>
+	            <groupId>junit</groupId>
+	            <artifactId>junit</artifactId>
+	        </exclusion>
+	    </exclusions>
 	</dependency>
 
 	<!-- https://mvnrepository.com/artifact/commons-cli/commons-cli -->
@@ -72,17 +97,14 @@
 		<version>1.17.0</version>
 	</dependency>
 
-	<!-- This is added to fix a security issue in 4.10. junit is a transitive dependency
-	 from com.googlecode.json-simple. This is added as a fix. When/if json-simple can be
-	 upgraded to a safe version of junit this needs to be removed.-->
-    <!-- https://mvnrepository.com/artifact/junit/junit -->
+	<!-- JUnit 5 (Jupiter) for unit tests; aggregator brings in
+	     junit-jupiter-api, junit-jupiter-engine, junit-jupiter-params. -->
 	<dependency>
-		<groupId>junit</groupId>
-		<artifactId>junit</artifactId>
-		<version>4.13.2</version>
+		<groupId>org.junit.jupiter</groupId>
+		<artifactId>junit-jupiter</artifactId>
 		<scope>test</scope>
 	</dependency>
-	
+
   </dependencies>
   
   <distributionManagement>
@@ -97,18 +119,10 @@
   </distributionManagement>
   
   <build>
-    <sourceDirectory>src</sourceDirectory>
-    <resources>
-      <resource>
-        <directory>src</directory>
-        <excludes>
-          <exclude>**/*.java</exclude>
-        </excludes>
-      </resource>
-    </resources>
-    
-    <!-- <pluginManagement> -->
-	    <plugins>
+    <!-- Standard Maven layout. Sources live under src/main/java,
+         resources under src/main/resources, tests under src/test/java
+         + src/test/resources. -->
+    <plugins>
 	    
 	      <plugin>
 	        <artifactId>maven-compiler-plugin</artifactId>
@@ -116,6 +130,21 @@
 	        <configuration>
 	          <source>1.8</source>
 	          <target>1.8</target>
+	        </configuration>
+	      </plugin>
+
+	      <!-- Surefire 3.x runs JUnit 5 tests natively. The custom
+	           include picks up classes like Jsr223 that don't match
+	           the default *Test / Test* pattern. -->
+	      <plugin>
+	        <artifactId>maven-surefire-plugin</artifactId>
+	        <version>3.5.2</version>
+	        <configuration>
+	          <includes>
+	            <include>**/Jsr223.java</include>
+	            <include>**/*Test.java</include>
+	            <include>**/*Tests.java</include>
+	          </includes>
 	        </configuration>
 	      </plugin>
 	      
@@ -143,48 +172,52 @@
 	        </executions>
 	      </plugin>
 	      
+	      <!-- CUP grammar -> src/main/java/com/aussom/{parser,sym}.java
+	           Emitted into the source tree so IDEs index them
+	           without needing to know about target/generated-sources.
+	           These files are regenerated on every build; do not edit
+	           them by hand. -->
 	      <plugin>
-			  <groupId>com.github.vbmacher</groupId>
-			  <artifactId>cup-maven-plugin</artifactId>
-			  <version>11b-20160615</version>
-			  <executions>
-			    <execution>
-			      <goals>
-			        <goal>generate</goal>
-			      </goals>
-			    </execution>
-			  </executions>
-			  <configuration>
-			    <className>parser</className>
-			    <symbolsName>sym</symbolsName>
-			    <packageName>com.aussom</packageName>
-			    <cupDefinition>src/com/aussom/aussom.cup</cupDefinition>
-			    <outputDirectory>src</outputDirectory>
-			    <symbolsInterface>false</symbolsInterface>
-			    <locations>false</locations>
-			  </configuration>
-			</plugin>
-	      
-	      <plugin>
-	        <groupId>de.jflex</groupId>
-	        <artifactId>maven-jflex-plugin</artifactId>
-	        <version>1.4.3</version>
-	        
-	        <configuration>
-              <lexDefinitions>
-                <lexFile>src/main/jflex/Scanner.jflex</lexFile>
-              </lexDefinitions>
-              <outputDirectory>src</outputDirectory>
-            </configuration>
-            
-            <executions>
+	        <groupId>com.github.vbmacher</groupId>
+	        <artifactId>cup-maven-plugin</artifactId>
+	        <version>11b-20160615</version>
+	        <executions>
 	          <execution>
 	            <goals>
 	              <goal>generate</goal>
 	            </goals>
 	          </execution>
 	        </executions>
-	        
+	        <configuration>
+	          <className>parser</className>
+	          <symbolsName>sym</symbolsName>
+	          <packageName>com.aussom</packageName>
+	          <cupDefinition>src/main/cup/aussom.cup</cupDefinition>
+	          <outputDirectory>src/main/java</outputDirectory>
+	          <symbolsInterface>false</symbolsInterface>
+	          <locations>false</locations>
+	        </configuration>
+	      </plugin>
+
+	      <!-- JFlex lexer -> src/main/java/com/aussom/Lexer.java
+	           Same rationale as the CUP plugin above. -->
+	      <plugin>
+	        <groupId>de.jflex</groupId>
+	        <artifactId>maven-jflex-plugin</artifactId>
+	        <version>1.4.3</version>
+	        <configuration>
+	          <lexDefinitions>
+	            <lexFile>src/main/jflex/Scanner.jflex</lexFile>
+	          </lexDefinitions>
+	          <outputDirectory>src/main/java</outputDirectory>
+	        </configuration>
+	        <executions>
+	          <execution>
+	            <goals>
+	              <goal>generate</goal>
+	            </goals>
+	          </execution>
+	        </executions>
 	      </plugin>
 
 			<plugin>
@@ -249,6 +282,5 @@
 	      
 	      
 	    </plugins>
-	  <!-- </pluginManagement> -->
   </build>
 </project>

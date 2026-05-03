@@ -17,7 +17,7 @@ for aussom in Maven Central](https://search.maven.org/#search%7Cga%7C1%7Caussom)
 <dependency>
     <groupId>io.github.rsv-cod</groupId>
     <artifactId>aussom.base</artifactId>
-    <version>1.2.2</version>
+    <version>1.2.3</version>
 </dependency>
 ```
 

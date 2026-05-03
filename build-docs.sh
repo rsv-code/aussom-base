@@ -1,6 +1,6 @@
 #!/bin/bash
 # The Aussom file directory to build the docs from.
-AUSSOM_DIR=src/com/aussom/stdlib/aus
+AUSSOM_DIR=src/main/resources/com/aussom/stdlib/aus
 OUT_DIR=docs
 
 # Remove everything from the out dir.

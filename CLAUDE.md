@@ -40,31 +40,44 @@ Keep in mind error handling and implement try/catch blocks where appropriate.
 # Build fat JAR with all dependencies
 mvn clean package
 
-# Output: target/aussom.base-1.1.0-jar-with-dependencies.jar
+# Output: target/aussom.base-<version>-jar-with-dependencies.jar
 ```
 
-The parser (`parser.java`, `sym.java`) and lexer (`Lexer.java`) are **generated files** — do not edit them directly. Edit the grammar source files instead:
-- `src/com/aussom/aussom.cup` — CUP grammar definition
-- `src/com/aussom/Scanner.jflex` — JFlex lexer definition
+The parser (`parser.java`, `sym.java`) and lexer (`Lexer.java`) are **generated files**. They are regenerated on every build into `target/generated-sources/{cup,jflex}/com/aussom/` and are not committed. Edit the grammar source files instead:
+- `src/main/cup/aussom.cup` — CUP grammar definition
+- `src/main/jflex/Scanner.jflex` — JFlex lexer definition
 
 ## Running Tests
 
-The test suite is an Aussom script run through the interpreter itself:
+There are two test suites.
+
+**JUnit 5** (Java side, runs via Surefire). Covers the JSR 223
+engine in `src/test/java/Jsr223.java`:
 
 ```bash
-java -jar target/aussom.base-1.1.0-jar-with-dependencies.jar -t tests/interpreter.aus
+mvn test
 ```
 
-Expected output: `TOTAL: 319 RAN: 319 PASSED: 319` (counts may vary as tests are added).
+Expected: `Tests run: 72, Failures: 0, Errors: 0, Skipped: 0`
+(counts may vary as tests are added).
+
+**Aussom integration test suite** (interpreter behaviour, run
+through the CLI):
+
+```bash
+java -jar target/aussom.base-<version>-jar-with-dependencies.jar -t tests/interpreter.aus
+```
+
+Expected output: `TOTAL: 589 PASSED: 589 FAILED: 0` (counts may vary as tests are added).
 
 ## Running Scripts
 
 ```bash
 # Run an Aussom script
-java -jar target/aussom.base-1.1.0-jar-with-dependencies.jar script.aus
+java -jar target/aussom.base-<version>-jar-with-dependencies.jar script.aus
 
 # Generate documentation from a script
-java -jar target/aussom.base-1.1.0-jar-with-dependencies.jar -d script.aus
+java -jar target/aussom.base-<version>-jar-with-dependencies.jar -d script.aus
 ```
 
 ## Architecture
@@ -76,15 +89,21 @@ java -jar target/aussom.base-1.1.0-jar-with-dependencies.jar -d script.aus
 3. Lexer (`Scanner.jflex` → `Lexer.java`) tokenizes source
 4. Parser (`aussom.cup` → `parser.java`) builds an AST from `ast/` node classes
 5. `Engine` walks the AST, managing `CallStack` and `Environment` for scope
-6. `Universe.java` is a global singleton holding all class definitions
+6. `Universe.java` is a global singleton holding the parsed `lang.aus` class defs
 
-### Key Packages
+### Project Layout (Standard Maven)
 
-- `src/com/aussom/` — Core: `Engine`, `Main`, `Universe`, `Lexer`, `CallStack`, `Environment`
-- `src/com/aussom/ast/` — 30+ AST node classes; `astNode` is the base class
-- `src/com/aussom/types/` — All Aussom runtime types implement `AussomTypeInt`; primitives (`AussomInt`, `AussomDouble`, `AussomBool`, `AussomString`), collections (`AussomList`, `AussomMap`), control flow (`AussomReturn`, `AussomBreak`, `AussomException`)
-- `src/com/aussom/stdlib/` — Java implementations of built-in classes (prefixed `A`), plus `Lang.java` which manages loading of stdlib Aussom source files
-- `src/com/aussom/stdlib/aus/` — Standard library written in Aussom itself (`lang.aus`, `math.aus`, `sys.aus`, `reflect.aus`, `util.aus`, `aunit.aus`)
+- `src/main/java/com/aussom/` — Core: `Engine`, `Main`, `Universe`, `CallStack`, `Environment`
+- `src/main/java/com/aussom/ast/` — 30+ AST node classes; `astNode` is the base class
+- `src/main/java/com/aussom/types/` — All Aussom runtime types implement `AussomTypeInt`; primitives (`AussomInt`, `AussomDouble`, `AussomBool`, `AussomString`), collections (`AussomList`, `AussomMap`), control flow (`AussomReturn`, `AussomBreak`, `AussomException`)
+- `src/main/java/com/aussom/stdlib/` — Java implementations of built-in classes (prefixed `A`), plus `Lang.java` which manages loading of stdlib Aussom source files
+- `src/main/java/com/aussom/script/` — JSR 223 (`javax.script`) bindings: `AussomScriptEngineFactory`, `AussomScriptEngine`, `AussomCompiledScript`, marshaller, context-routed logger
+- `src/main/resources/com/aussom/stdlib/aus/` — Standard library written in Aussom itself (`lang.aus`, `math.aus`, `sys.aus`, `reflect.aus`, `util.aus`, `aunit.aus`)
+- `src/main/resources/META-INF/services/javax.script.ScriptEngineFactory` — JSR 223 SPI descriptor
+- `src/main/cup/aussom.cup` — CUP grammar source
+- `src/main/jflex/Scanner.jflex` — JFlex lexer source
+- `src/test/java/` — Java test sources
+- `tests/` — Aussom integration test scripts (`interpreter.aus`, `testbench.aus`, `testRunnerTest.aus`), invoked via the CLI rather than Maven
 
 ### Security Model
 
