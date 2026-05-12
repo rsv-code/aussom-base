@@ -2,7 +2,7 @@
 
 ## class: exception
 
-[1346:14] (extern: com.aussom.types.AussomException) **extends: object** 
+[1345:14] (extern: com.aussom.types.AussomException) **extends: object** 
 
 The exception class is the object that is created or
 thrown when an exception occurs. In your catch (e) {}
@@ -70,7 +70,7 @@ block this is the object that is provided there.
 
 ## class: Buffer
 
-[1628:14] (extern: com.aussom.stdlib.ABuffer) **extends: object** 
+[1627:14] (extern: com.aussom.stdlib.ABuffer) **extends: object** 
 
 The Buffer object provides an object for handling binary
 data. Aussom doesn't natively support something like a
@@ -501,7 +501,7 @@ functionality.
 
 ## class: charset
 
-[1603:6] `static` **extends: object** 
+[1602:6] `static` **extends: object** 
 
 Defines available character set values.
 
@@ -517,7 +517,7 @@ Defines available character set values.
 
 ## class: c
 
-[1415:21] `static` (extern: com.aussom.stdlib.console) **extends: object** 
+[1414:21] `static` (extern: com.aussom.stdlib.console) **extends: object** 
 
 The static 'c' class also known as console is
 the standard object for writing to standard output.
@@ -596,7 +596,7 @@ then write to standard out at the info logging level.
 
 ## class: bool
 
-[22:14] (extern: com.aussom.types.AussomBool) **extends: object** 
+[21:14] (extern: com.aussom.types.AussomBool) **extends: object** 
 
 The bool class implements bool datatype methods. These
 functions can be used on any bool value.
@@ -692,7 +692,7 @@ functions can be used on any bool value.
 
 ## class: string
 
-[506:14] (extern: com.aussom.types.AussomString) **extends: object** 
+[505:14] (extern: com.aussom.types.AussomString) **extends: object** 
 
 Implements string datatype methods.
 
@@ -974,7 +974,7 @@ Implements string datatype methods.
 
 ## class: double
 
-[317:14] (extern: com.aussom.types.AussomDouble) **extends: object** 
+[316:14] (extern: com.aussom.types.AussomDouble) **extends: object** 
 
 The int class implements int datatype methods. These
 functions can be used on any int value.
@@ -1091,7 +1091,7 @@ functions can be used on any int value.
 
 ## class: list
 
-[817:14] (extern: com.aussom.types.AussomList) **extends: object** 
+[816:14] (extern: com.aussom.types.AussomList) **extends: object** 
 
 Implements list datatype methods.
 
@@ -1314,7 +1314,7 @@ Implements list datatype methods.
 
 ## class: cnull
 
-[1318:14] (extern: com.aussom.types.AussomNull) **extends: object** 
+[1317:14] (extern: com.aussom.types.AussomNull) **extends: object** 
 
 Implements null datatype methods.
 
@@ -1345,7 +1345,7 @@ Implements null datatype methods.
 
 ## class: Double
 
-[440:21] `static` (extern: com.aussom.stdlib.SDouble) **extends: object** 
+[439:21] `static` (extern: com.aussom.stdlib.SDouble) **extends: object** 
 
 Static class Double implements functions the operate on
 double data types. For instance you can call
@@ -1427,7 +1427,7 @@ Double.maxVal() to get the maximum double value.
 
 ## class: int
 
-[129:14] (extern: com.aussom.types.AussomInt) **extends: object** 
+[128:14] (extern: com.aussom.types.AussomInt) **extends: object** 
 
 The int class implements int datatype methods. These
 functions can be used on any int value.
@@ -1594,7 +1594,7 @@ functions can be used on any int value.
 
 ## class: Int
 
-[290:21] `static` (extern: com.aussom.stdlib.SInt) **extends: object** 
+[289:21] `static` (extern: com.aussom.stdlib.SInt) **extends: object** 
 
 Static class Int implements functions the operate on
 int data types. For instance you can call
@@ -1627,7 +1627,7 @@ Int.maxVal() to get the maximum integer value.
 
 ## class: Date
 
-[1483:14] (extern: com.aussom.stdlib.ADate) **extends: object** 
+[1482:14] (extern: com.aussom.stdlib.ADate) **extends: object** 
 
 The Date class holds date and time information. Internally
 it stores a java.time.Instant. Hour, minute, and second
@@ -1737,7 +1737,7 @@ accessors are evaluated at UTC.
 
 ## class: securitymanager
 
-[2256:21] `static` (extern: com.aussom.stdlib.ASecurityManager) **extends: object** 
+[2255:21] `static` (extern: com.aussom.stdlib.ASecurityManager) **extends: object** 
 
 The securitymanager class provides an object that you can
 instantiate and provide to the Aussom engine to use.
@@ -1787,7 +1787,7 @@ instantiate and provide to the Aussom engine to use.
 
 ## class: secman
 
-[2202:21] `static` (extern: com.aussom.stdlib.ASecMan) **extends: object** 
+[2201:21] `static` (extern: com.aussom.stdlib.ASecMan) **extends: object** 
 
 The static secman class implements function for working with
 the security manager of the currently executing engine.
@@ -1837,7 +1837,7 @@ the security manager of the currently executing engine.
 
 ## class: Bool
 
-[116:21] `static` (extern: com.aussom.stdlib.SBool) **extends: object** 
+[115:21] `static` (extern: com.aussom.stdlib.SBool) **extends: object** 
 
 Static class Bool implements functions that operate on
 bool data types. For example you can use Bool.parse()
@@ -1857,7 +1857,7 @@ to parse a string value.
 
 ## class: callback
 
-[1261:14] (extern: com.aussom.types.AussomCallback) **extends: object** 
+[1260:14] (extern: com.aussom.types.AussomCallback) **extends: object** 
 
 Implements callback datatype methods. The callback is
 a function reference that can be passed around. This is
@@ -1915,7 +1915,7 @@ useful when needing to pass a function to call later.
 
 ## class: json
 
-[2165:21] `static` (extern: com.aussom.stdlib.AJson) **extends: object** 
+[2164:21] `static` (extern: com.aussom.stdlib.AJson) **extends: object** 
 
 The static json class implements some functions for
 working with JSON data.
@@ -1950,7 +1950,7 @@ working with JSON data.
 
 ## class: lang
 
-[2135:21] `static` (extern: com.aussom.stdlib.ALang) **extends: object** 
+[2134:21] `static` (extern: com.aussom.stdlib.ALang) **extends: object** 
 
 The staic lang object provides some standard
 functionality for the Aussom language.
@@ -1977,7 +1977,7 @@ functionality for the Aussom language.
 
 ## class: map
 
-[1041:14] (extern: com.aussom.types.AussomMap) **extends: object** 
+[1040:14] (extern: com.aussom.types.AussomMap) **extends: object** 
 
 Implements map datatype methods.
 
@@ -2138,7 +2138,7 @@ Implements map datatype methods.
 
 ## class: byteOrder
 
-[1616:6] `static` **extends: object** 
+[1615:6] `static` **extends: object** 
 
 Defines the byte order types.
 
@@ -2150,7 +2150,7 @@ Defines the byte order types.
 
 ## class: object
 
-[1199:14] (extern: com.aussom.types.AussomObject) 
+[1198:14] (extern: com.aussom.types.AussomObject) 
 
 Implements object datatype methods.
 

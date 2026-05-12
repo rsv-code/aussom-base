@@ -3,9 +3,9 @@
 This is a base interpreter implementation of Aussom language. You can run the interpreter from the command line, but 
 this package was built to be embedded and provides only the most common language and standard library functionality.
 
-## [Wiki/Docs](https://github.com/rsv-code/aussom.base/wiki)
-This README.md is just the high level of building/embedding. For details on building and Aussom lang itself [checkout 
-the Wiki](https://github.com/rsv-code/aussom.base/wiki).
+## [Docs](https://aussom-lang.com/docsProduct?product=aussom-base)
+This README.md is just the high level of building/embedding. For all details about using the Aussom interpreter 
+and the language itself visit [https://aussom-lang.com](https://aussom-lang.com).
 
 
 ## Embedding
@@ -15,9 +15,9 @@ for aussom in Maven Central](https://search.maven.org/#search%7Cga%7C1%7Caussom)
 
 ```
 <dependency>
-    <groupId>io.github.rsv-cod</groupId>
+    <groupId>io.gitlab.cupofcode</groupId>
     <artifactId>aussom.base</artifactId>
-    <version>1.2.3</version>
+    <version>1.2.4</version>
 </dependency>
 ```
 

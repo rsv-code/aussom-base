@@ -1,14 +1,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   
-  <groupId>io.github.rsv-code</groupId>
+  <groupId>io.gitlab.cupofcode</groupId>
   <artifactId>aussom.base</artifactId>
-  <version>1.2.3</version>
+  <version>1.2.4</version>
   <packaging>jar</packaging>
   
   <name>aussom.base</name>
   <description>Aussom Interpreter. This library implements the basic interpreter and runtime.</description>
-  <url>http://aussom.com</url>
+  <url>https://aussom-lang.com</url>
   
   <licenses>
     <license>
@@ -19,22 +19,22 @@
   </licenses>
   
   <issueManagement>
-	<url>https://github.com/rsv-code/aussom.base/issues</url>
-	<system>GitHub Issues</system>
+	<url>https://gitlab.com/cupofcode/aussom-base/-/issues</url>
+	<system>GitLab Issues</system>
   </issueManagement>
-  
+
   <scm>
-	<url>https://github.com/rsv-code/aussom.base</url>
-	<connection>scm:git:git://github.com:rsv-code/aussom.base.git</connection>
-	<developerConnection>scm:git:git@github.com:rsv-code/aussom.base.git</developerConnection>
+	<url>https://gitlab.com/cupofcode/aussom-base</url>
+	<connection>scm:git:https://gitlab.com/cupofcode/aussom-base.git</connection>
+	<developerConnection>scm:git:git@gitlab.com:cupofcode/aussom-base.git</developerConnection>
   </scm>
-  
+
   <developers>
 	<developer>
-	  <email>lehman.austin@gmail.com</email>
+	  <email>cupofcode@yahoo.com</email>
 	  <name>Austin Lehman</name>
-	  <url>https://github.com/rsv-code</url>
-	  <id>rsv-code</id>
+	  <url>https://gitlab.com/cupofcode</url>
+	  <id>cupofcode</id>
 	</developer>
   </developers>
 
@@ -94,7 +94,7 @@
 	<dependency>
 		<groupId>commons-codec</groupId>
 		<artifactId>commons-codec</artifactId>
-		<version>1.17.0</version>
+		<version>1.22.0</version>
 	</dependency>
 
 	<!-- JUnit 5 (Jupiter) for unit tests; aggregator brings in
