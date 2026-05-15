@@ -38,13 +38,48 @@ parser code {:
   Engine eng = null;
   String fileName;
   boolean loadExternClasses;
+  // Script-mode target. When non-null, top-level statements
+  // are appended to this list via scriptOrError. When null,
+  // top-level statements are rejected with a parse error.
+  astStatementList scriptStmtTarget = null;
 
   public parser(Lexer lex, Engine Eng, String FileName, boolean LoadExternClasses) {
+      this(lex, Eng, FileName, LoadExternClasses, null);
+  }
+
+  public parser(Lexer lex, Engine Eng, String FileName, boolean LoadExternClasses, astStatementList ScriptStmtTarget) {
       super(lex);
       lexer = lex;
       this.eng = Eng;
       this.fileName = FileName;
       this.loadExternClasses = LoadExternClasses;
+      this.scriptStmtTarget = ScriptStmtTarget;
+  }
+
+  /**
+   * Semantic-action helper for top-level instructions. If a
+   * script-statement target is set, append the parsed node to
+   * it. Otherwise raise a parse error pointing at the offending
+   * statement.
+   *
+   * report_error filters out non-Symbol info objects, so we set
+   * the engine's parse-error flag directly and emit the message
+   * via the console (mirroring what report_error does for
+   * Symbol-tagged errors).
+   */
+  private void scriptOrError(astNode n) {
+      if (this.scriptStmtTarget == null) {
+          this.syntaxErrors = true;
+          this.eng.setParseError();
+          aussomException ce = new aussomException(n,
+              "PARSE_ERROR: Top-level statements are not allowed in this "
+              + "parse context. Use Engine.setScriptMode(true) and "
+              + "Engine.evalLine for script-mode evaluation.",
+              "");
+          console.get().err(ce.getMessage());
+          return;
+      }
+      this.scriptStmtTarget.addNode(n);
   }
 
   public void report_error(String message, Object info)
@@ -171,6 +206,7 @@ non terminal cType									functDefPrimType;
 non terminal astStatementList						instructionListBlock;
 non terminal astStatementList						instructionList;
 non terminal astNode								instruction;
+non terminal astNode								topInstruction;
 non terminal astNode								returnInstruction;
 non terminal astNode								tryCatchBlock;
 non terminal astNode								includeExp;
@@ -267,9 +303,50 @@ block ::=
 		r.addInclude(((astInclude)i).getPath());
 		RESULT = r;
 	:}
+|	topInstruction:i
+	{:
+		this.parser.scriptOrError(i);
+		RESULT = this.parser.eng;
+	:}
+|	block:r topInstruction:i
+	{:
+		this.parser.scriptOrError(i);
+		RESULT = r;
+	:}
 |	error
 	{:
-		
+
+	:}
+;
+
+topInstruction ::=
+	expression:e SEMI
+	{:
+		RESULT = (astNode)e;
+	:}
+|	returnInstruction:r
+	{:
+		RESULT = (astNode)r;
+	:}
+|	expIfBlock:ib
+	{:
+		RESULT = ib;
+	:}
+|	expSwitch:s
+	{:
+		RESULT = s;
+	:}
+|	expWhile:w
+	{:
+		RESULT = w;
+	:}
+|	expFor:f
+	{:
+		RESULT = f;
+	:}
+|	tryCatchBlock:tcb
+	{:
+		RESULT = (astNode)tcb;
 	:}
 ;
 

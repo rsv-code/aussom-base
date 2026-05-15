@@ -94,6 +94,12 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 		this.props.put("test.aussom.runner", false);
 		this.props.put("test.mock.inject", false);
 		this.props.put("test.mock.spy", false);
+
+		/*
+		 * Script mode actions. See com.aussom.Engine.setScriptMode
+		 * and com.aussom.Engine.evalLine.
+		 */
+		this.props.put("aussom.script.mode.enable", false);
 	}
 	
 	/**

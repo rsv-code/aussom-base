@@ -114,6 +114,32 @@ public class Engine {
 	 */
 	private Map<String, astClass> classes = new ConcurrentHashMap<String, astClass>();
 	private Map<String, AussomType> staticClasses = new ConcurrentHashMap<String, AussomType>();
+
+	/*
+	 * Script-mode state. See setScriptMode, evalLine, parseStatements,
+	 * getScriptClass, and design/script-mode-design.md. Independent of
+	 * the classical run path; the synthetic class is deliberately NOT
+	 * registered in this.classes.
+	 */
+	public static final String SCRIPT_CLASS_NAME = "__script_main";
+	private boolean scriptMode = false;
+	private astClass scriptClass = null;
+	// Direct reference to the synthetic main(args) astFunctDef. The
+	// arg is an untyped wildcard so the dispatcher routes the def to
+	// wildcardOverloads rather than dispatchMap; getFunct("main", "*")
+	// would not find it. Keeping a direct reference avoids that
+	// indirection entirely.
+	private astFunctDef scriptMainFn = null;
+	private AussomObject scriptInstance = null;
+	private Environment scriptEnv = null;
+	// Filename reported on AST nodes parsed by evalLine. Embedders set
+	// this via setScriptFileName so error attribution points at the
+	// original source file. Defaults to "<script>".
+	private String scriptFileName = "<script>";
+	// Index of the next not-yet-evaluated statement in scriptClass's
+	// main body. Advanced by evalLine to body.size() at the end of each
+	// call so statements from a prior call are never re-walked.
+	private int scriptCursor = 0;
 	
 	/**
 	 * Default constructor. When called this gets an instance of the Universe object 
@@ -729,7 +755,276 @@ public class Engine {
 	public void clearParseError() {
 		this.hasParseErrors = false;
 	}
-	
+
+	/* ============================================================
+	 * Script mode
+	 *
+	 * Script mode is a self-contained facility on the engine that
+	 * lets an embedder evaluate top-level statements (assignments,
+	 * expressions, control flow) without wrapping them in a class
+	 * and main. It does NOT touch the classical run pipeline:
+	 * setMainClassAndFunct, callMain, instantiateStaticClasses, and
+	 * the contents of this.classes are unchanged. The synthetic
+	 * script class is deliberately kept out of this.classes so the
+	 * classical pipeline never sees it.
+	 *
+	 * See design/script-mode-design.md for the full design.
+	 * ============================================================ */
+
+	/**
+	 * Returns true if script mode is currently enabled.
+	 * @return A boolean with true for enabled and false for not.
+	 */
+	public boolean isScriptMode() {
+		return this.scriptMode;
+	}
+
+	/**
+	 * Enables or disables script mode. Enabling builds a synthetic
+	 * __script_main class with an empty main(args), instantiates it
+	 * against a long-lived Environment whose Members persist across
+	 * evalLine calls, and prepares the engine to accept evalLine
+	 * input. The synthetic class is NOT registered in this.classes;
+	 * the classical run path remains independent. Disabling does
+	 * not destroy the synthetic class — it just gates further
+	 * evalLine calls.
+	 *
+	 * Gated by the security property aussom.script.mode.enable.
+	 * Throws an aussomException if the property is false when
+	 * enabling.
+	 *
+	 * @param on is a boolean with true to enable script mode.
+	 * @throws aussomException on security denial or instantiation
+	 *         failure of the synthetic class.
+	 */
+	public void setScriptMode(boolean on) throws aussomException {
+		if (this.scriptMode == on) return;
+		if (on) {
+			// Security check (every entry; defends against runtime
+			// property changes via setProp).
+			if (!(Boolean) this.secman.getProperty("aussom.script.mode.enable")) {
+				throw new aussomException(
+					"Engine.setScriptMode: Security exception, action "
+					+ "'aussom.script.mode.enable' not permitted.");
+			}
+
+			// Build the synthetic class with an empty main(args).
+			this.scriptClass = new astClass(SCRIPT_CLASS_NAME);
+			this.scriptClass.setParserInfo("<script>", 1, 1);
+			this.scriptMainFn = new astFunctDef("main");
+			this.scriptMainFn.setParserInfo("<script>", 1, 1);
+			this.scriptMainFn.setAccessType(AccessType.aPublic);
+			astFunctDefArgsList args = new astFunctDefArgsList();
+			astVar argsVar = new astVar();
+			argsVar.setName("args");
+			args.addNode(argsVar);
+			this.scriptMainFn.setArgList(args);
+			this.scriptMainFn.setInstructionList(new astStatementList());
+			this.scriptClass.addFunction("main", this.scriptMainFn);
+
+			// Build the long-lived Environment with persistent
+			// Members and instantiate the synthetic class against
+			// it.
+			this.scriptEnv = new Environment(this);
+			Members locals = new Members();
+			this.scriptEnv.setEnvironment(null, locals, new CallStack());
+			AussomType inst = this.scriptClass.instantiate(this.scriptEnv, false, new AussomList());
+			if (inst.isEx()) {
+				throw new aussomException(this.scriptClass,
+					((AussomException) inst).getText(), "");
+			}
+			this.scriptInstance = (AussomObject) inst;
+			this.scriptEnv.setClassInstance(this.scriptInstance);
+			// Leave curObj null. Top-level identifiers go through
+			// astObj.evalObjStart which checks locals and static
+			// classes; setting curObj would force evalObj which
+			// only resolves members of the current object.
+			this.scriptCursor = 0;
+		}
+		this.scriptMode = on;
+	}
+
+	/**
+	 * Sets the file name reported on AST nodes parsed by evalLine.
+	 * The default is {@code "<script>"}. Embedders feeding source from a
+	 * real file call this once after setScriptMode(true) so error
+	 * attribution points at the original source file.
+	 * @param fileName is the file name to report.
+	 */
+	public void setScriptFileName(String fileName) {
+		this.scriptFileName = fileName;
+	}
+
+	/**
+	 * Returns the current script-mode file name.
+	 * @return A String with the script-mode file name.
+	 */
+	public String getScriptFileName() {
+		return this.scriptFileName;
+	}
+
+	/**
+	 * Returns the synthetic __script_main class definition built
+	 * by setScriptMode(true), or null if script mode has not been
+	 * enabled. The synthetic class is not registered in
+	 * this.classes; this accessor is the bridge for tooling that
+	 * needs to walk the synthetic main's body (e.g. an LSP
+	 * provider that analyzes top-level statements).
+	 *
+	 * Read-only; does not trigger initialization, parsing, or
+	 * evaluation.
+	 *
+	 * @return An astClass for the synthetic class, or null.
+	 */
+	public astClass getScriptClass() {
+		return this.scriptClass;
+	}
+
+	/**
+	 * Single-argument convenience wrapper that calls
+	 * evalLine(source, 1).
+	 * @param source is the Aussom source string to parse and run.
+	 * @return An AussomType with the value of the last evaluated
+	 *         statement, or AussomNull if the source was empty.
+	 * @throws Exception on parse error, security denial, or other
+	 *         engine failure.
+	 */
+	public AussomType evalLine(String source) throws Exception {
+		return this.evalLine(source, 1);
+	}
+
+	/**
+	 * Parses the supplied Aussom source as a script-mode fragment,
+	 * appends any parsed top-level statements to the synthetic
+	 * main's body, and evaluates only the newly-appended statements
+	 * against the long-lived script Environment. Returns the
+	 * AussomType produced by the last evaluated statement.
+	 *
+	 * The lineNumber argument is 1-indexed and tells the lexer
+	 * which line the first source line should report as. Pass the
+	 * file line where the snippet starts so error attribution
+	 * remains correct (e.g. lineNumber=42 for a snippet that
+	 * begins on line 42 of the original file).
+	 *
+	 * Parse errors throw an aussomException after rolling back any
+	 * partially-appended statements. Runtime errors (from a
+	 * statement returning or throwing an exception) are returned
+	 * as an AussomException value, never re-thrown.
+	 *
+	 * @param source is the Aussom source string to parse and run.
+	 * @param lineNumber is the 1-indexed line number to report
+	 *        for the first source line.
+	 * @return An AussomType with the value of the last evaluated
+	 *         statement, or AussomNull if the source was empty.
+	 * @throws Exception on parse error or security denial.
+	 */
+	public AussomType evalLine(String source, int lineNumber) throws Exception {
+		if (!this.scriptMode) {
+			throw new aussomException(
+				"Engine.evalLine: script mode is not enabled.");
+		}
+		// Security check on every entry; defends against runtime
+		// property changes via setProp.
+		if (!(Boolean) this.secman.getProperty("aussom.script.mode.enable")) {
+			throw new aussomException(
+				"Engine.evalLine: Security exception, action "
+				+ "'aussom.script.mode.enable' not permitted.");
+		}
+
+		astStatementList body = this.scriptMainFn.getInstructionList();
+		List<astNode> stmts = body.getStatements();
+
+		// Snapshot the body size before the parse so a parse error
+		// can roll back any statements the parser already appended.
+		int sliceStart = stmts.size();
+
+		// lineNumber is 1-indexed; the lexer adds (lineNumber - 1)
+		// to its yyline+1 so the first source line reports as
+		// lineNumber.
+		this.parseStatements(this.scriptFileName, source, lineNumber - 1, body);
+		if (this.hasParseErrors) {
+			while (stmts.size() > sliceStart) {
+				stmts.remove(stmts.size() - 1);
+			}
+			this.clearParseError();
+			throw new aussomException(
+				"Engine.evalLine: parse error.");
+		}
+
+		int sliceEnd = stmts.size();
+
+		// Commit the cursor advance for the whole slice up front so
+		// an exception or return mid-slice does not leave unwalked
+		// statements for the next call to pick up.
+		this.scriptCursor = sliceEnd;
+
+		AussomType last = new AussomNull();
+		for (int i = sliceStart; i < sliceEnd; i++) {
+			try {
+				last = stmts.get(i).eval(this.scriptEnv, false);
+			} catch (aussomException e) {
+				// Convert any thrown evaluation exception into a
+				// returnable AussomException so the caller always
+				// gets an AussomType back.
+				last = new AussomException(
+					"Engine.evalLine: uncaught exception during "
+					+ "evaluation: " + e.getMessage());
+				break;
+			}
+			if (last.isEx()) break;
+			if (last.isReturn()) {
+				last = ((AussomReturn) last).getValue();
+				break;
+			}
+			if (last.isBreak()) break;
+		}
+		return last;
+	}
+
+	/**
+	 * Protected building block that parses an Aussom source string
+	 * and populates a caller-supplied astStatementList with the
+	 * parsed top-level statements. Class declarations and includes
+	 * encountered during the parse still flow through the existing
+	 * addClass / addInclude paths on the engine; only bare
+	 * top-level statements go to the supplied target.
+	 *
+	 * Wraps p.parse() in a try/catch and converts any thrown
+	 * exception to the engine's parse-error flag so callers handle
+	 * parse failure uniformly via hasParseErrors() — no try/catch
+	 * needed at the call site.
+	 *
+	 * Does NOT mutate this.fileNames; each call is a transient
+	 * parse, not a "loaded file."
+	 *
+	 * Visibility is protected; subclasses (e.g. a future debugger-
+	 * aware Engine) can call it directly.
+	 *
+	 * @param fileName is the file name to attach to AST nodes.
+	 * @param source is the Aussom source string to parse.
+	 * @param lineOffset is added to lexer-reported line numbers
+	 *        (so the first source line reports as
+	 *        lineOffset + 1).
+	 * @param target is the caller-supplied list to receive parsed
+	 *        top-level statements.
+	 */
+	protected void parseStatements(String fileName, String source, int lineOffset, astStatementList target) {
+		Lexer scanner = new Lexer(new StringReader(source), fileName);
+		scanner.setLineOffset(lineOffset);
+		parser p = new parser(scanner, this, fileName, this.loadExternClasses, target);
+		try {
+			p.parse();
+		} catch (Exception e) {
+			// Convert any thrown parser-level exception (semantic
+			// action raise, lexer fatal, etc.) to the parse-error
+			// flag.
+			this.setParseError();
+		}
+		if (scanner.hasErrors()) {
+			this.setParseError();
+		}
+	}
+
 	/**
 	 * Obligatory toString method.
 	 * @return A String representing the engine includes and classes.

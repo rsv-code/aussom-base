@@ -37,13 +37,21 @@ import com.aussom.stdlib.console;
   StringBuffer string = new StringBuffer();
   String fileName = "<unknown>";
   boolean hasErrors = false;
+  // Added to lexer-reported line numbers so callers (e.g. Engine.evalLine
+  // via Engine.parseStatements) can pretend a snippet starts at any line.
+  // Defaults to 0, leaving line numbers unchanged for every existing parse.
+  int lineOffset = 0;
+
+  public void setLineOffset(int offset) {
+    this.lineOffset = offset;
+  }
 
   private Symbol symbol(int sym) {
-    return new Symbol(sym, yyline+1, yycolumn+1);
+    return new Symbol(sym, yyline+1+lineOffset, yycolumn+1);
   }
 
   private Symbol symbol(int sym, Object val) {
-    return new Symbol(sym, yyline+1, yycolumn+1, val);
+    return new Symbol(sym, yyline+1+lineOffset, yycolumn+1, val);
   }
 
   private void error(String message) {

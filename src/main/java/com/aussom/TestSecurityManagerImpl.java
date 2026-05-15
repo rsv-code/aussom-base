@@ -30,6 +30,13 @@ public class TestSecurityManagerImpl extends SecurityManagerImpl {
          */
         this.props.put("test.mock.inject", true);
         this.props.put("test.mock.spy", true);
+
+        /*
+         * Script mode actions. Enabled in test contexts so the
+         * ScriptMode JUnit suite can exercise Engine.setScriptMode
+         * and Engine.evalLine.
+         */
+        this.props.put("aussom.script.mode.enable", true);
     }
 
     /**
