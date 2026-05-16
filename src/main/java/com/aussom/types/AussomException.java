@@ -22,6 +22,11 @@ import com.aussom.ast.astClass;
 
 import java.util.ArrayList;
 
+/**
+ * User code exception. This is one that has to do with exceptions occurring
+ * in the users aussom code. This is in contrast to aussomException which is
+ * an engine level exception.
+ */
 public class AussomException extends AussomObject implements AussomTypeInt {
 	public enum exType {
 		exUndef,

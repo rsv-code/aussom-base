@@ -16,7 +16,9 @@
 
 package com.aussom.ast;
 
-
+/**
+ * Engine level exception. This is not used for user Aussom code.
+ */
 public class aussomException extends Exception {
 	// Serializable
 	private static final long serialVersionUID = 1193764482058983012L;
