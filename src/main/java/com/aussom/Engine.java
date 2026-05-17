@@ -140,7 +140,32 @@ public class Engine {
 	// main body. Advanced by evalLine to body.size() at the end of each
 	// call so statements from a prior call are never re-walked.
 	private int scriptCursor = 0;
-	
+
+	/*
+	 * Debugging state. See design/debugging-interface-design.md.
+	 *
+	 * debugMode is a plain (non-volatile) boolean because it is set
+	 * once before any interpreter thread starts and never changes
+	 * after. Plain boolean lets the JIT fold the gated debug block
+	 * out of the production hot path. Attaching a debugger to an
+	 * already-running interpreter is not supported.
+	 *
+	 * debugger is volatile because it is the live reference during
+	 * a debug session and may be swapped (hot-swap, detach,
+	 * replace) while interpreter threads are running. The volatile
+	 * read costs nothing in production because the surrounding
+	 * isDebugMode() block folds away when debugMode is false.
+	 *
+	 * lastSeenThrowable is the per-thread "last seen" used by the
+	 * post-eval exception hook to fire onException(Exception, ...)
+	 * exactly once per logical throw rather than once per stack
+	 * frame the throwable unwinds through. Only touched inside the
+	 * gated catch block; zero cost in production.
+	 */
+	private boolean debugMode = false;
+	private volatile DebuggerInt debugger = null;
+	private final ThreadLocal<Throwable> lastSeenThrowable = new ThreadLocal<Throwable>();
+
 	/**
 	 * Default constructor. When called this gets an instance of the Universe object 
 	 * and initializes it if not already done. It loads universe classes and instantiates 
@@ -754,6 +779,267 @@ public class Engine {
 	 */
 	public void clearParseError() {
 		this.hasParseErrors = false;
+	}
+
+	/* ============================================================
+	 * Debugging
+	 *
+	 * See design/debugging-interface-design.md.
+	 * ============================================================ */
+
+	/**
+	 * Registers (or clears) the debugger. Setting a non-null
+	 * debugger turns debug mode on; setting null turns it off.
+	 *
+	 * Contract: must be called before any interpreter thread
+	 * starts running. The debugMode field is a plain boolean and
+	 * relies on safe publication via thread start to be visible to
+	 * interpreter threads. Attaching a debugger to an
+	 * already-running interpreter is not supported.
+	 *
+	 * The debugger reference itself is volatile, so it may be
+	 * swapped during an active debug session (hot-swap, detach,
+	 * replace) and the change is visible to interpreter threads on
+	 * their next eval.
+	 *
+	 * @param d The DebuggerInt implementation, or null to clear.
+	 */
+	public void setDebugger(DebuggerInt d) {
+		this.debugger = d;
+		this.debugMode = (d != null);
+	}
+
+	/**
+	 * Returns the currently registered debugger, or null.
+	 * @return A DebuggerInt or null.
+	 */
+	public DebuggerInt getDebugger() {
+		return this.debugger;
+	}
+
+	/**
+	 * Returns true if a debugger is currently registered.
+	 * @return A boolean with true for enabled and false for not.
+	 */
+	public boolean isDebugMode() {
+		return this.debugMode;
+	}
+
+	/**
+	 * Returns the per-thread "last seen" throwable used by the
+	 * post-eval exception hook in astNode.eval to dedupe
+	 * onException(Exception, ...) calls across stack frames the
+	 * throwable unwinds through. Engine-internal; exposed for the
+	 * eval hook to access.
+	 * @return The ThreadLocal holding the last-seen throwable.
+	 */
+	public ThreadLocal<Throwable> getLastSeenThrowable() {
+		return this.lastSeenThrowable;
+	}
+
+	/**
+	 * Walks every class registered in the engine (and the
+	 * synthetic script class, if script mode is on) recursively
+	 * and returns every astNode whose getFileName() and
+	 * getLineNum() match the supplied values. The debugger uses
+	 * this to translate a user-supplied "set breakpoint at
+	 * file.aus:42" into the AST node(s) to mark.
+	 *
+	 * Cost is O(N) in total node count. Run once per "set
+	 * breakpoint" request, not on the hot path.
+	 *
+	 * @param fileName The file name to match (must equal getFileName()).
+	 * @param lineNumber The line number to match (must equal getLineNum()).
+	 * @return A list of matching nodes in source order, possibly empty.
+	 */
+	public List<astNode> findNodesByLine(String fileName, int lineNumber) {
+		List<astNode> matches = new ArrayList<astNode>();
+		for (astClass cls : this.classes.values()) {
+			debuggerCollectFromClass(cls, fileName, lineNumber, matches);
+		}
+		if (this.scriptClass != null) {
+			debuggerCollectFromClass(this.scriptClass, fileName, lineNumber, matches);
+		}
+		return matches;
+	}
+
+	/**
+	 * Helper for findNodesByLine: walks a class definition's
+	 * members and functions.
+	 */
+	private void debuggerCollectFromClass(astClass cls, String file, int line, List<astNode> matches) {
+		if (cls == null) return;
+		debuggerMatchAndAdd(cls, file, line, matches);
+		for (astNode m : cls.getMembers().values()) {
+			debuggerCollectFromNode(m, file, line, matches);
+		}
+		for (astFunctDef f : cls.getAllFunctions()) {
+			debuggerCollectFromNode(f, file, line, matches);
+		}
+	}
+
+	/**
+	 * Helper for findNodesByLine: walks an arbitrary AST node by
+	 * subclass-aware recursion. Knows the child shapes of every
+	 * astNode subclass that owns sub-nodes.
+	 */
+	private void debuggerCollectFromNode(astNode n, String file, int line, List<astNode> matches) {
+		if (n == null) return;
+		debuggerMatchAndAdd(n, file, line, matches);
+
+		// Dispatch by concrete subclass to walk children.
+		if (n instanceof astFunctDef) {
+			astFunctDef fd = (astFunctDef) n;
+			debuggerCollectFromNode(fd.getArgList(), file, line, matches);
+			debuggerCollectFromNode(fd.getInstructionList(), file, line, matches);
+		} else if (n instanceof astStatementList) {
+			for (astNode s : ((astStatementList) n).getStatements()) {
+				debuggerCollectFromNode(s, file, line, matches);
+			}
+		} else if (n instanceof astFunctDefArgsList) {
+			for (astNode a : ((astFunctDefArgsList) n).getArgs()) {
+				debuggerCollectFromNode(a, file, line, matches);
+			}
+		} else if (n instanceof astExpression) {
+			astExpression e = (astExpression) n;
+			debuggerCollectFromNode(e.getLeft(), file, line, matches);
+			debuggerCollectFromNode(e.getRight(), file, line, matches);
+		} else if (n instanceof astIfElse) {
+			astIfElse ie = (astIfElse) n;
+			debuggerCollectFromNode(ie.getIfCondition(), file, line, matches);
+			for (astNode c : ie.getIfElseConditions()) {
+				debuggerCollectFromNode(c, file, line, matches);
+			}
+			debuggerCollectFromNode(ie.getElseInstructionList(), file, line, matches);
+		} else if (n instanceof astConditionBlock) {
+			astConditionBlock cb = (astConditionBlock) n;
+			debuggerCollectFromNode(cb.getExpression(), file, line, matches);
+			debuggerCollectFromNode(cb.getInstructionList(), file, line, matches);
+		} else if (n instanceof astSwitch) {
+			astSwitch sw = (astSwitch) n;
+			debuggerCollectFromNode(sw.getExpression(), file, line, matches);
+			for (astNode c : sw.getCaseConditions()) {
+				debuggerCollectFromNode(c, file, line, matches);
+			}
+			debuggerCollectFromNode(sw.getDefaultList(), file, line, matches);
+		} else if (n instanceof astTryCatch) {
+			astTryCatch tc = (astTryCatch) n;
+			debuggerCollectFromNode(tc.getTryInstList(), file, line, matches);
+			debuggerCollectFromNode(tc.getCatchInstList(), file, line, matches);
+		} else if (n instanceof astWhile) {
+			astWhile w = (astWhile) n;
+			debuggerCollectFromNode(w.getExpr(), file, line, matches);
+			debuggerCollectFromNode(w.getInstructions(), file, line, matches);
+		} else if (n instanceof astFor) {
+			astFor f = (astFor) n;
+			debuggerCollectFromNode(f.getExprInit(), file, line, matches);
+			debuggerCollectFromNode(f.getExprCond(), file, line, matches);
+			debuggerCollectFromNode(f.getExprInc(), file, line, matches);
+			debuggerCollectFromNode(f.getEachVar(), file, line, matches);
+			debuggerCollectFromNode(f.getEachExpr(), file, line, matches);
+			debuggerCollectFromNode(f.getInstructions(), file, line, matches);
+		} else if (n instanceof astFunctCall) {
+			debuggerCollectFromNode(((astFunctCall) n).getArgs(), file, line, matches);
+		} else if (n instanceof astNewInst) {
+			debuggerCollectFromNode(((astNewInst) n).getArgs(), file, line, matches);
+		} else if (n instanceof astReturn) {
+			debuggerCollectFromNode(((astReturn) n).getValue(), file, line, matches);
+		} else if (n instanceof astThrow) {
+			debuggerCollectFromNode(((astThrow) n).getExpression(), file, line, matches);
+		} else if (n instanceof astObj) {
+			debuggerCollectFromNode(((astObj) n).getIndex(), file, line, matches);
+		} else if (n instanceof astVar) {
+			debuggerCollectFromNode(((astVar) n).getAssociative(), file, line, matches);
+		} else if (n instanceof astList) {
+			for (astNode item : ((astList) n).getItems()) {
+				debuggerCollectFromNode(item, file, line, matches);
+			}
+		} else if (n instanceof astMap) {
+			for (Map.Entry<astNode, astNode> e : ((astMap) n).getItems().entrySet()) {
+				debuggerCollectFromNode(e.getKey(), file, line, matches);
+				debuggerCollectFromNode(e.getValue(), file, line, matches);
+			}
+		} else if (n instanceof astClass) {
+			// Nested or inherited class definition encountered through
+			// some other node's children; recurse the same way as
+			// top-level classes.
+			debuggerCollectFromClass((astClass) n, file, line, matches);
+		}
+
+		// Every astNode supports a child chain via getChild() for
+		// dot-chained references (x.y.z). Walk it for every node.
+		if (n.getChild() != null) {
+			debuggerCollectFromNode(n.getChild(), file, line, matches);
+		}
+	}
+
+	/**
+	 * Helper for findNodesByLine: tests a single node and adds it
+	 * to the matches list when the file name and line number
+	 * match.
+	 */
+	private void debuggerMatchAndAdd(astNode n, String file, int line, List<astNode> matches) {
+		if (n.getLineNum() == line
+				&& n.getFileName() != null
+				&& n.getFileName().equals(file)) {
+			matches.add(n);
+		}
+	}
+
+	/**
+	 * Parses an Aussom source snippet and evaluates it against
+	 * the supplied frame's environment. Used by debuggers to
+	 * implement DAP "evaluate" requests (and similar tooling)
+	 * that need to inspect or compute values in the context of a
+	 * paused frame.
+	 *
+	 * The source is parsed via the existing parseStatements
+	 * building block, so it accepts the same shape as
+	 * Engine.evalLine: bare statements, class declarations, and
+	 * include directives. Only bare top-level statements are
+	 * walked against the supplied frame; class declarations and
+	 * includes go through the engine's normal addClass /
+	 * addInclude paths.
+	 *
+	 * Returns the value of the last evaluated statement, or
+	 * AussomNull if the source produced no statements. A runtime
+	 * error from a statement is returned as an AussomException
+	 * value (caught and converted; not thrown).
+	 *
+	 * Parse errors throw an aussomException.
+	 *
+	 * @param source The Aussom source snippet to evaluate.
+	 * @param frame The Environment of the paused frame.
+	 * @return An AussomType with the last value.
+	 * @throws Exception on parse error.
+	 */
+	public AussomType evalInFrame(String source, Environment frame) throws Exception {
+		astStatementList parsed = new astStatementList();
+		this.parseStatements("<eval>", source, 0, parsed);
+		if (this.hasParseErrors) {
+			this.clearParseError();
+			throw new aussomException("Engine.evalInFrame: parse error.");
+		}
+
+		AussomType last = new AussomNull();
+		List<astNode> stmts = parsed.getStatements();
+		for (int i = 0; i < stmts.size(); i++) {
+			try {
+				last = stmts.get(i).eval(frame, false);
+			} catch (aussomException e) {
+				last = new AussomException(
+					"Engine.evalInFrame: uncaught exception during "
+					+ "evaluation: " + e.getMessage());
+				break;
+			}
+			if (last.isEx()) break;
+			if (last.isReturn()) {
+				last = ((AussomReturn) last).getValue();
+				break;
+			}
+			if (last.isBreak()) break;
+		}
+		return last;
 	}
 
 	/* ============================================================

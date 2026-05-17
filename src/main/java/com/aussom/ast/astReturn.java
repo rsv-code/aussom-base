@@ -33,6 +33,10 @@ public class astReturn extends astNode implements astNodeInt
 		this.value = Value;
 	}
 
+	public astNode getValue() {
+		return this.value;
+	}
+
 	@Override
 	public String toString() {
 		return this.toString(0);

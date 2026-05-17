@@ -68,6 +68,11 @@ public class Jsr223 {
 
 	@BeforeEach
 	void setUp() {
+		// Quiet the engine's [trc] chatter during tests. Default
+		// level on DefaultLoggingImpl is INFO, so trc/dbg are
+		// filtered out.
+		com.aussom.stdlib.console.get().register(new com.aussom.DefaultLoggingImpl());
+
 		mgr = new ScriptEngineManager();
 		engine = mgr.getEngineByName("aussom");
 		assertNotNull(engine, "engine must be discoverable by name");

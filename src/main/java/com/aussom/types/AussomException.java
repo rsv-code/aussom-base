@@ -45,7 +45,15 @@ public class AussomException extends AussomObject implements AussomTypeInt {
 	// ones being passed aroudn as objects. Throw needs to set this
 	// flag to false and catch needs to set it to true.
 	private boolean isLocalObject = false;
-	
+
+	// Set by the debugger hook in astNode.eval the first time the
+	// value flows through eval. Used to dedupe the
+	// DebuggerInt.onException(AussomException, Environment) call
+	// so the hook fires once per logical exception rather than
+	// once per stack frame the value passes through. See
+	// design/debugging-interface-design.md.
+	private boolean debuggerSeen = false;
+
 	public AussomException() {
 		this.setType(cType.cException);
 
@@ -140,6 +148,26 @@ public class AussomException extends AussomObject implements AussomTypeInt {
 
 	public void setLocalObject(boolean localObject) {
 		isLocalObject = localObject;
+	}
+
+	/**
+	 * Returns true if the debugger hook in astNode.eval has
+	 * already observed this exception value. Used to dedupe the
+	 * DebuggerInt.onException(AussomException, Environment) call
+	 * across stack frames the value passes through.
+	 * @return A boolean with true for seen and false for not.
+	 */
+	public boolean isDebuggerSeen() {
+		return this.debuggerSeen;
+	}
+
+	/**
+	 * Sets the debuggerSeen flag. Called by the debugger hook in
+	 * astNode.eval the first time the value flows through eval.
+	 * @param debuggerSeen the flag value.
+	 */
+	public void setDebuggerSeen(boolean debuggerSeen) {
+		this.debuggerSeen = debuggerSeen;
 	}
 
 	/**

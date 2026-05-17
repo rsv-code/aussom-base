@@ -16,6 +16,7 @@
 
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.aussom.DefaultLoggingImpl;
 import com.aussom.DefaultSecurityManagerImpl;
 import com.aussom.Engine;
 import com.aussom.LoggingInt;
@@ -50,6 +52,14 @@ import com.aussom.types.AussomType;
  */
 @DisplayName("Engine script mode")
 public class ScriptMode {
+
+	@BeforeEach
+	void setUp() {
+		// Quiet the engine's [trc] chatter during tests. Default
+		// level on DefaultLoggingImpl is INFO, so trc/dbg are
+		// filtered out.
+		console.get().register(new DefaultLoggingImpl());
+	}
 
 	/**
 	 * Minimal LoggingInt that captures every log/print/println/info
