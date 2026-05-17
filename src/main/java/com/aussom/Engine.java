@@ -34,7 +34,7 @@ import com.aussom.types.*;
  * code.
  * @author austin
  */
-public class Engine {
+public class Engine implements AussomDebuggingInt {
 	/**
 	 * Defines the run mode of then engine. When set to DOC some
 	 * errors are ignored like missing includes.
@@ -853,136 +853,208 @@ public class Engine {
 	 * @return A list of matching nodes in source order, possibly empty.
 	 */
 	public List<astNode> findNodesByLine(String fileName, int lineNumber) {
-		List<astNode> matches = new ArrayList<astNode>();
-		for (astClass cls : this.classes.values()) {
-			debuggerCollectFromClass(cls, fileName, lineNumber, matches);
-		}
-		if (this.scriptClass != null) {
-			debuggerCollectFromClass(this.scriptClass, fileName, lineNumber, matches);
-		}
+		final List<astNode> matches = new ArrayList<astNode>();
+		final String file = fileName;
+		final int line = lineNumber;
+		java.util.function.Consumer<astNode> visitor = new java.util.function.Consumer<astNode>() {
+			@Override public void accept(astNode n) {
+				if (n.getLineNum() == line
+						&& n.getFileName() != null
+						&& n.getFileName().equals(file)) {
+					matches.add(n);
+				}
+			}
+		};
+		debuggerVisitAll(visitor);
 		return matches;
 	}
 
 	/**
-	 * Helper for findNodesByLine: walks a class definition's
-	 * members and functions.
+	 * Convenience method that sets a breakpoint at the given
+	 * file and line. Marks the first node returned by
+	 * findNodesByLine and leaves any other nodes on the same
+	 * line unmarked. Returns true if a node was found and
+	 * marked, false if the line has no executable code.
+	 *
+	 * @param fileName The file name to match.
+	 * @param lineNumber The line number to match.
+	 * @return true if a node was marked, false otherwise.
 	 */
-	private void debuggerCollectFromClass(astClass cls, String file, int line, List<astNode> matches) {
-		if (cls == null) return;
-		debuggerMatchAndAdd(cls, file, line, matches);
-		for (astNode m : cls.getMembers().values()) {
-			debuggerCollectFromNode(m, file, line, matches);
+	public boolean setBreakpoint(String fileName, int lineNumber) {
+		List<astNode> hits = this.findNodesByLine(fileName, lineNumber);
+		if (hits.isEmpty()) return false;
+		hits.get(0).breakpoint = true;
+		return true;
+	}
+
+	/**
+	 * Convenience method that clears any breakpoints set at
+	 * the given file and line. Unsets the breakpoint flag on
+	 * every matching node (not just the first) so that this
+	 * call undoes a prior setBreakpoint as well as any nodes
+	 * the caller marked manually via findNodesByLine.
+	 *
+	 * @param fileName The file name to match.
+	 * @param lineNumber The line number to match.
+	 * @return true if at least one breakpoint was cleared, false otherwise.
+	 */
+	public boolean clearBreakpoint(String fileName, int lineNumber) {
+		List<astNode> hits = this.findNodesByLine(fileName, lineNumber);
+		boolean any = false;
+		for (astNode n : hits) {
+			if (n.breakpoint) {
+				n.breakpoint = false;
+				any = true;
+			}
 		}
-		for (astFunctDef f : cls.getAllFunctions()) {
-			debuggerCollectFromNode(f, file, line, matches);
+		return any;
+	}
+
+	/**
+	 * Convenience method that clears every breakpoint flag in
+	 * the AST — across every registered class and the
+	 * synthetic script class. Useful for DAP-style "remove all
+	 * breakpoints" handling.
+	 *
+	 * @return true if at least one breakpoint was cleared, false otherwise.
+	 */
+	public boolean clearAllBreakpoints() {
+		final boolean[] any = new boolean[] { false };
+		java.util.function.Consumer<astNode> visitor = new java.util.function.Consumer<astNode>() {
+			@Override public void accept(astNode n) {
+				if (n.breakpoint) {
+					n.breakpoint = false;
+					any[0] = true;
+				}
+			}
+		};
+		debuggerVisitAll(visitor);
+		return any[0];
+	}
+
+	/**
+	 * Helper: invokes the supplied visitor on every astNode in
+	 * the engine — across every registered class and the
+	 * synthetic script class, if one exists. Single entry
+	 * point shared by findNodesByLine, clearAllBreakpoints,
+	 * and any other walker-based debugger helper.
+	 */
+	private void debuggerVisitAll(java.util.function.Consumer<astNode> visitor) {
+		for (astClass cls : this.classes.values()) {
+			debuggerVisitClass(cls, visitor);
+		}
+		if (this.scriptClass != null) {
+			debuggerVisitClass(this.scriptClass, visitor);
 		}
 	}
 
 	/**
-	 * Helper for findNodesByLine: walks an arbitrary AST node by
-	 * subclass-aware recursion. Knows the child shapes of every
-	 * astNode subclass that owns sub-nodes.
+	 * Helper: walks a class definition's members and functions
+	 * and invokes the visitor on every node.
 	 */
-	private void debuggerCollectFromNode(astNode n, String file, int line, List<astNode> matches) {
+	private void debuggerVisitClass(astClass cls, java.util.function.Consumer<astNode> visitor) {
+		if (cls == null) return;
+		visitor.accept(cls);
+		for (astNode m : cls.getMembers().values()) {
+			debuggerVisitNode(m, visitor);
+		}
+		for (astFunctDef f : cls.getAllFunctions()) {
+			debuggerVisitNode(f, visitor);
+		}
+	}
+
+	/**
+	 * Helper: walks an arbitrary AST node by subclass-aware
+	 * recursion. Knows the child shapes of every astNode
+	 * subclass that owns sub-nodes.
+	 */
+	private void debuggerVisitNode(astNode n, java.util.function.Consumer<astNode> visitor) {
 		if (n == null) return;
-		debuggerMatchAndAdd(n, file, line, matches);
+		visitor.accept(n);
 
 		// Dispatch by concrete subclass to walk children.
 		if (n instanceof astFunctDef) {
 			astFunctDef fd = (astFunctDef) n;
-			debuggerCollectFromNode(fd.getArgList(), file, line, matches);
-			debuggerCollectFromNode(fd.getInstructionList(), file, line, matches);
+			debuggerVisitNode(fd.getArgList(), visitor);
+			debuggerVisitNode(fd.getInstructionList(), visitor);
 		} else if (n instanceof astStatementList) {
 			for (astNode s : ((astStatementList) n).getStatements()) {
-				debuggerCollectFromNode(s, file, line, matches);
+				debuggerVisitNode(s, visitor);
 			}
 		} else if (n instanceof astFunctDefArgsList) {
 			for (astNode a : ((astFunctDefArgsList) n).getArgs()) {
-				debuggerCollectFromNode(a, file, line, matches);
+				debuggerVisitNode(a, visitor);
 			}
 		} else if (n instanceof astExpression) {
 			astExpression e = (astExpression) n;
-			debuggerCollectFromNode(e.getLeft(), file, line, matches);
-			debuggerCollectFromNode(e.getRight(), file, line, matches);
+			debuggerVisitNode(e.getLeft(), visitor);
+			debuggerVisitNode(e.getRight(), visitor);
 		} else if (n instanceof astIfElse) {
 			astIfElse ie = (astIfElse) n;
-			debuggerCollectFromNode(ie.getIfCondition(), file, line, matches);
+			debuggerVisitNode(ie.getIfCondition(), visitor);
 			for (astNode c : ie.getIfElseConditions()) {
-				debuggerCollectFromNode(c, file, line, matches);
+				debuggerVisitNode(c, visitor);
 			}
-			debuggerCollectFromNode(ie.getElseInstructionList(), file, line, matches);
+			debuggerVisitNode(ie.getElseInstructionList(), visitor);
 		} else if (n instanceof astConditionBlock) {
 			astConditionBlock cb = (astConditionBlock) n;
-			debuggerCollectFromNode(cb.getExpression(), file, line, matches);
-			debuggerCollectFromNode(cb.getInstructionList(), file, line, matches);
+			debuggerVisitNode(cb.getExpression(), visitor);
+			debuggerVisitNode(cb.getInstructionList(), visitor);
 		} else if (n instanceof astSwitch) {
 			astSwitch sw = (astSwitch) n;
-			debuggerCollectFromNode(sw.getExpression(), file, line, matches);
+			debuggerVisitNode(sw.getExpression(), visitor);
 			for (astNode c : sw.getCaseConditions()) {
-				debuggerCollectFromNode(c, file, line, matches);
+				debuggerVisitNode(c, visitor);
 			}
-			debuggerCollectFromNode(sw.getDefaultList(), file, line, matches);
+			debuggerVisitNode(sw.getDefaultList(), visitor);
 		} else if (n instanceof astTryCatch) {
 			astTryCatch tc = (astTryCatch) n;
-			debuggerCollectFromNode(tc.getTryInstList(), file, line, matches);
-			debuggerCollectFromNode(tc.getCatchInstList(), file, line, matches);
+			debuggerVisitNode(tc.getTryInstList(), visitor);
+			debuggerVisitNode(tc.getCatchInstList(), visitor);
 		} else if (n instanceof astWhile) {
 			astWhile w = (astWhile) n;
-			debuggerCollectFromNode(w.getExpr(), file, line, matches);
-			debuggerCollectFromNode(w.getInstructions(), file, line, matches);
+			debuggerVisitNode(w.getExpr(), visitor);
+			debuggerVisitNode(w.getInstructions(), visitor);
 		} else if (n instanceof astFor) {
 			astFor f = (astFor) n;
-			debuggerCollectFromNode(f.getExprInit(), file, line, matches);
-			debuggerCollectFromNode(f.getExprCond(), file, line, matches);
-			debuggerCollectFromNode(f.getExprInc(), file, line, matches);
-			debuggerCollectFromNode(f.getEachVar(), file, line, matches);
-			debuggerCollectFromNode(f.getEachExpr(), file, line, matches);
-			debuggerCollectFromNode(f.getInstructions(), file, line, matches);
+			debuggerVisitNode(f.getExprInit(), visitor);
+			debuggerVisitNode(f.getExprCond(), visitor);
+			debuggerVisitNode(f.getExprInc(), visitor);
+			debuggerVisitNode(f.getEachVar(), visitor);
+			debuggerVisitNode(f.getEachExpr(), visitor);
+			debuggerVisitNode(f.getInstructions(), visitor);
 		} else if (n instanceof astFunctCall) {
-			debuggerCollectFromNode(((astFunctCall) n).getArgs(), file, line, matches);
+			debuggerVisitNode(((astFunctCall) n).getArgs(), visitor);
 		} else if (n instanceof astNewInst) {
-			debuggerCollectFromNode(((astNewInst) n).getArgs(), file, line, matches);
+			debuggerVisitNode(((astNewInst) n).getArgs(), visitor);
 		} else if (n instanceof astReturn) {
-			debuggerCollectFromNode(((astReturn) n).getValue(), file, line, matches);
+			debuggerVisitNode(((astReturn) n).getValue(), visitor);
 		} else if (n instanceof astThrow) {
-			debuggerCollectFromNode(((astThrow) n).getExpression(), file, line, matches);
+			debuggerVisitNode(((astThrow) n).getExpression(), visitor);
 		} else if (n instanceof astObj) {
-			debuggerCollectFromNode(((astObj) n).getIndex(), file, line, matches);
+			debuggerVisitNode(((astObj) n).getIndex(), visitor);
 		} else if (n instanceof astVar) {
-			debuggerCollectFromNode(((astVar) n).getAssociative(), file, line, matches);
+			debuggerVisitNode(((astVar) n).getAssociative(), visitor);
 		} else if (n instanceof astList) {
 			for (astNode item : ((astList) n).getItems()) {
-				debuggerCollectFromNode(item, file, line, matches);
+				debuggerVisitNode(item, visitor);
 			}
 		} else if (n instanceof astMap) {
 			for (Map.Entry<astNode, astNode> e : ((astMap) n).getItems().entrySet()) {
-				debuggerCollectFromNode(e.getKey(), file, line, matches);
-				debuggerCollectFromNode(e.getValue(), file, line, matches);
+				debuggerVisitNode(e.getKey(), visitor);
+				debuggerVisitNode(e.getValue(), visitor);
 			}
 		} else if (n instanceof astClass) {
 			// Nested or inherited class definition encountered through
 			// some other node's children; recurse the same way as
 			// top-level classes.
-			debuggerCollectFromClass((astClass) n, file, line, matches);
+			debuggerVisitClass((astClass) n, visitor);
 		}
 
 		// Every astNode supports a child chain via getChild() for
 		// dot-chained references (x.y.z). Walk it for every node.
 		if (n.getChild() != null) {
-			debuggerCollectFromNode(n.getChild(), file, line, matches);
-		}
-	}
-
-	/**
-	 * Helper for findNodesByLine: tests a single node and adds it
-	 * to the matches list when the file name and line number
-	 * match.
-	 */
-	private void debuggerMatchAndAdd(astNode n, String file, int line, List<astNode> matches) {
-		if (n.getLineNum() == line
-				&& n.getFileName() != null
-				&& n.getFileName().equals(file)) {
-			matches.add(n);
+			debuggerVisitNode(n.getChild(), visitor);
 		}
 	}
 
