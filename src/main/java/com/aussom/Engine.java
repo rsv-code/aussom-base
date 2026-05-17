@@ -821,7 +821,7 @@ public class Engine {
 	 * Returns true if a debugger is currently registered.
 	 * @return A boolean with true for enabled and false for not.
 	 */
-	public boolean isDebugMode() {
+	public final boolean isDebugMode() {
 		return this.debugMode;
 	}
 
