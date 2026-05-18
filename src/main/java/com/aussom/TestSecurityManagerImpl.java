@@ -37,6 +37,12 @@ public class TestSecurityManagerImpl extends SecurityManagerImpl {
          * and Engine.evalLine.
          */
         this.props.put("aussom.script.mode.enable", true);
+
+        /*
+         * Debugger attach. Enabled in test contexts so the
+         * Debugger JUnit suite can exercise Engine.setDebugger.
+         */
+        this.props.put("aussom.debugger.enable", true);
     }
 
     /**

@@ -200,7 +200,7 @@ public class Debugger {
 	 */
 	private static Engine newEngine() {
 		try {
-			Engine eng = new Engine(new DefaultSecurityManagerImpl());
+			Engine eng = new Engine(new TestSecurityManagerImpl());
 			eng.addResourceIncludePath("/com/aussom/stdlib/aus/");
 			return eng;
 		} catch (Exception e) {
@@ -224,6 +224,35 @@ public class Debugger {
 		@DisplayName("1. Default off: isDebugMode is false, no debugger")
 		void defaultOff() throws Exception {
 			Engine eng = newEngine();
+			assertFalse(eng.isDebugMode());
+			assertNull(eng.getDebugger());
+		}
+
+		@Test
+		@DisplayName("2a. setDebugger denied under default security manager")
+		void setDebuggerDeniedByDefault() throws Exception {
+			Engine eng = new Engine(new DefaultSecurityManagerImpl());
+			eng.addResourceIncludePath("/com/aussom/stdlib/aus/");
+			CapturingDebugger d = new CapturingDebugger();
+			aussomException ex = assertThrows(aussomException.class,
+				() -> eng.setDebugger(d));
+			assertTrue(ex.getMessage().contains("aussom.debugger.enable"),
+				"message should reference the gated property; got: "
+				+ ex.getMessage());
+			// Engine state must not have been mutated by the denied call.
+			assertFalse(eng.isDebugMode());
+			assertNull(eng.getDebugger());
+		}
+
+		@Test
+		@DisplayName("2b. setDebugger(null) is always allowed (detach)")
+		void setDebuggerNullAlwaysAllowed() throws Exception {
+			// Attach under permissive manager, then swap in a strict
+			// engine for the detach path. Easier: just confirm detach
+			// is a no-op throw-wise on a default-locked engine.
+			Engine eng = new Engine(new DefaultSecurityManagerImpl());
+			eng.addResourceIncludePath("/com/aussom/stdlib/aus/");
+			eng.setDebugger(null);
 			assertFalse(eng.isDebugMode());
 			assertNull(eng.getDebugger());
 		}
@@ -656,6 +685,26 @@ public class Debugger {
 			AussomType ret = eng.evalInFrame("1/0;", env);
 			assertTrue(ret.isEx(),
 				"expected an AussomException, got " + ret);
+		}
+
+		@Test
+		@DisplayName("17. evalInFrame denied under default security manager")
+		void deniedByDefaultSecurity() throws Exception {
+			// Fresh engine on the locked-down default manager. The
+			// gate must fire even if no debugger is attached, since
+			// evalInFrame is the same arbitrary-code attack surface
+			// in either case.
+			Engine eng = new Engine(new DefaultSecurityManagerImpl());
+			eng.addResourceIncludePath("/com/aussom/stdlib/aus/");
+			Environment env = new Environment(eng);
+			env.setEnvironment(null,
+				new com.aussom.types.Members(),
+				new com.aussom.CallStack());
+			aussomException ex = assertThrows(aussomException.class,
+				() -> eng.evalInFrame("1 + 1;", env));
+			assertTrue(ex.getMessage().contains("aussom.debugger.enable"),
+				"message should reference the gated property; got: "
+				+ ex.getMessage());
 		}
 	}
 }

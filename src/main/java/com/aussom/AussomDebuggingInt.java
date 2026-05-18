@@ -19,6 +19,7 @@ package com.aussom;
 import java.util.List;
 
 import com.aussom.ast.astNode;
+import com.aussom.ast.aussomException;
 import com.aussom.types.AussomType;
 
 /**
@@ -55,9 +56,15 @@ public interface AussomDebuggingInt {
 	 * session, but the engine's underlying debugMode flag is
 	 * not guaranteed to flip across threads mid-run.
 	 *
+	 * Gated by the security property aussom.debugger.enable.
+	 * Throws an aussomException when attaching a debugger if
+	 * the property is false. Detach (d == null) is always
+	 * allowed.
+	 *
 	 * @param d The DebuggerInt implementation, or null to clear.
+	 * @throws aussomException on security denial.
 	 */
-	void setDebugger(DebuggerInt d);
+	void setDebugger(DebuggerInt d) throws aussomException;
 
 	/**
 	 * Returns the currently registered debugger, or null.
@@ -147,10 +154,15 @@ public interface AussomDebuggingInt {
 	 * value (caught and converted; not thrown). Parse errors
 	 * throw an aussomException.
 	 *
+	 * Gated by the security property aussom.debugger.enable.
+	 * Throws an aussomException if the property is false. The
+	 * check runs on every entry so revoking the property at
+	 * runtime immediately blocks further evaluation.
+	 *
 	 * @param source The Aussom source snippet to evaluate.
 	 * @param frame The Environment of the paused frame.
 	 * @return An AussomType with the last value.
-	 * @throws Exception on parse error.
+	 * @throws Exception on parse error or security denial.
 	 */
 	AussomType evalInFrame(String source, Environment frame) throws Exception;
 }

@@ -100,6 +100,14 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 		 * and com.aussom.Engine.evalLine.
 		 */
 		this.props.put("aussom.script.mode.enable", false);
+
+		/*
+		 * Debugger attach. See com.aussom.Engine.setDebugger.
+		 * Gates whether an external client (DAP server, custom
+		 * debug REPL, test harness) is allowed to register a
+		 * DebuggerInt and turn on the engine's debug mode.
+		 */
+		this.props.put("aussom.debugger.enable", false);
 	}
 	
 	/**

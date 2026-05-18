@@ -802,9 +802,23 @@ public class Engine implements AussomDebuggingInt {
 	 * replace) and the change is visible to interpreter threads on
 	 * their next eval.
 	 *
+	 * Gated by the security property aussom.debugger.enable.
+	 * Throws an aussomException when attaching a debugger if the
+	 * property is false. Detach (d == null) is always allowed so a
+	 * caller can clear a previously-attached debugger regardless of
+	 * the current property value.
+	 *
 	 * @param d The DebuggerInt implementation, or null to clear.
+	 * @throws aussomException on security denial.
 	 */
-	public void setDebugger(DebuggerInt d) {
+	public void setDebugger(DebuggerInt d) throws aussomException {
+		if (d != null) {
+			if (!(Boolean) this.secman.getProperty("aussom.debugger.enable")) {
+				throw new aussomException(
+					"Engine.setDebugger: Security exception, action "
+					+ "'aussom.debugger.enable' not permitted.");
+			}
+		}
 		this.debugger = d;
 		this.debugMode = (d != null);
 	}
@@ -1080,12 +1094,27 @@ public class Engine implements AussomDebuggingInt {
 	 *
 	 * Parse errors throw an aussomException.
 	 *
+	 * Gated by the security property aussom.debugger.enable.
+	 * Throws an aussomException if the property is false. The
+	 * check runs on every entry so that revoking the property at
+	 * runtime (via setProp on a permissive manager) immediately
+	 * blocks further evaluation, even if a debugger is still
+	 * attached.
+	 *
 	 * @param source The Aussom source snippet to evaluate.
 	 * @param frame The Environment of the paused frame.
 	 * @return An AussomType with the last value.
-	 * @throws Exception on parse error.
+	 * @throws Exception on parse error or security denial.
 	 */
 	public AussomType evalInFrame(String source, Environment frame) throws Exception {
+		// Security check on every entry; defends against runtime
+		// property changes via setProp.
+		if (!(Boolean) this.secman.getProperty("aussom.debugger.enable")) {
+			throw new aussomException(
+				"Engine.evalInFrame: Security exception, action "
+				+ "'aussom.debugger.enable' not permitted.");
+		}
+
 		astStatementList parsed = new astStatementList();
 		this.parseStatements("<eval>", source, 0, parsed);
 		if (this.hasParseErrors) {
