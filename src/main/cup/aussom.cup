@@ -354,7 +354,7 @@ include ::=
 	expVar:name
 	{:
 		astInclude i = new astInclude(((astVar)name).getName());
-		i.setParserInfo(this.parser.fileName, nameleft, nameright);
+		i.setParserInfo(this.parser.fileName, nameleft, nameright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = i;
 	:}
 |	include:i DOT expVar:name
@@ -373,7 +373,7 @@ classBlock ::=
     {:
         // Set doc node.
         astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright);
+        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
         exp.setDocNode(ad);
         RESULT = exp;
     :}
@@ -381,7 +381,7 @@ classBlock ::=
     {:
         // Set doc node.
         astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright);
+        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
         exp.setDocNode(ad);
         exp.addAnnotations(annList);
         RESULT = exp;
@@ -389,7 +389,7 @@ classBlock ::=
 |   annotationList:annList classDefExpr:exp
     {:
         // Set doc node.
-        exp.setParserInfo(this.parser.fileName, annListleft, annListright);
+        exp.setParserInfo(this.parser.fileName, annListleft, annListright, this.parser.cur_token.left, this.parser.cur_token.right);
         exp.addAnnotations(annList);
         RESULT = exp;
     :}
@@ -413,13 +413,13 @@ annotation ::=
     AT IDENT:annotationName
     {:
         astAnnotation aa = new astAnnotation(annotationName);
-        aa.setParserInfo(this.parser.fileName, annotationNameleft, annotationNameright);
+        aa.setParserInfo(this.parser.fileName, annotationNameleft, annotationNameright, this.parser.cur_token.left, this.parser.cur_token.right);
         RESULT = aa;
     :}
 |   AT IDENT:annotationName LPAREN annotationArgList:al RPAREN
     {:
         astAnnotation aa = new astAnnotation(annotationName, al);
-        aa.setParserInfo(this.parser.fileName, annotationNameleft, annotationNameright);
+        aa.setParserInfo(this.parser.fileName, annotationNameleft, annotationNameright, this.parser.cur_token.left, this.parser.cur_token.right);
         RESULT = aa;
     :}
 ;
@@ -442,7 +442,7 @@ annotationArg ::=
     IDENT:argName EQ STRING:s
     {:
         astAnnotationArg annArg = new astAnnotationArg(argName, s);
-        annArg.setParserInfo(this.parser.fileName, argNameleft, argNameright);
+        annArg.setParserInfo(this.parser.fileName, argNameleft, argNameright, this.parser.cur_token.left, this.parser.cur_token.right);
         RESULT = annArg;
     :}
 ;
@@ -451,14 +451,14 @@ classDefExpr ::=
 	isStatic:is CLASSDEF IDENT:className classSection:ac
 	{:
 		ac.setName(className);
-		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright);
+		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astClass)ac).setStatic((boolean)is);
 		RESULT = ac;
 	:}
 |	isStatic:is CLASSDEF IDENT:className COLON extendClassList:cl classSection:ac
 	{:
 		ac.setName(className);
-		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright);
+		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astClass)ac).setStatic((boolean)is);
 		((astClass)ac).setExtendedClasses(cl);
 		RESULT = ac;
@@ -466,7 +466,7 @@ classDefExpr ::=
 |	isStatic:is EXTERN CLASSDEF IDENT:className COLON externClassRef:i classSection:ac
 	{:
 		ac.setName(className);
-		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright);
+		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astClass)ac).setStatic((boolean)is);
 		((astClass)ac).setExtern(true);
 		((astClass)ac).setExternClassName(((astInclude)i).getExternClass(), this.parser.loadExternClasses);
@@ -475,7 +475,7 @@ classDefExpr ::=
 |	isStatic:is EXTERN CLASSDEF IDENT:className COLON externClassRef:i COMMA extendClassList:cl classSection:ac
 	{:
 		ac.setName(className);
-		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright);
+		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astClass)ac).setStatic((boolean)is);
 		((astClass)ac).setExtern(true);
 		((astClass)ac).setExternClassName(((astInclude)i).getExternClass(), this.parser.loadExternClasses);
@@ -485,7 +485,7 @@ classDefExpr ::=
 |	ENUM IDENT:enumName LBRACKET enumBlocks:eb RBRACKET
 	{:
 		eb.setName(enumName);
-		eb.setParserInfo(this.parser.fileName, enumNameleft, enumNameright);
+		eb.setParserInfo(this.parser.fileName, enumNameleft, enumNameright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astClass)eb).setStatic(true);
 		RESULT = eb;
 	:}
@@ -575,7 +575,7 @@ memberDefinitionBlock ::=
     {:
         // Set doc node.
         astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright);
+        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
         md.setDocNode(ad);
         RESULT = md;
     :}
@@ -588,7 +588,7 @@ memberDefinitionBlock ::=
     {:
         // Set doc node.
         astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright);
+        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
         md.setDocNode(ad);
         md.addAnnotations(annList);
         RESULT = md;
@@ -649,7 +649,7 @@ enumBlocks ::=
 	enumRec:er
 	{:
 		astClass ac = new astClass();
-		ac.setParserInfo(this.parser.fileName, erleft, erright);
+		ac.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		ac.addMember(er.getName(), er);
 		RESULT = (astNode)ac;
 	:}
@@ -665,7 +665,7 @@ enumRec ::=
 	{:
 		astString tmp = new astString(v.getName());
 		tmp.setName(v.getName());
-		tmp.setParserInfo(this.parser.fileName, vleft, vright);
+		tmp.setParserInfo(this.parser.fileName, vleft, vright, this.parser.cur_token.left, this.parser.cur_token.right);
 		tmp.setAccessType(AccessType.aPublic);
 		RESULT = tmp;
 	:}
@@ -673,7 +673,7 @@ enumRec ::=
 	{:
 		astString tmp = new astString(((astString)s).getValueString());
 		tmp.setName(v.getName());
-		tmp.setParserInfo(this.parser.fileName, vleft, vright);
+		tmp.setParserInfo(this.parser.fileName, vleft, vright, this.parser.cur_token.left, this.parser.cur_token.right);
 		tmp.setAccessType(AccessType.aPublic);
 		RESULT = tmp;
 	:}
@@ -688,7 +688,7 @@ functionDefinitionBlock ::=
     {:
         // Set doc node.
         astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright);
+        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
         fd.setDocNode(ad);
         RESULT = fd;
     :}
@@ -701,7 +701,7 @@ functionDefinitionBlock ::=
     {:
         // Set doc node.
         astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright);
+        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
         fd.setDocNode(ad);
         fd.addAnnotations(annList);
         RESULT = fd;
@@ -711,7 +711,7 @@ functionDefinitionBlock ::=
 functionDefinition ::=
 	AccessType:am expFunctDef:f LPAREN functDefArgList:al RPAREN LBRACKET instructionList:il RBRACKET
 	{:
-		f.setParserInfo(this.parser.fileName, fleft, fright);
+		f.setParserInfo(this.parser.fileName, fleft, fright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astFunctDef)f).setArgList(al);
 		((astFunctDef)f).setInstructionList(il);
 		f.setAccessType(am);
@@ -719,14 +719,14 @@ functionDefinition ::=
 	:}
 |	AccessType:am expFunctDef:f LPAREN functDefArgList:al RPAREN LBRACKET RBRACKET
 	{:
-		f.setParserInfo(this.parser.fileName, fleft, fright);
+		f.setParserInfo(this.parser.fileName, fleft, fright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astFunctDef)f).setArgList(al);
 		f.setAccessType(am);
 		RESULT = f;
 	:}
 |	AccessType:am EXTERN expFunctDef:f LPAREN functDefArgList:al RPAREN SEMI
 	{:
-		f.setParserInfo(this.parser.fileName, fleft, fright);
+		f.setParserInfo(this.parser.fileName, fleft, fright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astFunctDef)f).setArgList(al);
 		((astFunctDef)f).setExtern(true);
 		f.setAccessType(am);
@@ -826,7 +826,7 @@ functDefPrimType ::=
 		else
 		{
 			astNode n = new astNode();
-			n.setParserInfo(this.parser.fileName, sleft, sright);
+			n.setParserInfo(this.parser.fileName, sleft, sright, this.parser.cur_token.left, this.parser.cur_token.right);
 			throw new aussomException(n, "PARSE_ERROR: Expecting primative identifier but found '" + s + "' instead.", "");
 		}
 	:}
@@ -885,7 +885,7 @@ includeExp ::=
 	INCLUDE include:i SEMI
 	{:
 		astExpression e = new astExpression(i);
-		e.setParserInfo(this.parser.fileName, ileft, iright);
+		e.setParserInfo(this.parser.fileName, ileft, iright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.seteType(expType.INCLUDE);
 		RESULT = e;
 	:}
@@ -899,7 +899,7 @@ expression ::=
 |	NEW:n expVar:v LPAREN functCallArgList:al RPAREN
 	{:
 		astNewInst ni = new astNewInst(((astVar)v).getName());
-		ni.setParserInfo(this.parser.fileName, nleft, nright);
+		ni.setParserInfo(this.parser.fileName, nleft, nright, this.parser.cur_token.left, this.parser.cur_token.right);
 		astFunctDefArgsList nl = new astFunctDefArgsList();
 		nl.setArgs(al);
 		ni.setArgs(nl);
@@ -920,7 +920,7 @@ expression ::=
 |	expression:el INSERT expression:er
 	{:
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.INSERT);
 		RESULT = e;
@@ -928,14 +928,14 @@ expression ::=
 |	COUNT expression:el
 	{:
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, elleft, elright);
+		e.setParserInfo(this.parser.fileName, elleft, elright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.seteType(expType.COUNT);
 		RESULT = e;
 	:}
 |	expVar:v LPAREN functCallArgList:al RPAREN
 	{:
 		astFunctCall afc = new astFunctCall(((astVar)v).getName());
-		afc.setParserInfo(this.parser.fileName, vleft, vright);
+		afc.setParserInfo(this.parser.fileName, vleft, vright, this.parser.cur_token.left, this.parser.cur_token.right);
 		astFunctDefArgsList nl = new astFunctDefArgsList();
 		nl.setArgs(al);
 		afc.setArgs(nl);
@@ -949,7 +949,7 @@ expression ::=
 |	expression:el INSTANCEOF expression:er
 	{:
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.INSTANCEOF);
 		RESULT = e;
@@ -962,7 +962,7 @@ expression ::=
 |	expVar:v 
 	{:
 		astObj ao = new astObj();
-		ao.setParserInfo(this.parser.fileName, vleft, vright);
+		ao.setParserInfo(this.parser.fileName, vleft, vright, this.parser.cur_token.left, this.parser.cur_token.right);
 		ao.setName(v.getName());
 		RESULT = ao;
 	:}
@@ -1004,14 +1004,14 @@ indexExp ::=
 	LBRACE expression:er RBRACE
 	{:
 		astObj aobj = new astObj();
-		aobj.setParserInfo(this.parser.fileName, erleft, erright);
+		aobj.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		aobj.setIndex(er);
 		RESULT = aobj;
 	:}
 |	indexExp:ie LBRACE expression:er RBRACE
 	{:
 		astObj aobj = new astObj();
-		aobj.setParserInfo(this.parser.fileName, erleft, erright);
+		aobj.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		aobj.setIndex(er);
 		ie.appendChild(aobj);
 		RESULT = ie;
@@ -1027,7 +1027,7 @@ operExp ::=
 	expression:el PL expression:er
 	{:
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.ADD);
 		RESULT = e;
@@ -1035,7 +1035,7 @@ operExp ::=
 |	expression:el MI expression:er
 	{:
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.SUBTRACT);
 		RESULT = e;
@@ -1043,7 +1043,7 @@ operExp ::=
 |	expression:el MU expression:er
 	{:
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.MULTIPLY);
 		RESULT = e;
@@ -1051,7 +1051,7 @@ operExp ::=
 |	expression:el DI expression:er
 	{:
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.DIVIDE);
 		RESULT = e;
@@ -1059,7 +1059,7 @@ operExp ::=
 |	expression:el MODULUS expression:er
 	{:
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.MODULUS);
 		RESULT = e;
@@ -1067,7 +1067,7 @@ operExp ::=
 |	expression:el FLOORDIV expression:er
 	{:
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.FLOORDIV);
 		RESULT = e;
@@ -1075,7 +1075,7 @@ operExp ::=
 |   expression:el SET expression:er
     {:
         astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, elleft, elright);
+		e.setParserInfo(this.parser.fileName, elleft, elright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.SET);
 		RESULT = e;
@@ -1083,7 +1083,7 @@ operExp ::=
 |	expression:el EQ expression:er
 	{:
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.ASSIGNMENT);
 		RESULT = e;
@@ -1091,12 +1091,12 @@ operExp ::=
 |	expression:el PLEQ expression:er
 	{:
 		astExpression ea = new astExpression(el);
-		ea.setParserInfo(this.parser.fileName, erleft, erright);
+		ea.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		ea.setRight(er);
 		ea.seteType(expType.ADD);
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(ea);
 		e.seteType(expType.ASSIGNMENT);
 		RESULT = e;
@@ -1104,12 +1104,12 @@ operExp ::=
 |	expression:el MIEQ expression:er
 	{:
 		astExpression ea = new astExpression(el);
-		ea.setParserInfo(this.parser.fileName, erleft, erright);
+		ea.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		ea.setRight(er);
 		ea.seteType(expType.SUBTRACT);
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(ea);
 		e.seteType(expType.ASSIGNMENT);
 		RESULT = e;
@@ -1117,12 +1117,12 @@ operExp ::=
 |	expression:el MUEQ expression:er
 	{:
 		astExpression ea = new astExpression(el);
-		ea.setParserInfo(this.parser.fileName, erleft, erright);
+		ea.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		ea.setRight(er);
 		ea.seteType(expType.MULTIPLY);
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(ea);
 		e.seteType(expType.ASSIGNMENT);
 		RESULT = e;
@@ -1130,12 +1130,12 @@ operExp ::=
 |	expression:el DIEQ expression:er
 	{:
 		astExpression ea = new astExpression(el);
-		ea.setParserInfo(this.parser.fileName, erleft, erright);
+		ea.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		ea.setRight(er);
 		ea.seteType(expType.DIVIDE);
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(ea);
 		e.seteType(expType.ASSIGNMENT);
 		RESULT = e;
@@ -1143,12 +1143,12 @@ operExp ::=
 |	expression:el MODULUSEQ expression:er
 	{:
 		astExpression ea = new astExpression(el);
-		ea.setParserInfo(this.parser.fileName, erleft, erright);
+		ea.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		ea.setRight(er);
 		ea.seteType(expType.MODULUS);
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(ea);
 		e.seteType(expType.ASSIGNMENT);
 		RESULT = e;
@@ -1156,15 +1156,15 @@ operExp ::=
 |	expression:el PLPL
 	{:
 		astInt ai = new astInt(1);
-		ai.setParserInfo(this.parser.fileName, elleft, elright);
+		ai.setParserInfo(this.parser.fileName, elleft, elright, this.parser.cur_token.left, this.parser.cur_token.right);
 		
 		astExpression ea = new astExpression(el);
-		ea.setParserInfo(this.parser.fileName, elleft, elright);
+		ea.setParserInfo(this.parser.fileName, elleft, elright, this.parser.cur_token.left, this.parser.cur_token.right);
 		ea.setRight(ai);
 		ea.seteType(expType.ADD);
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, elleft, elright);
+		e.setParserInfo(this.parser.fileName, elleft, elright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(ea);
 		e.seteType(expType.ASSIGNMENT);
 		RESULT = e;
@@ -1172,15 +1172,15 @@ operExp ::=
 |	expression:el MIMI
 	{:
 		astInt ai = new astInt(1);
-		ai.setParserInfo(this.parser.fileName, elleft, elright);
+		ai.setParserInfo(this.parser.fileName, elleft, elright, this.parser.cur_token.left, this.parser.cur_token.right);
 		
 		astExpression ea = new astExpression(el);
-		ea.setParserInfo(this.parser.fileName, elleft, elright);
+		ea.setParserInfo(this.parser.fileName, elleft, elright, this.parser.cur_token.left, this.parser.cur_token.right);
 		ea.setRight(ai);
 		ea.seteType(expType.SUBTRACT);
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, elleft, elright);
+		e.setParserInfo(this.parser.fileName, elleft, elright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(ea);
 		e.seteType(expType.ASSIGNMENT);
 		RESULT = e;
@@ -1188,7 +1188,7 @@ operExp ::=
 |	expression:el EQEQ expression:er
 	{:
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.EQEQ);
 		RESULT = e;
@@ -1196,7 +1196,7 @@ operExp ::=
 |	expression:el NOTEQ expression:er
 	{:
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.NOTEQ);
 		RESULT = e;
@@ -1204,7 +1204,7 @@ operExp ::=
 |	expression:el LT expression:er
 	{:
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.LT);
 		RESULT = e;
@@ -1212,7 +1212,7 @@ operExp ::=
 |	expression:el GT expression:er
 	{:
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.GT);
 		RESULT = e;
@@ -1220,7 +1220,7 @@ operExp ::=
 |	expression:el LTEQ expression:er
 	{:
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.LTEQ);
 		RESULT = e;
@@ -1228,7 +1228,7 @@ operExp ::=
 |	expression:el GTEQ expression:er
 	{:
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.GTEQ);
 		RESULT = e;
@@ -1236,21 +1236,21 @@ operExp ::=
 |	NOT expression:er
 	{:
 		astExpression e = new astExpression(er);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.seteType(expType.NOT);
 		RESULT = e;
 	:}
 |	MISSNULL expression:er
 	{:
 		astExpression e = new astExpression(er);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.seteType(expType.MISSNULL);
 		RESULT = e;
 	:}
 |	expression:el AND expression:er
 	{:
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.AND);
 		RESULT = e;
@@ -1258,7 +1258,7 @@ operExp ::=
 |	expression:el OR expression:er
 	{:
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.OR);
 		RESULT = e;
@@ -1269,14 +1269,14 @@ returnInstruction ::=
 	RETURN:r SEMI
 	{:
 		astReturn ar = new astReturn();
-		ar.setParserInfo(this.parser.fileName, rleft, rright);
+		ar.setParserInfo(this.parser.fileName, rleft, rright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = ar;
 	:}
 |	RETURN:r expression:ex SEMI
 	{:
 		astReturn ar = new astReturn();
 		ar.setValue(ex);
-		ar.setParserInfo(this.parser.fileName, rleft, rright);
+		ar.setParserInfo(this.parser.fileName, rleft, rright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = ar;
 	:} 
 ;
@@ -1285,7 +1285,7 @@ tryCatchBlock ::=
 	TRY:t instructionListBlock:til CATCH LPAREN expVar:v RPAREN instructionListBlock:cil
 	{:
 		astTryCatch atc = new astTryCatch();
-		atc.setParserInfo(this.parser.fileName, tleft, tright);
+		atc.setParserInfo(this.parser.fileName, tleft, tright, this.parser.cur_token.left, this.parser.cur_token.right);
 		atc.setName(v.getName());
 		atc.setTryInstList(til);
 		atc.setCatchInstList(cil);
@@ -1335,7 +1335,7 @@ expIfBlockList ::=
 	IF LPAREN expression:e RPAREN LBRACKET RBRACKET
 	{:
 		astIfElse aie = new astIfElse();
-		aie.setParserInfo(this.parser.fileName, eleft, eright);
+		aie.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		astConditionBlock acb = new astConditionBlock();
 		acb.setExpression(e);
 		aie.setIfCondition(acb);
@@ -1344,7 +1344,7 @@ expIfBlockList ::=
 |	IF LPAREN expression:e RPAREN LBRACKET instructionList:iil RBRACKET
 	{:
 		astIfElse aie = new astIfElse();
-		aie.setParserInfo(this.parser.fileName, eleft, eright);
+		aie.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		astConditionBlock acb = new astConditionBlock();
 		acb.setExpression(e);
 		acb.setInstructionList(iil);
@@ -1371,14 +1371,14 @@ expIfElseBlock ::=
 	ELSE IF LPAREN expression:e RPAREN LBRACKET RBRACKET
 	{:
 		astConditionBlock acb = new astConditionBlock();
-		acb.setParserInfo(this.parser.fileName, eleft, eright);
+		acb.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		acb.setExpression(e);
 		RESULT = acb;
 	:}
 |	ELSE IF LPAREN expression:e RPAREN LBRACKET instructionList:iil RBRACKET
 	{:
 		astConditionBlock acb = new astConditionBlock();
-		acb.setParserInfo(this.parser.fileName, eleft, eright);
+		acb.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		acb.setExpression(e);
 		acb.setInstructionList(iil);
 		RESULT = acb;
@@ -1401,14 +1401,14 @@ expSwitch ::=
 	SWITCH LPAREN expression:e RPAREN LBRACKET expSwitchBlockList:sbl RBRACKET
 	{:
 		astSwitch as = (astSwitch)sbl;
-		as.setParserInfo(this.parser.fileName, eleft, eright);
+		as.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		as.setExpression(e);
 		RESULT = as;
 	:}
 |	SWITCH LPAREN expression:e RPAREN LBRACKET RBRACKET
 	{:
 		astSwitch as = new astSwitch();
-		as.setParserInfo(this.parser.fileName, eleft, eright);
+		as.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		as.setExpression(e);
 		RESULT = as;
 	:}
@@ -1448,7 +1448,7 @@ expCaseBlock ::=
 	CASE expression:e COLON LBRACKET instructionList:il RBRACKET
 	{:
 		astConditionBlock acb = new astConditionBlock();
-		acb.setParserInfo(this.parser.fileName, eleft, eright);
+		acb.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		acb.setExpression(e);
 		acb.setInstructionList(il);
 		RESULT = acb;
@@ -1456,7 +1456,7 @@ expCaseBlock ::=
 |	CASE expression:e COLON LBRACKET RBRACKET
 	{:
 		astConditionBlock acb = new astConditionBlock();
-		acb.setParserInfo(this.parser.fileName, eleft, eright);
+		acb.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		acb.setExpression(e);
 		RESULT = acb;
 	:}
@@ -1478,7 +1478,7 @@ expWhile ::=
 	WHILE LPAREN expression:e RPAREN LBRACKET instructionList:il RBRACKET
 	{:
 		astWhile aw = new astWhile();
-		aw.setParserInfo(this.parser.fileName, eleft, eright);
+		aw.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		aw.setExpr(e);
 		aw.setInstructions(il);
 		RESULT = aw;
@@ -1486,7 +1486,7 @@ expWhile ::=
 |	WHILE LPAREN expression:e RPAREN LBRACKET RBRACKET
 	{:
 		astWhile aw = new astWhile();
-		aw.setParserInfo(this.parser.fileName, eleft, eright);
+		aw.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		aw.setExpr(e);
 		RESULT = aw;
 	:}
@@ -1496,7 +1496,7 @@ expFor ::=
 	FOR:f LPAREN expForExp:einit SEMI expForExp:econd SEMI expForExp:eincr  RPAREN LBRACKET instructionList:il RBRACKET
 	{:
 		astFor af = new astFor();
-		af.setParserInfo(this.parser.fileName, fleft, fright);
+		af.setParserInfo(this.parser.fileName, fleft, fright, this.parser.cur_token.left, this.parser.cur_token.right);
 		af.setExprInit(einit);
 		af.setExprCond(econd);
 		af.setExprInc(eincr);
@@ -1506,7 +1506,7 @@ expFor ::=
 |	FOR:f LPAREN expForExp:einit SEMI expForExp:econd SEMI expForExp:eincr RPAREN LBRACKET RBRACKET
 	{:
 		astFor af = new astFor();
-		af.setParserInfo(this.parser.fileName, fleft, fright);
+		af.setParserInfo(this.parser.fileName, fleft, fright, this.parser.cur_token.left, this.parser.cur_token.right);
 		af.setExprInit(einit);
 		af.setExprCond(econd);
 		af.setExprInc(eincr);
@@ -1515,7 +1515,7 @@ expFor ::=
 |	FOR:f LPAREN expVar:ev COLON expression:er RPAREN LBRACKET instructionList:il RBRACKET
 	{:
 		astFor af = new astFor();
-		af.setParserInfo(this.parser.fileName, fleft, fright);
+		af.setParserInfo(this.parser.fileName, fleft, fright, this.parser.cur_token.left, this.parser.cur_token.right);
 		af.setIsForEach(true);
 		af.setEachVar(ev);
 		af.setEachExpr(er);
@@ -1525,7 +1525,7 @@ expFor ::=
 |	FOR:f LPAREN expVar:ev COLON expression:er RPAREN LBRACKET RBRACKET
 	{:
 		astFor af = new astFor();
-		af.setParserInfo(this.parser.fileName, fleft, fright);
+		af.setParserInfo(this.parser.fileName, fleft, fright, this.parser.cur_token.left, this.parser.cur_token.right);
 		af.setIsForEach(true);
 		af.setEachVar(ev);
 		af.setEachExpr(er);
@@ -1586,7 +1586,7 @@ expNull ::=
 	NULL:n
 	{:
 		astNull an = new astNull();
-		an.setParserInfo(this.parser.fileName, nleft, nright);
+		an.setParserInfo(this.parser.fileName, nleft, nright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = an;
 	:}
 ;
@@ -1595,7 +1595,7 @@ expBool ::=
 	BOOL:b
 	{:
 		astBool ab = new astBool(b);
-		ab.setParserInfo(this.parser.fileName, bleft, bright);
+		ab.setParserInfo(this.parser.fileName, bleft, bright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = ab;
 	:}
 ;
@@ -1607,12 +1607,12 @@ expInt ::=
 		if(val.compareTo(new BigInteger(String.valueOf(Long.MAX_VALUE))) == 1)
 		{
 			astNode n = new astNode();
-			n.setParserInfo(this.parser.fileName, ileft, iright);
+			n.setParserInfo(this.parser.fileName, ileft, iright, this.parser.cur_token.left, this.parser.cur_token.right);
 			throw new aussomException(n, "PARSE_ERROR: Integer out of bounds. Integer max size is " + String.valueOf(Long.MAX_VALUE) + ". <" + val.toString() + ">", "");
 		}
 		
 		astInt ai = new astInt(i.longValue());
-		ai.setParserInfo(this.parser.fileName, ileft, iright);
+		ai.setParserInfo(this.parser.fileName, ileft, iright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = ai;
 	:}
 |	MI INT:i
@@ -1621,12 +1621,12 @@ expInt ::=
 		if(val.compareTo(new BigInteger(String.valueOf(Long.MIN_VALUE))) == -1)
 		{
 			astNode n = new astNode();
-			n.setParserInfo(this.parser.fileName, ileft, iright);
+			n.setParserInfo(this.parser.fileName, ileft, iright, this.parser.cur_token.left, this.parser.cur_token.right);
 			throw new aussomException(n, "PARSE_ERROR: Integer out of bounds. Integer min size is " + String.valueOf(Long.MIN_VALUE) + ". <" + val.toString() + ">", "");
 		}
 		
 		astInt ai = new astInt(val.longValue());
-		ai.setParserInfo(this.parser.fileName, ileft, iright);
+		ai.setParserInfo(this.parser.fileName, ileft, iright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = ai;
 	:} %prec UMINUS
 ;
@@ -1638,12 +1638,12 @@ expDouble ::=
 		if(val.compareTo(new BigDecimal(Double.MAX_VALUE)) == 1)
 		{
 			astNode n = new astNode();
-			n.setParserInfo(this.parser.fileName, dleft, dright);
+			n.setParserInfo(this.parser.fileName, dleft, dright, this.parser.cur_token.left, this.parser.cur_token.right);
 			throw new aussomException(n, "PARSE_ERROR: Double out of bounds. Double max size is " + String.valueOf(Double.MAX_VALUE) + ". <" + val.toString() + ">", "");
 		}
 		
 		astDouble ad = new astDouble(d.doubleValue());
-		ad.setParserInfo(this.parser.fileName, dleft, dright);
+		ad.setParserInfo(this.parser.fileName, dleft, dright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = ad;
 	:}
 |	MI DOUBLE:d
@@ -1652,12 +1652,12 @@ expDouble ::=
 		if(val.compareTo(new BigDecimal(-Double.MAX_VALUE)) == -1)
 		{
 			astNode n = new astNode();
-			n.setParserInfo(this.parser.fileName, dleft, dright);
+			n.setParserInfo(this.parser.fileName, dleft, dright, this.parser.cur_token.left, this.parser.cur_token.right);
 			throw new aussomException(n, "PARSE_ERROR: Double out of bounds. Double min size is " + String.valueOf(Double.MIN_NORMAL) + ". <" + val.toString() + ">", "");
 		}
 		
 		astDouble ad = new astDouble(val.doubleValue());
-		ad.setParserInfo(this.parser.fileName, dleft, dright);
+		ad.setParserInfo(this.parser.fileName, dleft, dright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = ad;
 	:} %prec UMINUS
 ;
@@ -1666,7 +1666,7 @@ expString ::=
 	STRING:s
 	{:
 		astString as = new astString(s);
-		as.setParserInfo(this.parser.fileName, sleft, sright);
+		as.setParserInfo(this.parser.fileName, sleft, sright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = as;
 	:}
 ;
@@ -1675,13 +1675,13 @@ expList ::=
 	LBRACE expListItems:l RBRACE
 	{:
 		astList al = new astList(l);
-		al.setParserInfo(this.parser.fileName, lleft, lright);
+		al.setParserInfo(this.parser.fileName, lleft, lright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = (astNode)al;
 	:}
 |	LBRACE:l RBRACE
 	{:
 		astList al = new astList();
-		al.setParserInfo(this.parser.fileName, lleft, lright);
+		al.setParserInfo(this.parser.fileName, lleft, lright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = (astNode)al;
 	:}
 ;
@@ -1731,13 +1731,13 @@ expMap ::=
 	LBRACKET expMapItems:d RBRACKET
 	{:
 		astMap ad = new astMap(d);
-		ad.setParserInfo(this.parser.fileName, dleft, dright);
+		ad.setParserInfo(this.parser.fileName, dleft, dright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = (astNode)ad;
 	:}
 |	LBRACKET:m RBRACKET
 	{:
 		astMap am = new astMap();
-		am.setParserInfo(this.parser.fileName, mleft, mright);
+		am.setParserInfo(this.parser.fileName, mleft, mright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = (astNode)am;
 	:}
 ;
@@ -1771,7 +1771,7 @@ expVar ::=
 	IDENT:s
 	{:
 		astVar av = new astVar();
-		av.setParserInfo(this.parser.fileName, sleft, sright);
+		av.setParserInfo(this.parser.fileName, sleft, sright, this.parser.cur_token.left, this.parser.cur_token.right);
 		av.setName(s);
 		RESULT = av;
 	:}
@@ -1781,7 +1781,7 @@ expFunctDef ::=
 	IDENT:s
 	{:
 		astFunctDef afd = new astFunctDef(s);
-		afd.setParserInfo(this.parser.fileName, sleft, sright);
+		afd.setParserInfo(this.parser.fileName, sleft, sright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = (astNode)afd;
 	:}
 ;
@@ -1790,7 +1790,7 @@ expBreak ::=
 	BREAK:b
 	{:
 		astBreak ab = new astBreak();
-		ab.setParserInfo(this.parser.fileName, bleft, bright);
+		ab.setParserInfo(this.parser.fileName, bleft, bright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = ab;
 	:}
 ;
@@ -1799,7 +1799,7 @@ expEtcetera ::=
 	ETCETERA:e
 	{:
 		astEtcetera etc = new astEtcetera();
-		etc.setParserInfo(this.parser.fileName, eleft, eright);
+		etc.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = etc;
 	:}
 ;
@@ -1808,7 +1808,7 @@ expCallback ::=
 	CALLBACK:c IDENT:s
 	{:
 		astCallback cb = new astCallback(s);
-		cb.setParserInfo(this.parser.fileName, cleft, cright);
+		cb.setParserInfo(this.parser.fileName, cleft, cright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = cb;
 	:}
 ;
@@ -1853,7 +1853,7 @@ expNewMapItems ::=
 |	expression:el COLON expression:er
 	{:
 		astMap am = new astMap();
-		am.setParserInfo(this.parser.fileName, elleft, elright);
+		am.setParserInfo(this.parser.fileName, elleft, elright, this.parser.cur_token.left, this.parser.cur_token.right);
 		am.add(el, er);
 		RESULT = am;
 	:}
@@ -1868,7 +1868,7 @@ expThrow ::=
 	THROW:t expression:e
 	{:
 		astThrow at = new astThrow();
-		at.setParserInfo(this.parser.fileName, tleft, tright);
+		at.setParserInfo(this.parser.fileName, tleft, tright, this.parser.cur_token.left, this.parser.cur_token.right);
 		at.setExpression(e);
 		RESULT = at;
 	:}

@@ -1996,7 +1996,7 @@ class CUP$parser$actions {
 		astNode name = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astInclude i = new astInclude(((astVar)name).getName());
-		i.setParserInfo(this.parser.fileName, nameleft, nameright);
+		i.setParserInfo(this.parser.fileName, nameleft, nameright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = i;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("include",2, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -2048,7 +2048,7 @@ class CUP$parser$actions {
 		
         // Set doc node.
         astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright);
+        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
         exp.setDocNode(ad);
         RESULT = exp;
     
@@ -2072,7 +2072,7 @@ class CUP$parser$actions {
 		
         // Set doc node.
         astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright);
+        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
         exp.setDocNode(ad);
         exp.addAnnotations(annList);
         RESULT = exp;
@@ -2093,7 +2093,7 @@ class CUP$parser$actions {
 		astNode exp = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
         // Set doc node.
-        exp.setParserInfo(this.parser.fileName, annListleft, annListright);
+        exp.setParserInfo(this.parser.fileName, annListleft, annListright, this.parser.cur_token.left, this.parser.cur_token.right);
         exp.addAnnotations(annList);
         RESULT = exp;
     
@@ -2144,7 +2144,7 @@ class CUP$parser$actions {
 		String annotationName = (String)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
         astAnnotation aa = new astAnnotation(annotationName);
-        aa.setParserInfo(this.parser.fileName, annotationNameleft, annotationNameright);
+        aa.setParserInfo(this.parser.fileName, annotationNameleft, annotationNameright, this.parser.cur_token.left, this.parser.cur_token.right);
         RESULT = aa;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("annotation",11, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -2163,7 +2163,7 @@ class CUP$parser$actions {
 		ArrayList<astAnnotationArg> al = (ArrayList<astAnnotationArg>)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
         astAnnotation aa = new astAnnotation(annotationName, al);
-        aa.setParserInfo(this.parser.fileName, annotationNameleft, annotationNameright);
+        aa.setParserInfo(this.parser.fileName, annotationNameleft, annotationNameright, this.parser.cur_token.left, this.parser.cur_token.right);
         RESULT = aa;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("annotation",11, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-4)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -2216,7 +2216,7 @@ class CUP$parser$actions {
 		String s = (String)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
         astAnnotationArg annArg = new astAnnotationArg(argName, s);
-        annArg.setParserInfo(this.parser.fileName, argNameleft, argNameright);
+        annArg.setParserInfo(this.parser.fileName, argNameleft, argNameright, this.parser.cur_token.left, this.parser.cur_token.right);
         RESULT = annArg;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("annotationArg",13, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -2238,7 +2238,7 @@ class CUP$parser$actions {
 		astNode ac = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		ac.setName(className);
-		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright);
+		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astClass)ac).setStatic((boolean)is);
 		RESULT = ac;
 	
@@ -2264,7 +2264,7 @@ class CUP$parser$actions {
 		astNode ac = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		ac.setName(className);
-		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright);
+		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astClass)ac).setStatic((boolean)is);
 		((astClass)ac).setExtendedClasses(cl);
 		RESULT = ac;
@@ -2291,7 +2291,7 @@ class CUP$parser$actions {
 		astNode ac = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		ac.setName(className);
-		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright);
+		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astClass)ac).setStatic((boolean)is);
 		((astClass)ac).setExtern(true);
 		((astClass)ac).setExternClassName(((astInclude)i).getExternClass(), this.parser.loadExternClasses);
@@ -2322,7 +2322,7 @@ class CUP$parser$actions {
 		astNode ac = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		ac.setName(className);
-		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright);
+		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astClass)ac).setStatic((boolean)is);
 		((astClass)ac).setExtern(true);
 		((astClass)ac).setExternClassName(((astInclude)i).getExternClass(), this.parser.loadExternClasses);
@@ -2345,7 +2345,7 @@ class CUP$parser$actions {
 		astNode eb = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		eb.setName(enumName);
-		eb.setParserInfo(this.parser.fileName, enumNameleft, enumNameright);
+		eb.setParserInfo(this.parser.fileName, enumNameleft, enumNameright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astClass)eb).setStatic(true);
 		RESULT = eb;
 	
@@ -2563,7 +2563,7 @@ class CUP$parser$actions {
 		
         // Set doc node.
         astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright);
+        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
         md.setDocNode(ad);
         RESULT = md;
     
@@ -2605,7 +2605,7 @@ class CUP$parser$actions {
 		
         // Set doc node.
         astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright);
+        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
         md.setDocNode(ad);
         md.addAnnotations(annList);
         RESULT = md;
@@ -2795,7 +2795,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astClass ac = new astClass();
-		ac.setParserInfo(this.parser.fileName, erleft, erright);
+		ac.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		ac.addMember(er.getName(), er);
 		RESULT = (astNode)ac;
 	
@@ -2831,7 +2831,7 @@ class CUP$parser$actions {
 		
 		astString tmp = new astString(v.getName());
 		tmp.setName(v.getName());
-		tmp.setParserInfo(this.parser.fileName, vleft, vright);
+		tmp.setParserInfo(this.parser.fileName, vleft, vright, this.parser.cur_token.left, this.parser.cur_token.right);
 		tmp.setAccessType(AccessType.aPublic);
 		RESULT = tmp;
 	
@@ -2852,7 +2852,7 @@ class CUP$parser$actions {
 		
 		astString tmp = new astString(((astString)s).getValueString());
 		tmp.setName(v.getName());
-		tmp.setParserInfo(this.parser.fileName, vleft, vright);
+		tmp.setParserInfo(this.parser.fileName, vleft, vright, this.parser.cur_token.left, this.parser.cur_token.right);
 		tmp.setAccessType(AccessType.aPublic);
 		RESULT = tmp;
 	
@@ -2887,7 +2887,7 @@ class CUP$parser$actions {
 		
         // Set doc node.
         astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright);
+        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
         fd.setDocNode(ad);
         RESULT = fd;
     
@@ -2929,7 +2929,7 @@ class CUP$parser$actions {
 		
         // Set doc node.
         astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright);
+        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
         fd.setDocNode(ad);
         fd.addAnnotations(annList);
         RESULT = fd;
@@ -2955,7 +2955,7 @@ class CUP$parser$actions {
 		int ilright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
 		astStatementList il = (astStatementList)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
-		f.setParserInfo(this.parser.fileName, fleft, fright);
+		f.setParserInfo(this.parser.fileName, fleft, fright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astFunctDef)f).setArgList(al);
 		((astFunctDef)f).setInstructionList(il);
 		f.setAccessType(am);
@@ -2979,7 +2979,7 @@ class CUP$parser$actions {
 		int alright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-3)).right;
 		astFunctDefArgsList al = (astFunctDefArgsList)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-3)).value;
 		
-		f.setParserInfo(this.parser.fileName, fleft, fright);
+		f.setParserInfo(this.parser.fileName, fleft, fright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astFunctDef)f).setArgList(al);
 		f.setAccessType(am);
 		RESULT = f;
@@ -3002,7 +3002,7 @@ class CUP$parser$actions {
 		int alright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).right;
 		astFunctDefArgsList al = (astFunctDefArgsList)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-2)).value;
 		
-		f.setParserInfo(this.parser.fileName, fleft, fright);
+		f.setParserInfo(this.parser.fileName, fleft, fright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astFunctDef)f).setArgList(al);
 		((astFunctDef)f).setExtern(true);
 		f.setAccessType(am);
@@ -3273,7 +3273,7 @@ class CUP$parser$actions {
 		else
 		{
 			astNode n = new astNode();
-			n.setParserInfo(this.parser.fileName, sleft, sright);
+			n.setParserInfo(this.parser.fileName, sleft, sright, this.parser.cur_token.left, this.parser.cur_token.right);
 			throw new aussomException(n, "PARSE_ERROR: Expecting primative identifier but found '" + s + "' instead.", "");
 		}
 	
@@ -3436,7 +3436,7 @@ class CUP$parser$actions {
 		astNode i = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		astExpression e = new astExpression(i);
-		e.setParserInfo(this.parser.fileName, ileft, iright);
+		e.setParserInfo(this.parser.fileName, ileft, iright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.seteType(expType.INCLUDE);
 		RESULT = e;
 	
@@ -3473,7 +3473,7 @@ class CUP$parser$actions {
 		ArrayList<astNode> al = (ArrayList<astNode>)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		astNewInst ni = new astNewInst(((astVar)v).getName());
-		ni.setParserInfo(this.parser.fileName, nleft, nright);
+		ni.setParserInfo(this.parser.fileName, nleft, nright, this.parser.cur_token.left, this.parser.cur_token.right);
 		astFunctDefArgsList nl = new astFunctDefArgsList();
 		nl.setArgs(al);
 		ni.setArgs(nl);
@@ -3537,7 +3537,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.INSERT);
 		RESULT = e;
@@ -3555,7 +3555,7 @@ class CUP$parser$actions {
 		astNode el = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, elleft, elright);
+		e.setParserInfo(this.parser.fileName, elleft, elright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.seteType(expType.COUNT);
 		RESULT = e;
 	
@@ -3575,7 +3575,7 @@ class CUP$parser$actions {
 		ArrayList<astNode> al = (ArrayList<astNode>)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		astFunctCall afc = new astFunctCall(((astVar)v).getName());
-		afc.setParserInfo(this.parser.fileName, vleft, vright);
+		afc.setParserInfo(this.parser.fileName, vleft, vright, this.parser.cur_token.left, this.parser.cur_token.right);
 		astFunctDefArgsList nl = new astFunctDefArgsList();
 		nl.setArgs(al);
 		afc.setArgs(nl);
@@ -3615,7 +3615,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.INSTANCEOF);
 		RESULT = e;
@@ -3651,7 +3651,7 @@ class CUP$parser$actions {
 		astNode v = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astObj ao = new astObj();
-		ao.setParserInfo(this.parser.fileName, vleft, vright);
+		ao.setParserInfo(this.parser.fileName, vleft, vright, this.parser.cur_token.left, this.parser.cur_token.right);
 		ao.setName(v.getName());
 		RESULT = ao;
 	
@@ -3780,7 +3780,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		astObj aobj = new astObj();
-		aobj.setParserInfo(this.parser.fileName, erleft, erright);
+		aobj.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		aobj.setIndex(er);
 		RESULT = aobj;
 	
@@ -3800,7 +3800,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		astObj aobj = new astObj();
-		aobj.setParserInfo(this.parser.fileName, erleft, erright);
+		aobj.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		aobj.setIndex(er);
 		ie.appendChild(aobj);
 		RESULT = ie;
@@ -3839,7 +3839,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.ADD);
 		RESULT = e;
@@ -3860,7 +3860,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.SUBTRACT);
 		RESULT = e;
@@ -3881,7 +3881,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.MULTIPLY);
 		RESULT = e;
@@ -3902,7 +3902,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.DIVIDE);
 		RESULT = e;
@@ -3923,7 +3923,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.MODULUS);
 		RESULT = e;
@@ -3944,7 +3944,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.FLOORDIV);
 		RESULT = e;
@@ -3965,7 +3965,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
         astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, elleft, elright);
+		e.setParserInfo(this.parser.fileName, elleft, elright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.SET);
 		RESULT = e;
@@ -3986,7 +3986,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.ASSIGNMENT);
 		RESULT = e;
@@ -4007,12 +4007,12 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression ea = new astExpression(el);
-		ea.setParserInfo(this.parser.fileName, erleft, erright);
+		ea.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		ea.setRight(er);
 		ea.seteType(expType.ADD);
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(ea);
 		e.seteType(expType.ASSIGNMENT);
 		RESULT = e;
@@ -4033,12 +4033,12 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression ea = new astExpression(el);
-		ea.setParserInfo(this.parser.fileName, erleft, erright);
+		ea.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		ea.setRight(er);
 		ea.seteType(expType.SUBTRACT);
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(ea);
 		e.seteType(expType.ASSIGNMENT);
 		RESULT = e;
@@ -4059,12 +4059,12 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression ea = new astExpression(el);
-		ea.setParserInfo(this.parser.fileName, erleft, erright);
+		ea.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		ea.setRight(er);
 		ea.seteType(expType.MULTIPLY);
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(ea);
 		e.seteType(expType.ASSIGNMENT);
 		RESULT = e;
@@ -4085,12 +4085,12 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression ea = new astExpression(el);
-		ea.setParserInfo(this.parser.fileName, erleft, erright);
+		ea.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		ea.setRight(er);
 		ea.seteType(expType.DIVIDE);
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(ea);
 		e.seteType(expType.ASSIGNMENT);
 		RESULT = e;
@@ -4111,12 +4111,12 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression ea = new astExpression(el);
-		ea.setParserInfo(this.parser.fileName, erleft, erright);
+		ea.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		ea.setRight(er);
 		ea.seteType(expType.MODULUS);
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(ea);
 		e.seteType(expType.ASSIGNMENT);
 		RESULT = e;
@@ -4134,15 +4134,15 @@ class CUP$parser$actions {
 		astNode el = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		astInt ai = new astInt(1);
-		ai.setParserInfo(this.parser.fileName, elleft, elright);
+		ai.setParserInfo(this.parser.fileName, elleft, elright, this.parser.cur_token.left, this.parser.cur_token.right);
 		
 		astExpression ea = new astExpression(el);
-		ea.setParserInfo(this.parser.fileName, elleft, elright);
+		ea.setParserInfo(this.parser.fileName, elleft, elright, this.parser.cur_token.left, this.parser.cur_token.right);
 		ea.setRight(ai);
 		ea.seteType(expType.ADD);
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, elleft, elright);
+		e.setParserInfo(this.parser.fileName, elleft, elright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(ea);
 		e.seteType(expType.ASSIGNMENT);
 		RESULT = e;
@@ -4160,15 +4160,15 @@ class CUP$parser$actions {
 		astNode el = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		astInt ai = new astInt(1);
-		ai.setParserInfo(this.parser.fileName, elleft, elright);
+		ai.setParserInfo(this.parser.fileName, elleft, elright, this.parser.cur_token.left, this.parser.cur_token.right);
 		
 		astExpression ea = new astExpression(el);
-		ea.setParserInfo(this.parser.fileName, elleft, elright);
+		ea.setParserInfo(this.parser.fileName, elleft, elright, this.parser.cur_token.left, this.parser.cur_token.right);
 		ea.setRight(ai);
 		ea.seteType(expType.SUBTRACT);
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, elleft, elright);
+		e.setParserInfo(this.parser.fileName, elleft, elright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(ea);
 		e.seteType(expType.ASSIGNMENT);
 		RESULT = e;
@@ -4189,7 +4189,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.EQEQ);
 		RESULT = e;
@@ -4210,7 +4210,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.NOTEQ);
 		RESULT = e;
@@ -4231,7 +4231,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.LT);
 		RESULT = e;
@@ -4252,7 +4252,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.GT);
 		RESULT = e;
@@ -4273,7 +4273,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.LTEQ);
 		RESULT = e;
@@ -4294,7 +4294,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.GTEQ);
 		RESULT = e;
@@ -4312,7 +4312,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(er);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.seteType(expType.NOT);
 		RESULT = e;
 	
@@ -4329,7 +4329,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(er);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.seteType(expType.MISSNULL);
 		RESULT = e;
 	
@@ -4349,7 +4349,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.AND);
 		RESULT = e;
@@ -4370,7 +4370,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astExpression e = new astExpression(el);
-		e.setParserInfo(this.parser.fileName, erleft, erright);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.OR);
 		RESULT = e;
@@ -4388,7 +4388,7 @@ class CUP$parser$actions {
 		Object r = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		astReturn ar = new astReturn();
-		ar.setParserInfo(this.parser.fileName, rleft, rright);
+		ar.setParserInfo(this.parser.fileName, rleft, rright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = ar;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("returnInstruction",28, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -4408,7 +4408,7 @@ class CUP$parser$actions {
 		
 		astReturn ar = new astReturn();
 		ar.setValue(ex);
-		ar.setParserInfo(this.parser.fileName, rleft, rright);
+		ar.setParserInfo(this.parser.fileName, rleft, rright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = ar;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("returnInstruction",28, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -4433,7 +4433,7 @@ class CUP$parser$actions {
 		astStatementList cil = (astStatementList)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astTryCatch atc = new astTryCatch();
-		atc.setParserInfo(this.parser.fileName, tleft, tright);
+		atc.setParserInfo(this.parser.fileName, tleft, tright, this.parser.cur_token.left, this.parser.cur_token.right);
 		atc.setName(v.getName());
 		atc.setTryInstList(til);
 		atc.setCatchInstList(cil);
@@ -4553,7 +4553,7 @@ class CUP$parser$actions {
 		astNode e = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-3)).value;
 		
 		astIfElse aie = new astIfElse();
-		aie.setParserInfo(this.parser.fileName, eleft, eright);
+		aie.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		astConditionBlock acb = new astConditionBlock();
 		acb.setExpression(e);
 		aie.setIfCondition(acb);
@@ -4575,7 +4575,7 @@ class CUP$parser$actions {
 		astStatementList iil = (astStatementList)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		astIfElse aie = new astIfElse();
-		aie.setParserInfo(this.parser.fileName, eleft, eright);
+		aie.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		astConditionBlock acb = new astConditionBlock();
 		acb.setExpression(e);
 		acb.setInstructionList(iil);
@@ -4629,7 +4629,7 @@ class CUP$parser$actions {
 		astNode e = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-3)).value;
 		
 		astConditionBlock acb = new astConditionBlock();
-		acb.setParserInfo(this.parser.fileName, eleft, eright);
+		acb.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		acb.setExpression(e);
 		RESULT = acb;
 	
@@ -4649,7 +4649,7 @@ class CUP$parser$actions {
 		astStatementList iil = (astStatementList)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		astConditionBlock acb = new astConditionBlock();
-		acb.setParserInfo(this.parser.fileName, eleft, eright);
+		acb.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		acb.setExpression(e);
 		acb.setInstructionList(iil);
 		RESULT = acb;
@@ -4696,7 +4696,7 @@ class CUP$parser$actions {
 		astNode sbl = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		astSwitch as = (astSwitch)sbl;
-		as.setParserInfo(this.parser.fileName, eleft, eright);
+		as.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		as.setExpression(e);
 		RESULT = as;
 	
@@ -4713,7 +4713,7 @@ class CUP$parser$actions {
 		astNode e = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-3)).value;
 		
 		astSwitch as = new astSwitch();
-		as.setParserInfo(this.parser.fileName, eleft, eright);
+		as.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		as.setExpression(e);
 		RESULT = as;
 	
@@ -4803,7 +4803,7 @@ class CUP$parser$actions {
 		astStatementList il = (astStatementList)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		astConditionBlock acb = new astConditionBlock();
-		acb.setParserInfo(this.parser.fileName, eleft, eright);
+		acb.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		acb.setExpression(e);
 		acb.setInstructionList(il);
 		RESULT = acb;
@@ -4821,7 +4821,7 @@ class CUP$parser$actions {
 		astNode e = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-3)).value;
 		
 		astConditionBlock acb = new astConditionBlock();
-		acb.setParserInfo(this.parser.fileName, eleft, eright);
+		acb.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		acb.setExpression(e);
 		RESULT = acb;
 	
@@ -4867,7 +4867,7 @@ class CUP$parser$actions {
 		astStatementList il = (astStatementList)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		astWhile aw = new astWhile();
-		aw.setParserInfo(this.parser.fileName, eleft, eright);
+		aw.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		aw.setExpr(e);
 		aw.setInstructions(il);
 		RESULT = aw;
@@ -4885,7 +4885,7 @@ class CUP$parser$actions {
 		astNode e = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-3)).value;
 		
 		astWhile aw = new astWhile();
-		aw.setParserInfo(this.parser.fileName, eleft, eright);
+		aw.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		aw.setExpr(e);
 		RESULT = aw;
 	
@@ -4914,7 +4914,7 @@ class CUP$parser$actions {
 		astStatementList il = (astStatementList)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		astFor af = new astFor();
-		af.setParserInfo(this.parser.fileName, fleft, fright);
+		af.setParserInfo(this.parser.fileName, fleft, fright, this.parser.cur_token.left, this.parser.cur_token.right);
 		af.setExprInit(einit);
 		af.setExprCond(econd);
 		af.setExprInc(eincr);
@@ -4943,7 +4943,7 @@ class CUP$parser$actions {
 		astNode eincr = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-3)).value;
 		
 		astFor af = new astFor();
-		af.setParserInfo(this.parser.fileName, fleft, fright);
+		af.setParserInfo(this.parser.fileName, fleft, fright, this.parser.cur_token.left, this.parser.cur_token.right);
 		af.setExprInit(einit);
 		af.setExprCond(econd);
 		af.setExprInc(eincr);
@@ -4971,7 +4971,7 @@ class CUP$parser$actions {
 		astStatementList il = (astStatementList)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		astFor af = new astFor();
-		af.setParserInfo(this.parser.fileName, fleft, fright);
+		af.setParserInfo(this.parser.fileName, fleft, fright, this.parser.cur_token.left, this.parser.cur_token.right);
 		af.setIsForEach(true);
 		af.setEachVar(ev);
 		af.setEachExpr(er);
@@ -4997,7 +4997,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-3)).value;
 		
 		astFor af = new astFor();
-		af.setParserInfo(this.parser.fileName, fleft, fright);
+		af.setParserInfo(this.parser.fileName, fleft, fright, this.parser.cur_token.left, this.parser.cur_token.right);
 		af.setIsForEach(true);
 		af.setEachVar(ev);
 		af.setEachExpr(er);
@@ -5131,7 +5131,7 @@ class CUP$parser$actions {
 		Object n = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astNull an = new astNull();
-		an.setParserInfo(this.parser.fileName, nleft, nright);
+		an.setParserInfo(this.parser.fileName, nleft, nright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = an;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("expNull",35, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -5147,7 +5147,7 @@ class CUP$parser$actions {
 		Boolean b = (Boolean)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astBool ab = new astBool(b);
-		ab.setParserInfo(this.parser.fileName, bleft, bright);
+		ab.setParserInfo(this.parser.fileName, bleft, bright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = ab;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("expBool",36, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -5166,12 +5166,12 @@ class CUP$parser$actions {
 		if(val.compareTo(new BigInteger(String.valueOf(Long.MAX_VALUE))) == 1)
 		{
 			astNode n = new astNode();
-			n.setParserInfo(this.parser.fileName, ileft, iright);
+			n.setParserInfo(this.parser.fileName, ileft, iright, this.parser.cur_token.left, this.parser.cur_token.right);
 			throw new aussomException(n, "PARSE_ERROR: Integer out of bounds. Integer max size is " + String.valueOf(Long.MAX_VALUE) + ". <" + val.toString() + ">", "");
 		}
 		
 		astInt ai = new astInt(i.longValue());
-		ai.setParserInfo(this.parser.fileName, ileft, iright);
+		ai.setParserInfo(this.parser.fileName, ileft, iright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = ai;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("expInt",37, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -5190,12 +5190,12 @@ class CUP$parser$actions {
 		if(val.compareTo(new BigInteger(String.valueOf(Long.MIN_VALUE))) == -1)
 		{
 			astNode n = new astNode();
-			n.setParserInfo(this.parser.fileName, ileft, iright);
+			n.setParserInfo(this.parser.fileName, ileft, iright, this.parser.cur_token.left, this.parser.cur_token.right);
 			throw new aussomException(n, "PARSE_ERROR: Integer out of bounds. Integer min size is " + String.valueOf(Long.MIN_VALUE) + ". <" + val.toString() + ">", "");
 		}
 		
 		astInt ai = new astInt(val.longValue());
-		ai.setParserInfo(this.parser.fileName, ileft, iright);
+		ai.setParserInfo(this.parser.fileName, ileft, iright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = ai;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("expInt",37, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -5214,12 +5214,12 @@ class CUP$parser$actions {
 		if(val.compareTo(new BigDecimal(Double.MAX_VALUE)) == 1)
 		{
 			astNode n = new astNode();
-			n.setParserInfo(this.parser.fileName, dleft, dright);
+			n.setParserInfo(this.parser.fileName, dleft, dright, this.parser.cur_token.left, this.parser.cur_token.right);
 			throw new aussomException(n, "PARSE_ERROR: Double out of bounds. Double max size is " + String.valueOf(Double.MAX_VALUE) + ". <" + val.toString() + ">", "");
 		}
 		
 		astDouble ad = new astDouble(d.doubleValue());
-		ad.setParserInfo(this.parser.fileName, dleft, dright);
+		ad.setParserInfo(this.parser.fileName, dleft, dright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = ad;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("expDouble",38, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -5238,12 +5238,12 @@ class CUP$parser$actions {
 		if(val.compareTo(new BigDecimal(-Double.MAX_VALUE)) == -1)
 		{
 			astNode n = new astNode();
-			n.setParserInfo(this.parser.fileName, dleft, dright);
+			n.setParserInfo(this.parser.fileName, dleft, dright, this.parser.cur_token.left, this.parser.cur_token.right);
 			throw new aussomException(n, "PARSE_ERROR: Double out of bounds. Double min size is " + String.valueOf(Double.MIN_NORMAL) + ". <" + val.toString() + ">", "");
 		}
 		
 		astDouble ad = new astDouble(val.doubleValue());
-		ad.setParserInfo(this.parser.fileName, dleft, dright);
+		ad.setParserInfo(this.parser.fileName, dleft, dright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = ad;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("expDouble",38, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -5259,7 +5259,7 @@ class CUP$parser$actions {
 		String s = (String)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astString as = new astString(s);
-		as.setParserInfo(this.parser.fileName, sleft, sright);
+		as.setParserInfo(this.parser.fileName, sleft, sright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = as;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("expString",39, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -5275,7 +5275,7 @@ class CUP$parser$actions {
 		ArrayList<astNode> l = (ArrayList<astNode>)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		astList al = new astList(l);
-		al.setParserInfo(this.parser.fileName, lleft, lright);
+		al.setParserInfo(this.parser.fileName, lleft, lright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = (astNode)al;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("expList",40, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -5291,7 +5291,7 @@ class CUP$parser$actions {
 		Object l = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		astList al = new astList();
-		al.setParserInfo(this.parser.fileName, lleft, lright);
+		al.setParserInfo(this.parser.fileName, lleft, lright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = (astNode)al;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("expList",40, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -5425,7 +5425,7 @@ class CUP$parser$actions {
 		Map<astNode,astNode> d = (Map<astNode,astNode>)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		astMap ad = new astMap(d);
-		ad.setParserInfo(this.parser.fileName, dleft, dright);
+		ad.setParserInfo(this.parser.fileName, dleft, dright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = (astNode)ad;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("expMap",43, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -5441,7 +5441,7 @@ class CUP$parser$actions {
 		Object m = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 		astMap am = new astMap();
-		am.setParserInfo(this.parser.fileName, mleft, mright);
+		am.setParserInfo(this.parser.fileName, mleft, mright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = (astNode)am;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("expMap",43, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -5537,7 +5537,7 @@ class CUP$parser$actions {
 		String s = (String)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astVar av = new astVar();
-		av.setParserInfo(this.parser.fileName, sleft, sright);
+		av.setParserInfo(this.parser.fileName, sleft, sright, this.parser.cur_token.left, this.parser.cur_token.right);
 		av.setName(s);
 		RESULT = av;
 	
@@ -5554,7 +5554,7 @@ class CUP$parser$actions {
 		String s = (String)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astFunctDef afd = new astFunctDef(s);
-		afd.setParserInfo(this.parser.fileName, sleft, sright);
+		afd.setParserInfo(this.parser.fileName, sleft, sright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = (astNode)afd;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("expFunctDef",46, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -5570,7 +5570,7 @@ class CUP$parser$actions {
 		Object b = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astBreak ab = new astBreak();
-		ab.setParserInfo(this.parser.fileName, bleft, bright);
+		ab.setParserInfo(this.parser.fileName, bleft, bright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = ab;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("expBreak",58, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -5586,7 +5586,7 @@ class CUP$parser$actions {
 		Object e = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astEtcetera etc = new astEtcetera();
-		etc.setParserInfo(this.parser.fileName, eleft, eright);
+		etc.setParserInfo(this.parser.fileName, eleft, eright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = etc;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("expEtcetera",61, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -5605,7 +5605,7 @@ class CUP$parser$actions {
 		String s = (String)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astCallback cb = new astCallback(s);
-		cb.setParserInfo(this.parser.fileName, cleft, cright);
+		cb.setParserInfo(this.parser.fileName, cleft, cright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = cb;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("expCallback",62, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -5708,7 +5708,7 @@ class CUP$parser$actions {
 		astNode er = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astMap am = new astMap();
-		am.setParserInfo(this.parser.fileName, elleft, elright);
+		am.setParserInfo(this.parser.fileName, elleft, elright, this.parser.cur_token.left, this.parser.cur_token.right);
 		am.add(el, er);
 		RESULT = am;
 	
@@ -5749,7 +5749,7 @@ class CUP$parser$actions {
 		astNode e = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 		astThrow at = new astThrow();
-		at.setParserInfo(this.parser.fileName, tleft, tright);
+		at.setParserInfo(this.parser.fileName, tleft, tright, this.parser.cur_token.left, this.parser.cur_token.right);
 		at.setExpression(e);
 		RESULT = at;
 	

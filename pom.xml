@@ -3,7 +3,7 @@
   
   <groupId>io.gitlab.cupofcode</groupId>
   <artifactId>aussom.base</artifactId>
-  <version>1.2.6</version>
+  <version>1.2.7</version>
   <packaging>jar</packaging>
   
   <name>aussom.base</name>
@@ -144,6 +144,7 @@
 	            <include>**/Jsr223.java</include>
 	            <include>**/ScriptMode.java</include>
 	            <include>**/Debugger.java</include>
+	            <include>**/AstNodeRange.java</include>
 	            <include>**/*Test.java</include>
 	            <include>**/*Tests.java</include>
 	          </includes>

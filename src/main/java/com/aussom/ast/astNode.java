@@ -33,6 +33,8 @@ public class astNode {
 	private String fileName = "";
 	private int lineNum = 0;
 	private int colNum = 0;
+	private int lineNumEnd = 0;
+	private int colNumEnd = 0;
 	
 	private AccessType accessType = AccessType.aPrivate;
 	
@@ -116,9 +118,25 @@ public class astNode {
 	public void setColNum(int ColNum) {
 		this.colNum = ColNum;
 	}
-	
+
 	public int getColNum() {
 		return this.colNum;
+	}
+
+	public void setLineNumEnd(int LineNumEnd) {
+		this.lineNumEnd = LineNumEnd;
+	}
+
+	public int getLineNumEnd() {
+		return this.lineNumEnd;
+	}
+
+	public void setColNumEnd(int ColNumEnd) {
+		this.colNumEnd = ColNumEnd;
+	}
+
+	public int getColNumEnd() {
+		return this.colNumEnd;
 	}
 	
 	public void setChild(astNode Child) {
@@ -141,6 +159,16 @@ public class astNode {
 		this.fileName = FileName;
 		this.lineNum = LineNum;
 		this.colNum = ColNum;
+		this.lineNumEnd = LineNum;
+		this.colNumEnd = ColNum;
+	}
+
+	public void setParserInfo(String FileName, int LineNum, int ColNum, int LineNumEnd, int ColNumEnd) {
+		this.fileName = FileName;
+		this.lineNum = LineNum;
+		this.colNum = ColNum;
+		this.lineNumEnd = LineNumEnd;
+		this.colNumEnd = ColNumEnd;
 	}
 
 	public astAussomDoc getDocNode() {
