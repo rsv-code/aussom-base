@@ -41,9 +41,11 @@ import com.aussom.DefaultSecurityManagerImpl;
 import com.aussom.Engine;
 import com.aussom.Environment;
 import com.aussom.PauseReason;
+import com.aussom.CallStack;
 import com.aussom.TestSecurityManagerImpl;
 import com.aussom.ast.astFunctDef;
 import com.aussom.ast.astNode;
+import com.aussom.ast.astNodeType;
 import com.aussom.ast.astStatementList;
 import com.aussom.ast.aussomException;
 import com.aussom.types.AussomException;
@@ -705,6 +707,233 @@ public class Debugger {
 			assertTrue(ex.getMessage().contains("aussom.debugger.enable"),
 				"message should reference the gated property; got: "
 				+ ex.getMessage());
+		}
+	}
+
+	/* ============================================================ */
+	/*  Synthetic CallStack frames for un-framed eval sites.        */
+	/*  See design/debugging-callstack-update.md.                   */
+	/* ============================================================ */
+
+	/**
+	 * Records the function-name chain (innermost to outermost) of
+	 * every pause for offline scanning. Pauses do not block.
+	 */
+	static final class FrameCapturingDebugger implements DebuggerInt {
+		final List<List<String>> chains =
+			Collections.synchronizedList(new ArrayList<List<String>>());
+		volatile boolean stepEnabled = false;
+
+		@Override
+		public void onPause(astNode node, Environment env, PauseReason reason)
+				throws aussomException {
+			List<String> chain = new ArrayList<String>();
+			CallStack cs = env.getCallStack();
+			while (cs != null) {
+				chain.add(cs.getFunctionName());
+				cs = cs.getParent();
+			}
+			chains.add(chain);
+		}
+
+		@Override
+		public boolean shouldPauseForStep(astNode node, Environment env) {
+			return stepEnabled;
+		}
+
+		@Override public void onException(AussomException ex, Environment env) {}
+		@Override public void onException(Exception jex, Environment env) {}
+
+		boolean anyChainContains(String functionName) {
+			synchronized (chains) {
+				for (List<String> chain : chains) {
+					for (String name : chain) {
+						if (functionName.equals(name)) return true;
+					}
+				}
+			}
+			return false;
+		}
+
+		boolean anyChainContainsSubstring(String substr) {
+			synchronized (chains) {
+				for (List<String> chain : chains) {
+					for (String name : chain) {
+						if (name != null && name.contains(substr)) return true;
+					}
+				}
+			}
+			return false;
+		}
+	}
+
+	/**
+	 * Find the first node on the given line with one of the supplied
+	 * AST types, or fail. Used to set breakpoints precisely instead
+	 * of relying on which node a line-based lookup returns first.
+	 */
+	private static astNode pickNodeOnLine(Engine eng, String file, int line,
+			astNodeType... types) {
+		List<astNode> hits = eng.findNodesByLine(file, line);
+		assertFalse(hits.isEmpty(),
+			"expected nodes on " + file + ":" + line);
+		for (astNode n : hits) {
+			for (astNodeType t : types) {
+				if (n.getType() == t) return n;
+			}
+		}
+		throw new AssertionError("no node on " + file + ":" + line
+			+ " matched the requested types");
+	}
+
+	@Nested
+	@DisplayName("Synthetic CallStack frames")
+	class SyntheticFrames {
+
+		@Test
+		@DisplayName("Site 1: member init pushes <member-init> frame")
+		void memberInitFrame() throws Exception {
+			Engine eng = newEngine();
+			FrameCapturingDebugger d = new FrameCapturingDebugger();
+			eng.setDebugger(d);
+			eng.parseString("test.aus",
+				"class Box { public x = 1; }\n"
+				+ "class App { public main(args) {\n"
+				+ "    b = new Box();\n"
+				+ "} }");
+			// The INT node for the member's initializer "1" sits on
+			// line 1. Mark it; eval inside instantiateMembers should
+			// hit it under the synthetic frame.
+			astNode bp = pickNodeOnLine(eng, "test.aus", 1, astNodeType.INT);
+			bp.breakpoint = true;
+			eng.run();
+			assertTrue(d.anyChainContains("<member-init>"),
+				"expected <member-init> in some pause's stack chain; "
+				+ "captured chains=" + d.chains);
+		}
+
+		@Test
+		@DisplayName("Site 2: inherited member init also pushes a frame for each ancestor")
+		void inheritedMemberInitFrame() throws Exception {
+			Engine eng = newEngine();
+			FrameCapturingDebugger d = new FrameCapturingDebugger();
+			eng.setDebugger(d);
+			eng.parseString("test.aus",
+				"class Base { public p = 1; }\n"
+				+ "class Derived : Base { public q = 2; }\n"
+				+ "class App { public main(args) {\n"
+				+ "    obj = new Derived();\n"
+				+ "} }");
+			// Breakpoint on Base's member init (the "1" on line 1).
+			// new Derived() walks up to Base and calls
+			// instantiateMembers there; the frame for Base must appear.
+			astNode bp = pickNodeOnLine(eng, "test.aus", 1, astNodeType.INT);
+			bp.breakpoint = true;
+			eng.run();
+			assertTrue(d.anyChainContains("<member-init>"),
+				"expected <member-init> for Base's inherited init; "
+				+ "captured chains=" + d.chains);
+		}
+
+		@Test
+		@DisplayName("Site 3: default arg eval pushes <arg-defaults> frame")
+		void defaultArgFrame() throws Exception {
+			Engine eng = newEngine();
+			FrameCapturingDebugger d = new FrameCapturingDebugger();
+			eng.setDebugger(d);
+			// Default values must be literals per the grammar
+			// (functDefArg rule). Use a synthetic class with a single
+			// method whose only purpose is to be called with a
+			// defaulted arg. Capture every pause under the synthetic
+			// frame via step pauses so we do not depend on a
+			// breakpoint resolving to the exact default literal node.
+			d.stepEnabled = true;
+			eng.parseString("test.aus",
+				"class App {\n"
+				+ "    public foo(int x = 42) { return x; }\n"
+				+ "    public main(args) {\n"
+				+ "        a = this.foo();\n"
+				+ "    }\n"
+				+ "}");
+			eng.run();
+			d.stepEnabled = false;
+			assertTrue(d.anyChainContainsSubstring("<arg-defaults>"),
+				"expected <arg-defaults> in some pause's stack chain; "
+				+ "captured chains=" + d.chains);
+		}
+
+		@Test
+		@DisplayName("Site 4: extern default arg eval pushes <extern-arg-defaults> frame")
+		void externDefaultArgFrame() throws Exception {
+			Engine eng = newEngine();
+			FrameCapturingDebugger d = new FrameCapturingDebugger();
+			eng.setDebugger(d);
+			// string.split(string Delim, bool AllowBlanks = false) is
+			// a stdlib extern. Calling "a,b".split(",") drives the
+			// default-eval path in getExternArgs for the omitted
+			// AllowBlanks arg, which pushes the synthetic frame.
+			// Use step pauses so the test does not depend on the
+			// stdlib file name or line stability.
+			d.stepEnabled = true;
+			eng.parseString("test.aus",
+				"class App {\n"
+				+ "    public main(args) {\n"
+				+ "        \"a,b\".split(\",\");\n"
+				+ "    }\n"
+				+ "}");
+			eng.run();
+			d.stepEnabled = false;
+			assertTrue(d.anyChainContainsSubstring("<extern-arg-defaults>"),
+				"expected <extern-arg-defaults> in some pause's stack "
+				+ "chain; captured chains=" + d.chains);
+		}
+
+		@Test
+		@DisplayName("Site 5: static class init pushes <static-init> frame")
+		void staticInitFrame() throws Exception {
+			Engine eng = newEngine();
+			FrameCapturingDebugger d = new FrameCapturingDebugger();
+			eng.setDebugger(d);
+			// Static class member init runs synchronously inside
+			// parseString (addClass -> instantiateStaticClass when
+			// initComplete is true after engine construction). Enable
+			// step pauses BEFORE parseString so the synthetic frame
+			// is captured during the init walk.
+			d.stepEnabled = true;
+			eng.parseString("test.aus",
+				"static class S { public v = 7; }\n");
+			d.stepEnabled = false;
+			assertTrue(d.anyChainContains("<static-init>"),
+				"expected <static-init> in some pause's stack chain; "
+				+ "captured chains=" + d.chains);
+		}
+
+		@Test
+		@DisplayName("Site 6: reflection getMethods pushes <reflect.getMethods> frame")
+		void reflectionGetMethodsFrame() throws Exception {
+			Engine eng = newEngine();
+			FrameCapturingDebugger d = new FrameCapturingDebugger();
+			eng.setDebugger(d);
+			// Defaults must be literals per the grammar. main never
+			// calls Target.foo() directly, so the 42 INT on line 3
+			// is evaluated only by reflection's default-value walk.
+			eng.parseString("test.aus",
+				"include reflect;\n"
+				+ "class Target {\n"
+				+ "    public foo(int x = 42) { return x; }\n"
+				+ "}\n"
+				+ "class App {\n"
+				+ "    public main(args) {\n"
+				+ "        rc = reflect.getClassDef(\"Target\");\n"
+				+ "        m = rc.getMethods();\n"
+				+ "    }\n"
+				+ "}");
+			astNode bp = pickNodeOnLine(eng, "test.aus", 3, astNodeType.INT);
+			bp.breakpoint = true;
+			eng.run();
+			assertTrue(d.anyChainContains("<reflect.getMethods>"),
+				"expected <reflect.getMethods> in some pause's stack "
+				+ "chain; captured chains=" + d.chains);
 		}
 	}
 }

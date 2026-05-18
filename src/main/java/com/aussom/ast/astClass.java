@@ -485,35 +485,44 @@ public class astClass extends astNode implements astNodeInt {
 	}
 
 	public void instantiateMembers(Environment env, AussomObject ci) throws aussomException {
+		// Push a synthetic frame so debugger pauses inside member
+		// initializers show this class as the active context, not
+		// the caller's frame. See design/debugging-callstack-update.md.
+		CallStack frame = new CallStack(this.getFileName(), this.getLineNum(),
+			this.getName(), "<member-init>", "Member initializers.");
+		frame.setParent(env.getCallStack());
+		Environment tenv = new Environment(env.getEngine());
+		tenv.setEnvironment(env.getClassInstance(), env.getLocals(), frame);
+
 		for (int i = 0; i < this.membList.size(); i++) {
 			astNode cur = this.membDefs.get(this.membList.get(i));
 			switch(cur.getType()) {
 			case VAR:
-				ci.addMember(cur.getName(), cur.eval(env));
+				ci.addMember(cur.getName(), cur.eval(tenv));
 				break;
 			case BOOL:
-				ci.addMember(cur.getName(), cur.eval(env));
+				ci.addMember(cur.getName(), cur.eval(tenv));
 				break;
 			case INT:
-				ci.addMember(cur.getName(), cur.eval(env));
+				ci.addMember(cur.getName(), cur.eval(tenv));
 				break;
 			case DOUBLE:
-				ci.addMember(cur.getName(), cur.eval(env));
+				ci.addMember(cur.getName(), cur.eval(tenv));
 				break;
 			case STRING:
-				ci.addMember(cur.getName(), cur.eval(env));
+				ci.addMember(cur.getName(), cur.eval(tenv));
 				break;
 			case OBJ:
-				ci.addMember(cur.getName(), cur.eval(env));
+				ci.addMember(cur.getName(), cur.eval(tenv));
 				break;
 			case LIST:
-				ci.addMember(cur.getName(), cur.eval(env));
+				ci.addMember(cur.getName(), cur.eval(tenv));
 				break;
 			case MAP:
-				ci.addMember(cur.getName(), cur.eval(env));
+				ci.addMember(cur.getName(), cur.eval(tenv));
 				break;
 			case NULL:
-				ci.addMember(cur.getName(), cur.eval(env));
+				ci.addMember(cur.getName(), cur.eval(tenv));
 				break;
 			default:
 				throw new aussomException(this, "astClass.instantiateMembers(): Unexpected node type '" + cur.getType().name() + "' found.", env.stackTraceToString());

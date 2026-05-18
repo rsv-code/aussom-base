@@ -3,7 +3,7 @@
   
   <groupId>io.gitlab.cupofcode</groupId>
   <artifactId>aussom.base</artifactId>
-  <version>1.2.7</version>
+  <version>1.2.8</version>
   <packaging>jar</packaging>
   
   <name>aussom.base</name>

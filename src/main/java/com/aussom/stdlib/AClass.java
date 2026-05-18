@@ -19,6 +19,7 @@ package com.aussom.stdlib;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.aussom.CallStack;
 import com.aussom.Environment;
 import com.aussom.ast.*;
 import com.aussom.types.AussomBool;
@@ -83,6 +84,18 @@ public class AClass {
 		// a single name can map to multiple records.
 		AussomMap map = new AussomMap();
 
+		// Push a synthetic frame so debugger pauses inside any
+		// default-value expression evaluated during reflection show
+		// the class under reflection as the active context, not the
+		// caller's frame. See design/debugging-callstack-update.md.
+		CallStack reflectFrame = new CallStack(
+			this.classDef.getFileName(), this.classDef.getLineNum(),
+			this.classDef.getName(), "<reflect.getMethods>",
+			"Reflection: default argument values.");
+		reflectFrame.setParent(env.getCallStack());
+		Environment tenv = new Environment(env.getEngine());
+		tenv.setEnvironment(env.getClassInstance(), env.getLocals(), reflectFrame);
+
 		for (astFunctDef afd : this.classDef.getAllFunctions()) {
 			String mname = afd.getName();
 			AussomMap fm = new AussomMap();
@@ -116,7 +129,7 @@ public class AClass {
 						am.put("hasDefaultValue", new AussomBool(false));
 					} else {
 						am.put("hasDefaultValue", new AussomBool(true));
-						AussomType defVal = tn.eval(env);
+						AussomType defVal = tn.eval(tenv);
 						am.put("defaultValueType", new AussomString(defVal.getType().name().toLowerCase().substring(1)));
 						am.put("defaultValue", new AussomString(((AussomTypeInt) defVal).str()));
 					}

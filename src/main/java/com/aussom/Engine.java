@@ -624,7 +624,14 @@ public class Engine implements AussomDebuggingInt {
 			AussomType aci = null;
 			Environment tenv = new Environment(this);
 			Members locals = new Members();
-			tenv.setEnvironment((AussomObject) aci, locals, this.mainCallStack);
+			// Push a synthetic frame so debugger pauses inside the
+			// static class's member inits or constructor show this
+			// class as the active context, not the empty engine
+			// root. See design/debugging-callstack-update.md.
+			CallStack staticFrame = new CallStack(ac.getFileName(), ac.getLineNum(),
+				ac.getName(), "<static-init>", "Static class initializer.");
+			staticFrame.setParent(this.mainCallStack);
+			tenv.setEnvironment((AussomObject) aci, locals, staticFrame);
 			aci = (AussomObject) ac.instantiate(tenv, false, new AussomList());
 			if (!aci.isEx()) {
 				this.staticClasses.put(ac.getName(), aci);

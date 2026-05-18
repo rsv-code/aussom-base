@@ -214,7 +214,20 @@ public class astFunctDef extends astNode implements astNodeInt {
 	
 	public AussomType initArgs(Environment env, AussomList args) throws aussomException {
 		AussomType ret = new AussomNull();
-		
+
+		// Push a synthetic frame so debugger pauses inside default
+		// argument expressions show this function as the active
+		// context. The frame names the function and is parented to
+		// the caller's stack. See design/debugging-callstack-update.md.
+		String className = (env.getClassInstance() != null)
+			? env.getClassInstance().getClassDef().getName() : "";
+		CallStack defaultsFrame = new CallStack(this.getFileName(), this.getLineNum(),
+			className, this.getName() + " <arg-defaults>",
+			"Default argument values.");
+		defaultsFrame.setParent(env.getCallStack());
+		Environment tenv = new Environment(env.getEngine());
+		tenv.setEnvironment(env.getClassInstance(), env.getLocals(), defaultsFrame);
+
 		if (this.argList != null) {
 			int i = 0;
 			for (astNode adef : this.argList.getArgs()) {
@@ -275,8 +288,10 @@ public class astFunctDef extends astNode implements astNodeInt {
 					env.getLocals().add("etc", etcList);
 					break;
 				} else if (adef.getType() != astNodeType.VAR) {
-					// Not a var, so it is a defalut value.
-					env.getLocals().add(adef.getName(), adef.eval(env, false));
+					// Not a var, so it is a defalut value. Evaluate
+					// against tenv so the synthetic <arg-defaults>
+					// frame is visible to the debugger.
+					env.getLocals().add(adef.getName(), adef.eval(tenv, false));
 				} else {
 					AussomException e = new AussomException(exType.exRuntime);
 					e.setException(this.getLineNum(), "ARGUMENT_NUMBER", "Number of arguments provided does not match the number in definition.", "Number of arguments provided does not match the number in definition.", env.getCallStack().getStackTrace());
@@ -454,7 +469,19 @@ public class astFunctDef extends astNode implements astNodeInt {
 	private ArrayList<AussomType> getExternArgs(Environment env, AussomList eargs) throws aussomException
 	{
 		ArrayList<AussomType> args = new ArrayList<AussomType>();
-		
+
+		// Push a synthetic frame so debugger pauses inside default
+		// argument expressions for extern dispatch show this function
+		// as the active context. See design/debugging-callstack-update.md.
+		String className = (env.getClassInstance() != null)
+			? env.getClassInstance().getClassDef().getName() : "";
+		CallStack defaultsFrame = new CallStack(this.getFileName(), this.getLineNum(),
+			className, this.getName() + " <extern-arg-defaults>",
+			"Default argument values.");
+		defaultsFrame.setParent(env.getCallStack());
+		Environment tenv = new Environment(env.getEngine());
+		tenv.setEnvironment(env.getClassInstance(), env.getLocals(), defaultsFrame);
+
 		boolean etcFound = false;
 		AussomList etcList = new AussomList();
 		cType etype = cType.cUndef;
@@ -501,7 +528,7 @@ public class astFunctDef extends astNode implements astNodeInt {
 								throw new aussomException(this, "Expecting type '" + v.getPrimType().name() + "' but found type '" + eargs.getValue().get(i).getType().name() + "'.", env.stackTraceToString());
 							}
 						} else {
-							args.add(this.argList.getArgs().get(i).eval(env));
+							args.add(this.argList.getArgs().get(i).eval(tenv));
 						}
 					} else {
 						throw new aussomException(this, "Incorrect number of arguments provided to function '" + this.getName() + "'. Provided " + String.valueOf(eargs.size()) + " but expecting " + String.valueOf(this.argList.getArgs().size()) + ".", env.stackTraceToString());
