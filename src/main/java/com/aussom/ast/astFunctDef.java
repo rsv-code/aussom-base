@@ -225,6 +225,7 @@ public class astFunctDef extends astNode implements astNodeInt {
 			className, this.getName() + " <arg-defaults>",
 			"Default argument values.");
 		defaultsFrame.setParent(env.getCallStack());
+		defaultsFrame.setCalledFunction(this);
 		Environment tenv = new Environment(env.getEngine());
 		tenv.setEnvironment(env.getClassInstance(), env.getLocals(), defaultsFrame);
 
@@ -320,6 +321,7 @@ public class astFunctDef extends astNode implements astNodeInt {
 		
 		CallStack cst = new CallStack(FileName, this.getLineNum(), env.getClassInstance().getClassDef().getName(), this.getName(), "Defined.");
 		cst.setParent(env.getCallStack());
+		cst.setCalledFunction(this);
 		
 		// Itterate statement list of function
 		if(!tnode.isEx()) {
@@ -479,6 +481,7 @@ public class astFunctDef extends astNode implements astNodeInt {
 			className, this.getName() + " <extern-arg-defaults>",
 			"Default argument values.");
 		defaultsFrame.setParent(env.getCallStack());
+		defaultsFrame.setCalledFunction(this);
 		Environment tenv = new Environment(env.getEngine());
 		tenv.setEnvironment(env.getClassInstance(), env.getLocals(), defaultsFrame);
 

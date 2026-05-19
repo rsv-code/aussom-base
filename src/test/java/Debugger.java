@@ -722,6 +722,8 @@ public class Debugger {
 	static final class FrameCapturingDebugger implements DebuggerInt {
 		final List<List<String>> chains =
 			Collections.synchronizedList(new ArrayList<List<String>>());
+		final List<CallStack> topFrames =
+			Collections.synchronizedList(new ArrayList<CallStack>());
 		volatile boolean stepEnabled = false;
 
 		@Override
@@ -729,6 +731,7 @@ public class Debugger {
 				throws aussomException {
 			List<String> chain = new ArrayList<String>();
 			CallStack cs = env.getCallStack();
+			topFrames.add(cs);
 			while (cs != null) {
 				chain.add(cs.getFunctionName());
 				cs = cs.getParent();
@@ -909,6 +912,38 @@ public class Debugger {
 		}
 
 		@Test
+		@DisplayName("Bonus: <member-init> frame has calledFunction == null")
+		void memberInitFrameHasNoCalledFunction() throws Exception {
+			Engine eng = newEngine();
+			FrameCapturingDebugger d = new FrameCapturingDebugger();
+			eng.setDebugger(d);
+			eng.parseString("test.aus",
+				"class Box { public x = 1; }\n"
+				+ "class App { public main(args) {\n"
+				+ "    b = new Box();\n"
+				+ "} }");
+			astNode bp = pickNodeOnLine(eng, "test.aus", 1, astNodeType.INT);
+			bp.breakpoint = true;
+			eng.run();
+			// Walk every captured top frame; find the one whose name
+			// is <member-init> and assert its calledFunction is null.
+			boolean found = false;
+			synchronized (d.topFrames) {
+				for (CallStack top : d.topFrames) {
+					for (CallStack cs = top; cs != null; cs = cs.getParent()) {
+						if ("<member-init>".equals(cs.getFunctionName())) {
+							assertNull(cs.getCalledFunction(),
+								"<member-init> is class-scoped; "
+								+ "calledFunction should be null");
+							found = true;
+						}
+					}
+				}
+			}
+			assertTrue(found, "expected at least one <member-init> frame");
+		}
+
+		@Test
 		@DisplayName("Site 6: reflection getMethods pushes <reflect.getMethods> frame")
 		void reflectionGetMethodsFrame() throws Exception {
 			Engine eng = newEngine();
@@ -934,6 +969,109 @@ public class Debugger {
 			assertTrue(d.anyChainContains("<reflect.getMethods>"),
 				"expected <reflect.getMethods> in some pause's stack "
 				+ "chain; captured chains=" + d.chains);
+		}
+	}
+
+	/* ============================================================ */
+	/*  CallStack.calledFunction: function-pointer access from a    */
+	/*  paused frame, for debugger arg/metadata lookup.             */
+	/* ============================================================ */
+
+	@Nested
+	@DisplayName("CallStack.calledFunction")
+	class CalledFunction {
+
+		/**
+		 * Returns true if any captured top frame has, somewhere in
+		 * its chain, a frame whose calledFunction.getName() equals
+		 * the supplied name.
+		 */
+		private boolean anyChainHasCalledFunctionNamed(
+				FrameCapturingDebugger d, String functionName) {
+			synchronized (d.topFrames) {
+				for (CallStack top : d.topFrames) {
+					for (CallStack cs = top; cs != null; cs = cs.getParent()) {
+						astFunctDef f = cs.getCalledFunction();
+						if (f != null && functionName.equals(f.getName())) {
+							return true;
+						}
+					}
+				}
+			}
+			return false;
+		}
+
+		@Test
+		@DisplayName("Pause inside a function body -- top frame's calledFunction is the function")
+		void definedFrameHasCalledFunction() throws Exception {
+			Engine eng = newEngine();
+			FrameCapturingDebugger d = new FrameCapturingDebugger();
+			eng.setDebugger(d);
+			eng.parseString("test.aus",
+				"class App {\n"
+				+ "    public main(args) {\n"
+				+ "        x = 1;\n"
+				+ "    }\n"
+				+ "}");
+			astNode bp = pickNodeOnLine(eng, "test.aus", 3, astNodeType.INT);
+			bp.breakpoint = true;
+			eng.run();
+			assertFalse(d.topFrames.isEmpty(),
+				"expected at least one pause");
+			// At the pause inside main's body the top "Defined." frame
+			// must point at the main astFunctDef.
+			CallStack top = d.topFrames.get(0);
+			astFunctDef called = top.getCalledFunction();
+			assertNotNull(called,
+				"top frame's calledFunction should be set; "
+				+ "frame functionName=" + top.getFunctionName());
+			assertEquals("main", called.getName(),
+				"top frame should be App.main");
+		}
+
+		@Test
+		@DisplayName("<arg-defaults> frame carries the astFunctDef of the function being called")
+		void argDefaultsFrameHasCalledFunction() throws Exception {
+			Engine eng = newEngine();
+			FrameCapturingDebugger d = new FrameCapturingDebugger();
+			eng.setDebugger(d);
+			d.stepEnabled = true;
+			eng.parseString("test.aus",
+				"class App {\n"
+				+ "    public foo(int x = 42) { return x; }\n"
+				+ "    public main(args) {\n"
+				+ "        a = this.foo();\n"
+				+ "    }\n"
+				+ "}");
+			eng.run();
+			d.stepEnabled = false;
+			assertTrue(anyChainHasCalledFunctionNamed(d, "foo"),
+				"expected at least one captured frame whose "
+				+ "calledFunction is App.foo; captured chains="
+				+ d.chains);
+		}
+
+		@Test
+		@DisplayName("<extern-arg-defaults> frame carries the extern astFunctDef")
+		void externArgDefaultsFrameHasCalledFunction() throws Exception {
+			Engine eng = newEngine();
+			FrameCapturingDebugger d = new FrameCapturingDebugger();
+			eng.setDebugger(d);
+			d.stepEnabled = true;
+			eng.parseString("test.aus",
+				"class App {\n"
+				+ "    public main(args) {\n"
+				+ "        \"a,b\".split(\",\");\n"
+				+ "    }\n"
+				+ "}");
+			eng.run();
+			d.stepEnabled = false;
+			// string.split is the extern being called; the synthetic
+			// frame for its arg-defaults must point at its astFunctDef.
+			assertTrue(anyChainHasCalledFunctionNamed(d, "split"),
+				"expected at least one captured frame whose "
+				+ "calledFunction is the split() extern astFunctDef; "
+				+ "captured chains=" + d.chains);
 		}
 	}
 }

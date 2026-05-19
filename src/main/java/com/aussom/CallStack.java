@@ -16,9 +16,11 @@
 
 package com.aussom;
 
+import com.aussom.ast.astFunctDef;
+
 /**
- * CallStack object is a linked list representation of the Aussom function call 
- * stack. It handles the accounting of call information for use in debugging 
+ * CallStack object is a linked list representation of the Aussom function call
+ * stack. It handles the accounting of call information for use in debugging
  * and exception handling.
  * @author austin
  */
@@ -29,6 +31,7 @@ public class CallStack {
 	private String className = "";
 	private String functionName = "";
 	private String text = "";
+	private astFunctDef calledFunction = null;
 
 	/**
 	 * Default constructor.
@@ -128,6 +131,39 @@ public class CallStack {
 	public void setText(String str) {
 		synchronized(this) {
 			this.text = str;
+		}
+	}
+
+	/**
+	 * Gets the astFunctDef this frame represents, or null if the
+	 * frame does not correspond to a single Aussom function call
+	 * (e.g. the engine's root frame, class-level synthetic frames
+	 * like {@code <member-init>}, {@code <static-init>}, or
+	 * {@code <reflect.getMethods>}).
+	 *
+	 * Useful for debuggers that need to read the function's
+	 * declared arg list, annotations, or other metadata at pause
+	 * time without re-walking the AST to find it.
+	 *
+	 * @return The astFunctDef bound to this frame, or null.
+	 */
+	public astFunctDef getCalledFunction() {
+		synchronized(this) {
+			return this.calledFunction;
+		}
+	}
+
+	/**
+	 * Sets the astFunctDef this frame represents. Callers in
+	 * astFunctDef.call / initArgs / getExternArgs set it to `this`
+	 * when they push the frame. Frames that are not function-scoped
+	 * leave it null.
+	 *
+	 * @param f The astFunctDef bound to this frame.
+	 */
+	public void setCalledFunction(astFunctDef f) {
+		synchronized(this) {
+			this.calledFunction = f;
 		}
 	}
 
