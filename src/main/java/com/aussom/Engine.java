@@ -1294,6 +1294,12 @@ public class Engine implements AussomDebuggingInt {
 	 * against the long-lived script Environment. Returns the
 	 * AussomType produced by the last evaluated statement.
 	 *
+	 * Convenience wrapper that calls parseScriptLine followed by
+	 * evalParsedScript. Splitting them lets a debugger arm
+	 * breakpoints against the newly-parsed nodes between the two
+	 * phases; embedders that do not need that seam can keep using
+	 * this single-call form.
+	 *
 	 * The lineNumber argument is 1-indexed and tells the lexer
 	 * which line the first source line should report as. Pass the
 	 * file line where the snippet starts so error attribution
@@ -1313,15 +1319,49 @@ public class Engine implements AussomDebuggingInt {
 	 * @throws Exception on parse error or security denial.
 	 */
 	public AussomType evalLine(String source, int lineNumber) throws Exception {
+		astStatementList body = this.parseScriptLine(source, lineNumber);
+		return this.evalParsedScript(body);
+	}
+
+	/**
+	 * Parses the supplied Aussom source as a script-mode fragment
+	 * and appends the parsed top-level statements to the synthetic
+	 * main's body. Does NOT evaluate. Returns the script main's
+	 * instruction-list body so the caller can pass it back to
+	 * evalParsedScript.
+	 *
+	 * This is the parse half of evalLine. Splitting parse and eval
+	 * gives a debugger (or any other consumer) a place to inspect
+	 * or mutate the newly-parsed AST before it runs — for example
+	 * to call setBreakpoint on lines that did not exist as nodes
+	 * before this call.
+	 *
+	 * The lineNumber argument is 1-indexed and tells the lexer
+	 * which line the first source line should report as.
+	 *
+	 * Parse errors throw an aussomException after rolling back any
+	 * partially-appended statements so the body is left exactly as
+	 * it was before this call.
+	 *
+	 * Gated by the security property aussom.script.mode.enable;
+	 * checked on every entry so a permissive manager that revokes
+	 * the property at runtime immediately blocks further parsing.
+	 *
+	 * @param source is the Aussom source string to parse.
+	 * @param lineNumber is the 1-indexed line number to report
+	 *        for the first source line.
+	 * @return The script main's instruction-list body, with any
+	 *         newly-parsed statements appended.
+	 * @throws Exception on parse error or security denial.
+	 */
+	public astStatementList parseScriptLine(String source, int lineNumber) throws Exception {
 		if (!this.scriptMode) {
 			throw new aussomException(
-				"Engine.evalLine: script mode is not enabled.");
+				"Engine.parseScriptLine: script mode is not enabled.");
 		}
-		// Security check on every entry; defends against runtime
-		// property changes via setProp.
 		if (!(Boolean) this.secman.getProperty("aussom.script.mode.enable")) {
 			throw new aussomException(
-				"Engine.evalLine: Security exception, action "
+				"Engine.parseScriptLine: Security exception, action "
 				+ "'aussom.script.mode.enable' not permitted.");
 		}
 
@@ -1342,9 +1382,54 @@ public class Engine implements AussomDebuggingInt {
 			}
 			this.clearParseError();
 			throw new aussomException(
-				"Engine.evalLine: parse error.");
+				"Engine.parseScriptLine: parse error.");
 		}
 
+		return body;
+	}
+
+	/**
+	 * Evaluates any statements in the supplied body that have not
+	 * yet been evaluated -- that is, statements at indices >=
+	 * scriptCursor. Advances scriptCursor past the slice before
+	 * the eval loop runs, so a runtime failure mid-slice does not
+	 * leave unwalked statements for the next call to pick up.
+	 *
+	 * The body argument is expected to be the same instruction
+	 * list returned by parseScriptLine (the synthetic script
+	 * main's body). Passing a different list is not supported --
+	 * the scriptCursor watermark is engine state and only relates
+	 * to that one body.
+	 *
+	 * Returns the AussomType produced by the last evaluated
+	 * statement, or AussomNull if no statements were pending.
+	 * Runtime errors (a statement returning or throwing) are
+	 * returned as an AussomException value, never re-thrown.
+	 *
+	 * Gated by the security property aussom.script.mode.enable;
+	 * checked on every entry so a permissive manager that revokes
+	 * the property between parse and eval immediately blocks the
+	 * eval.
+	 *
+	 * @param body the script main's instruction-list body from
+	 *        parseScriptLine.
+	 * @return An AussomType with the value of the last evaluated
+	 *         statement, or AussomNull if the slice was empty.
+	 * @throws Exception on security denial.
+	 */
+	public AussomType evalParsedScript(astStatementList body) throws Exception {
+		if (!this.scriptMode) {
+			throw new aussomException(
+				"Engine.evalParsedScript: script mode is not enabled.");
+		}
+		if (!(Boolean) this.secman.getProperty("aussom.script.mode.enable")) {
+			throw new aussomException(
+				"Engine.evalParsedScript: Security exception, action "
+				+ "'aussom.script.mode.enable' not permitted.");
+		}
+
+		List<astNode> stmts = body.getStatements();
+		int sliceStart = this.scriptCursor;
 		int sliceEnd = stmts.size();
 
 		// Commit the cursor advance for the whole slice up front so
@@ -1361,7 +1446,7 @@ public class Engine implements AussomDebuggingInt {
 				// returnable AussomException so the caller always
 				// gets an AussomType back.
 				last = new AussomException(
-					"Engine.evalLine: uncaught exception during "
+					"Engine.evalParsedScript: uncaught exception during "
 					+ "evaluation: " + e.getMessage());
 				break;
 			}

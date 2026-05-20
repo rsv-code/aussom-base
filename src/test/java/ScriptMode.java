@@ -648,4 +648,165 @@ public class ScriptMode {
 				+ retHolder[0]);
 		}
 	}
+
+	/* ============================================================ */
+	/*  Split parseScriptLine / evalParsedScript                    */
+	/* ============================================================ */
+
+	@Nested
+	@DisplayName("Split parseScriptLine / evalParsedScript")
+	class SplitParseEval {
+
+		@Test
+		@DisplayName("parseScriptLine appends without evaluating; evalParsedScript runs the slice")
+		void parseThenEvalRunsExactlyOnce() throws Exception {
+			Engine eng = newScriptEngine();
+			eng.setScriptMode(true);
+
+			astStatementList body = eng.parseScriptLine("x = 5;", 1);
+			assertEquals(1, body.getStatements().size(),
+				"body should have one statement after parse");
+
+			// Eval should bind x. Capture stdout to confirm by
+			// printing x in a second pair of calls.
+			eng.evalParsedScript(body);
+			String out = capture(() -> {
+				try {
+					eng.evalLine("c.log(x);");
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			});
+			assertTrue(out.contains("5"),
+				"stdout should contain '5' (x bound by first slice), was: " + out);
+		}
+
+		@Test
+		@DisplayName("Second evalParsedScript call only evaluates the newer slice")
+		void cursorAdvanceDoesNotReEval() throws Exception {
+			Engine eng = newScriptEngine();
+			eng.setScriptMode(true);
+
+			// First slice: bind ctr to 1.
+			astStatementList body = eng.parseScriptLine("ctr = 1;", 1);
+			eng.evalParsedScript(body);
+
+			// Second slice: increment ctr. If the cursor were not
+			// advancing, the first slice would re-run and ctr would
+			// reset to 1.
+			body = eng.parseScriptLine("ctr = ctr + 10;", 2);
+			eng.evalParsedScript(body);
+
+			String out = capture(() -> {
+				try {
+					eng.evalLine("c.log(ctr);");
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			});
+			assertTrue(out.contains("11"),
+				"stdout should contain '11' (cursor advanced past first slice), was: "
+				+ out);
+		}
+
+		@Test
+		@DisplayName("Breakpoint set between parse and eval fires when eval runs (DAP scenario)")
+		void breakpointBetweenParseAndEval() throws Exception {
+			Engine eng = newScriptEngine();
+			final java.util.concurrent.atomic.AtomicBoolean fired =
+				new java.util.concurrent.atomic.AtomicBoolean(false);
+			eng.setDebugger(new com.aussom.DebuggerInt() {
+				@Override
+				public void onPause(astNode node, com.aussom.Environment env,
+						com.aussom.PauseReason reason) {
+					fired.set(true);
+				}
+				@Override
+				public boolean shouldPauseForStep(astNode node,
+						com.aussom.Environment env) {
+					return false;
+				}
+				@Override public void onException(AussomException ex,
+						com.aussom.Environment env) {}
+				@Override public void onException(Exception ex,
+						com.aussom.Environment env) {}
+			});
+			eng.setScriptMode(true);
+			eng.setScriptFileName("dap.aus");
+
+			// Parse first; user-source nodes don't exist before this.
+			astStatementList body = eng.parseScriptLine("y = 42;", 1);
+
+			// Setting a breakpoint now must find the parsed node.
+			// This is the seam evalLine did not previously offer.
+			assertTrue(eng.setBreakpoint("dap.aus", 1),
+				"setBreakpoint should find a node at dap.aus:1 after parse");
+
+			// Eval the parsed slice -- breakpoint fires.
+			eng.evalParsedScript(body);
+
+			assertTrue(fired.get(),
+				"breakpoint armed between parse and eval should fire");
+		}
+
+		@Test
+		@DisplayName("parseScriptLine rejects parse errors and leaves body unchanged")
+		void parseErrorRollback() throws Exception {
+			Engine eng = newScriptEngine();
+			eng.setScriptMode(true);
+			eng.parseScriptLine("a = 1;", 1);
+			astStatementList body = eng.parseScriptLine("b = 2;", 2);
+			int sizeBefore = body.getStatements().size();
+			aussomException ex = assertThrows(aussomException.class,
+				() -> eng.parseScriptLine("c = ;", 3));
+			assertTrue(ex.getMessage().contains("parse error"),
+				"message should mention parse error, was: " + ex.getMessage());
+			assertEquals(sizeBefore, body.getStatements().size(),
+				"failed parse must not leave statements appended");
+		}
+
+		@Test
+		@DisplayName("parseScriptLine without setScriptMode throws")
+		void parseRequiresScriptMode() throws Exception {
+			Engine eng = newScriptEngine();
+			aussomException ex = assertThrows(aussomException.class,
+				() -> eng.parseScriptLine("x = 5;", 1));
+			assertTrue(ex.getMessage().contains("script mode is not enabled"),
+				"message should mention script mode, was: " + ex.getMessage());
+		}
+
+		@Test
+		@DisplayName("evalParsedScript without setScriptMode throws")
+		void evalRequiresScriptMode() throws Exception {
+			Engine eng = newScriptEngine();
+			// Build a body indirectly via setScriptMode + parse, then
+			// flip script mode off and try to eval.
+			eng.setScriptMode(true);
+			astStatementList body = eng.parseScriptLine("z = 9;", 1);
+			eng.setScriptMode(false);
+			aussomException ex = assertThrows(aussomException.class,
+				() -> eng.evalParsedScript(body));
+			assertTrue(ex.getMessage().contains("script mode is not enabled"),
+				"message should mention script mode, was: " + ex.getMessage());
+		}
+
+		@Test
+		@DisplayName("parseScriptLine denied under default security manager")
+		void parseDeniedByDefaultSecurity() throws Exception {
+			// DefaultSecurityManagerImpl has aussom.script.mode.enable=false.
+			// We need scriptMode on to reach the security check, which
+			// itself requires the property on. That mutual exclusion
+			// means we cannot reach the parseScriptLine security gate
+			// on a default-locked engine without first flipping the
+			// gate to enable setScriptMode. Skip via a different
+			// approach: confirm the scriptMode gate fires first under
+			// default-locked manager.
+			Engine eng = new Engine(new DefaultSecurityManagerImpl());
+			aussomException ex = assertThrows(aussomException.class,
+				() -> eng.parseScriptLine("x = 1;", 1));
+			assertTrue(ex.getMessage().contains("script mode is not enabled"),
+				"first gate is scriptMode (locked manager never enables it); "
+				+ "was: " + ex.getMessage());
+		}
+	}
 }
