@@ -20,6 +20,7 @@ include sys;
 include util;
 include inctest;
 include reflect;
+include concurrent;
 
 enum numName {
 	one;
@@ -3595,4 +3596,150 @@ class indexedAssignTests {
         o.mp = {"a": new assignPoint(1,2)}; o.mp["a"].x = 99;
         return test.expect(o.mp["a"].x, 99);
     }
+}
+
+/***************************************************************************
+ * concurrent.aus module.
+ *
+ * API coverage for the concurrency primitives: AtomicLong, AtomicBool,
+ * AtomicRef, Counter, BlockingQueue, Semaphore, Latch, and Lock. These
+ * are single-threaded API tests. The cross-thread exactness stress
+ * tests (exact counts under 8-thread contention) live in
+ * src/test/java/ConcurrencyRegressionTest.java because aussom-base has
+ * no script-level threads to drive them with.
+ *
+ * See design/aussom-concurrency.md.
+ ***************************************************************************/
+@Test(name = "concurrent module")
+class concurrentTests {
+    private lk = null;
+    private q = null;
+
+    @Test(name = "(concurrent) AtomicLong basics and chaining")
+    public atomicLongBasics() {
+        a = new AtomicLong(5);
+        test.expect(a.get(), 5);
+        test.expect(a.incrementAndGet(), 6);
+        test.expect(a.decrementAndGet(), 5);
+        test.expect(a.addAndGet(10), 15);
+        return test.expect(a.set(42).get(), 42);
+    }
+
+    @Test(name = "(concurrent) AtomicLong getAndSet and compareAndSet")
+    public atomicLongCas() {
+        a = new AtomicLong(15);
+        test.expect(a.getAndSet(2), 15);
+        test.expectTrue(a.compareAndSet(2, 7));
+        test.expectFalse(a.compareAndSet(2, 9));
+        return test.expect(a.get(), 7);
+    }
+
+    @Test(name = "(concurrent) AtomicBool one-shot guard")
+    public atomicBoolGuard() {
+        b = new AtomicBool();
+        test.expectFalse(b.get());
+        test.expectTrue(b.compareAndSet(false, true));
+        test.expectFalse(b.compareAndSet(false, true));
+        test.expectTrue(b.getAndSet(false));
+        return test.expectFalse(b.get());
+    }
+
+    @Test(name = "(concurrent) AtomicRef identity compareAndSet")
+    public atomicRefCas() {
+        a = [1, 2, 3];
+        ref = new AtomicRef(a);
+        b = [9];
+        // Same instance: swap happens. Second try: current is b now.
+        test.expectTrue(ref.compareAndSet(a, b));
+        test.expectFalse(ref.compareAndSet(a, b));
+        return test.expect(#ref.get(), 1);
+    }
+
+    @Test(name = "(concurrent) AtomicRef null matches null and getAndSet")
+    public atomicRefNull() {
+        ref = new AtomicRef();
+        test.expectNull(ref.get());
+        test.expectTrue(ref.compareAndSet(null, "x"));
+        test.expect(ref.get(), "x");
+        test.expect(ref.getAndSet("y"), "x");
+        return test.expect(ref.get(), "y");
+    }
+
+    @Test(name = "(concurrent) Counter sum and reset")
+    public counterSum() {
+        cnt = new Counter();
+        cnt.increment().increment().add(10).decrement();
+        test.expect(cnt.sum(), 11);
+        cnt.reset();
+        return test.expect(cnt.sum(), 0);
+    }
+
+    @Test(name = "(concurrent) BlockingQueue FIFO order, size, clear")
+    public queueFifo() {
+        bq = new BlockingQueue();
+        test.expectTrue(bq.offer("a"));
+        bq.offer("b");
+        test.expect(bq.size(), 2);
+        test.expect(bq.poll(), "a");
+        test.expect(bq.poll(), "b");
+        test.expectNull(bq.poll());
+        bq.offer(1);
+        bq.clear();
+        return test.expect(bq.size(), 0);
+    }
+
+    @Test(name = "(concurrent) BlockingQueue bounded rejects when full")
+    public queueBounded() {
+        bq = new BlockingQueue(1);
+        test.expectTrue(bq.offer("a"));
+        return test.expectFalse(bq.offer("b"));
+    }
+
+    @Test(name = "(concurrent) BlockingQueue rejects null values")
+    public queueNull() {
+        this.q = new BlockingQueue();
+        return test.expectThrows(::offerNull);
+    }
+
+    /** Callback for queueNull; offering null must throw. */
+    public offerNull() {
+        this.q.offer(null);
+    }
+
+    @Test(name = "(concurrent) Semaphore permits, timeout, release")
+    public semaphorePermits() {
+        s = new Semaphore(2);
+        test.expectTrue(s.tryAcquire());
+        test.expectTrue(s.tryAcquire());
+        test.expectFalse(s.tryAcquire());
+        test.expectFalse(s.tryAcquire(50));
+        s.release();
+        test.expect(s.availablePermits(), 1);
+        return test.expectTrue(s.tryAcquire());
+    }
+
+    @Test(name = "(concurrent) Latch countdown and await timeout")
+    public latchCountdown() {
+        l = new Latch(2);
+        test.expect(l.getCount(), 2);
+        test.expectFalse(l.await(50));
+        l.countDown().countDown();
+        test.expect(l.getCount(), 0);
+        return test.expectTrue(l.await(50));
+    }
+
+    @Test(name = "(concurrent) Lock.withLock runs, returns, reenters, releases")
+    public lockWithLock() {
+        this.lk = new Lock();
+        test.expect(this.lk.withLock(::lockSimple), 41);
+        // Reentrant: the outer callback takes the same lock again.
+        test.expect(this.lk.withLock(::lockOuter), "nested");
+        // Released after each call: a fresh withLock still works.
+        return test.expect(this.lk.withLock(::lockSimple), 41);
+    }
+
+    /** Callbacks for lockWithLock. */
+    public lockSimple() { return 41; }
+    public lockOuter() { return this.lk.withLock(::lockInner); }
+    public lockInner() { return "nested"; }
 }

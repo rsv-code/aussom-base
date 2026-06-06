@@ -21,6 +21,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,6 +66,13 @@ import com.aussom.types.MockFunctionSpyRecord;
  *    Members instance.
  *  - Mock/MockFunction: spy records survive concurrent appends.
  *  - Lang.get(): one instance under concurrent first call.
+ *
+ * Also here: the cross-thread exactness stress tests for the
+ * concurrent stdlib module (include concurrent;). The module's API
+ * coverage lives with the rest of the interpreter tests in
+ * tests/interpreter.aus; only the multi-thread tests are JUnit,
+ * because aussom-base has no script-level threads to drive them
+ * with.
  *
  * The round counts are sized to catch regressions reliably (the
  * pre-fix engine failed roughly 1 in 25 rounds at 8 threads) while
@@ -235,5 +246,135 @@ public class ConcurrencyRegressionTest {
 		});
 		assertEquals(0, failures, "Lang.get() returned different instances");
 		assertSame(seen.get(), Lang.get());
+	}
+
+	/* ============================================================ */
+	/*  concurrent stdlib module: cross-thread exactness            */
+	/* ============================================================ */
+
+	/**
+	 * Invokes method on obj from THREADS threads, iterations times
+	 * each, all released together. Returns the number of invocations
+	 * that threw.
+	 */
+	private int hammer(ScriptEngine engine, Object obj, String method, int iterations)
+			throws Exception {
+		Invocable inv = (Invocable) engine;
+		CyclicBarrier gate = new CyclicBarrier(THREADS);
+		CountDownLatch done = new CountDownLatch(THREADS);
+		AtomicInteger failures = new AtomicInteger();
+		for (int t = 0; t < THREADS; t++) {
+			pool.submit(() -> {
+				try {
+					gate.await();
+					for (int i = 0; i < iterations; i++) {
+						inv.invokeMethod(obj, method);
+					}
+				} catch (Throwable e) {
+					failures.incrementAndGet();
+					System.out.println("hammer failure: " + e);
+				} finally {
+					done.countDown();
+				}
+			});
+		}
+		done.await();
+		return failures.get();
+	}
+
+	private ScriptEngine newScriptEngine() {
+		return new ScriptEngineManager().getEngineByName("aussom");
+	}
+
+	@Test
+	@DisplayName("6. AtomicLong holds an exact count under 8-thread contention")
+	void atomicLongStress() throws Exception {
+		ScriptEngine engine = newScriptEngine();
+		engine.eval(
+			"include concurrent;\n" +
+			"class S {\n" +
+			"  private n = null;\n" +
+			"  public S() { this.n = new AtomicLong(0); }\n" +
+			"  public inc() { return this.n.incrementAndGet(); }\n" +
+			"  public total() { return this.n.get(); }\n" +
+			"}");
+		Object s = engine.eval("return new S();");
+		int iterations = 500;
+		assertEquals(0, hammer(engine, s, "inc", iterations), "invocations threw");
+		assertEquals((long) THREADS * iterations,
+			((Invocable) engine).invokeMethod(s, "total"),
+			"increments lost; AtomicLong is not holding an exact count");
+	}
+
+	@Test
+	@DisplayName("7. Counter holds an exact count under 8-thread contention")
+	void counterStress() throws Exception {
+		ScriptEngine engine = newScriptEngine();
+		engine.eval(
+			"include concurrent;\n" +
+			"class S {\n" +
+			"  private n = null;\n" +
+			"  public S() { this.n = new Counter(); }\n" +
+			"  public inc() { this.n.increment(); return true; }\n" +
+			"  public total() { return this.n.sum(); }\n" +
+			"}");
+		Object s = engine.eval("return new S();");
+		int iterations = 500;
+		assertEquals(0, hammer(engine, s, "inc", iterations), "invocations threw");
+		assertEquals((long) THREADS * iterations,
+			((Invocable) engine).invokeMethod(s, "total"),
+			"increments lost; Counter is not holding an exact count");
+	}
+
+	@Test
+	@DisplayName("8. Lock.withLock makes a plain += member hold an exact count")
+	void lockStress() throws Exception {
+		// Without the lock this is the canonical lost-update race;
+		// withLock must serialize the read-compute-write.
+		ScriptEngine engine = newScriptEngine();
+		engine.eval(
+			"include concurrent;\n" +
+			"class S {\n" +
+			"  private lk = null;\n" +
+			"  public n = 0;\n" +
+			"  public S() { this.lk = new Lock(); }\n" +
+			"  public inc() { return this.lk.withLock(::incBody); }\n" +
+			"  public incBody() { this.n += 1; return this.n; }\n" +
+			"  public total() { return this.n; }\n" +
+			"}");
+		Object s = engine.eval("return new S();");
+		int iterations = 250;
+		assertEquals(0, hammer(engine, s, "inc", iterations), "invocations threw");
+		assertEquals((long) THREADS * iterations,
+			((Invocable) engine).invokeMethod(s, "total"),
+			"increments lost; Lock.withLock is not serializing the critical section");
+	}
+
+	@Test
+	@DisplayName("9. BlockingQueue hands every value across threads exactly once")
+	void queueStress() throws Exception {
+		ScriptEngine engine = newScriptEngine();
+		engine.eval(
+			"include concurrent;\n" +
+			"class S {\n" +
+			"  private q = null;\n" +
+			"  private got = null;\n" +
+			"  public S() { this.q = new BlockingQueue(); this.got = new Counter(); }\n" +
+			"  public produce() { this.q.offer(1); return true; }\n" +
+			"  public drain() {\n" +
+			"    while (true) {\n" +
+			"      v = this.q.poll();\n" +
+			"      if (v == null) { break; }\n" +
+			"      this.got.increment();\n" +
+			"    }\n" +
+			"    return this.got.sum();\n" +
+			"  }\n" +
+			"}");
+		Object s = engine.eval("return new S();");
+		int iterations = 500;
+		assertEquals(0, hammer(engine, s, "produce", iterations), "invocations threw");
+		assertEquals((long) THREADS * iterations,
+			((Invocable) engine).invokeMethod(s, "drain"),
+			"values lost in the queue handoff");
 	}
 }
