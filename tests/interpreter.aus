@@ -746,6 +746,9 @@ class interpreterTests {
      @Test(name = "(< operator) Less than int vals.")
      public operLessThanInt() { return test.expect(256 < 1, false); }
 
+     @Test(name = "(< operator) Less than large int vals.")
+     public operLessThanLargeInt() { return test.expect(1780697576546 > 0, true); }
+
      @Test(name = "(< operator) Less than double vals.")
      public operLessThanDouble() { return test.expect(3.14157 < 1.2345, false); }
 

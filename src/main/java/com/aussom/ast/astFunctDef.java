@@ -522,7 +522,7 @@ public class astFunctDef extends astNode implements astNodeInt {
 							if((v.getPrimType() == cType.cUndef)||(v.getPrimType() == eargs.getValue().get(i).getType())||(eargs.getValue().get(i).isNull())) {
 								args.add(eargs.getValue().get(i));
 							} else if((v.getPrimType() == cType.cInt)&&(eargs.getValue().get(i).getType() == cType.cDouble)){
-								AussomInt ai = new AussomInt((int)((AussomDouble)eargs.getValue().get(i)).getValue());
+								AussomInt ai = new AussomInt((long)((AussomDouble)eargs.getValue().get(i)).getValue());
 								args.add(ai);
 							} else if((v.getPrimType() == cType.cDouble)&&(eargs.getValue().get(i).getType() == cType.cInt)) {
 								AussomDouble ad = new AussomDouble((double)((AussomInt)eargs.getValue().get(i)).getValue());

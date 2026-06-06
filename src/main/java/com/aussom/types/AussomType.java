@@ -99,7 +99,7 @@ public class AussomType implements AussomClonable {
 				return 1;
 			return 0;
 		} else if(this.type == cType.cDouble) {
-			return (int)((AussomDouble)this).getValue();
+			return (long)((AussomDouble)this).getValue();
 		} else {
 			throw new aussomException("INTERNAL [AussomType.getNumericInt] Not expecting type '" + this.type.name() + "'.");
 		}

@@ -1053,7 +1053,7 @@ public class astExpression extends astNode implements astNodeInt {
 	
 	private long getValueInt(AussomType Item) {
 		if (Item.getType() == cType.cInt) {
-			return (int) ((AussomInt)Item).getValue();
+			return ((AussomInt)Item).getValue();
 		} else if (((AussomBool)Item).getValue()) {
 			return 1;
 		}
