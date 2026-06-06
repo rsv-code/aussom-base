@@ -50,9 +50,10 @@ public class AussomException extends AussomObject implements AussomTypeInt {
 	// value flows through eval. Used to dedupe the
 	// DebuggerInt.onException(AussomException, Environment) call
 	// so the hook fires once per logical exception rather than
-	// once per stack frame the value passes through. See
+	// once per stack frame the value passes through. Volatile so a
+	// value shared across threads dedupes there too. See
 	// design/debugging-interface-design.md.
-	private boolean debuggerSeen = false;
+	private volatile boolean debuggerSeen = false;
 
 	public AussomException() {
 		this.setType(cType.cException);

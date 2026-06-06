@@ -16,8 +16,8 @@
 
 package com.aussom.types;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class MockFunction {
     protected String functionName = "";
@@ -35,15 +35,18 @@ public class MockFunction {
 
     /**
      * The spy flag for the function. If set to true records should
-     * be added to spyRecords on each call.
+     * be added to spyRecords on each call. Volatile: read on the
+     * dispatch path of a possibly shared object.
      */
-    protected boolean spy = false;
+    protected volatile boolean spy = false;
 
     /**
      * A list of spy records to keep track of when the
-     * mocked function is called.
+     * mocked function is called. CopyOnWriteArrayList because a
+     * spied object called from multiple threads appends a record
+     * per call while test code may be reading the results.
      */
-    protected List<MockFunctionSpyRecord> spyRecords = new ArrayList<MockFunctionSpyRecord>();
+    protected List<MockFunctionSpyRecord> spyRecords = new CopyOnWriteArrayList<MockFunctionSpyRecord>();
 
     /**
      * Spy only doesn't intercept the function but just logs

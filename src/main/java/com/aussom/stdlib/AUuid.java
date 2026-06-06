@@ -30,7 +30,9 @@ import java.util.UUID;
 public class AUuid {
     private static SecureRandom sran = null;
 
-	private static SecureRandom getSecRandInst() throws Exception
+	// Synchronized so a racing first call cannot construct two
+	// SecureRandom instances.
+	private static synchronized SecureRandom getSecRandInst() throws Exception
 	{
 		if(sran == null) {
 			try {

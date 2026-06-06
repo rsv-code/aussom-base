@@ -19,18 +19,27 @@ package com.aussom.types;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Mock {
     /**
      * Weather or not the mock is set on this object. True is
-     * set and false is not.
+     * set and false is not. Volatile: a mocked object can be shared
+     * across threads, and the dispatch path reads this flag on every
+     * call.
      */
-    protected boolean mockSet = false;
+    protected volatile boolean mockSet = false;
 
     /**
-     * A list of mocked functions.
+     * A list of mocked functions. CopyOnWriteArrayList because the
+     * dispatch path iterates this list on every call to a mocked
+     * object while setup (and spy recording) may add entries from
+     * another thread; a plain ArrayList would throw
+     * ConcurrentModificationException or corrupt under that mix.
+     * Reads vastly outnumber writes, which is the copy-on-write
+     * sweet spot.
      */
-    protected List<MockFunction> mockFunctions = new ArrayList<MockFunction>();
+    protected List<MockFunction> mockFunctions = new CopyOnWriteArrayList<MockFunction>();
 
     /**
      * Default constructor.

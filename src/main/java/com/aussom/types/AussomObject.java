@@ -38,9 +38,17 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 	 * getMembers() / getMock(); read-only paths use the short-circuit
 	 * predicates (containsMember, isMockSet, ...) that return false
 	 * when the field is still null.
+	 *
+	 * Both fields are volatile and allocated with double-checked
+	 * locking. Without that, two threads doing the first write on a
+	 * shared object can each allocate their own instance and one
+	 * thread's writes silently vanish; a plain field also permits a
+	 * stale null read that would replace an already-populated
+	 * instance. The volatile read costs nothing on the hot path and
+	 * the monitor is touched at most once per object.
 	 */
-	private Members members;
-	private Mock mock;
+	private volatile Members members;
+	private volatile Mock mock;
 
 	private Object externObject = null;
 
@@ -102,8 +110,17 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 	 * without allocating.
 	 */
 	public Members getMembers() {
-		if (this.members == null) this.members = new Members();
-		return this.members;
+		Members m = this.members;
+		if (m == null) {
+			synchronized (this) {
+				m = this.members;
+				if (m == null) {
+					m = new Members();
+					this.members = m;
+				}
+			}
+		}
+		return m;
 	}
 
 	/**
@@ -282,8 +299,17 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 	 * isSpySet which short-circuit without allocating.
 	 */
 	public Mock getMock() {
-		if (this.mock == null) this.mock = new Mock();
-		return this.mock;
+		Mock m = this.mock;
+		if (m == null) {
+			synchronized (this) {
+				m = this.mock;
+				if (m == null) {
+					m = new Mock();
+					this.mock = m;
+				}
+			}
+		}
+		return m;
 	}
 
 	/**

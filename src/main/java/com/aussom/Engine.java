@@ -233,7 +233,7 @@ public class Engine implements AussomDebuggingInt {
 	 * @param Include is a String with the include to add.
 	 * @throws Exception on parse failure.
 	 */
-	public void addInclude(String Include) throws Exception {
+	public synchronized void addInclude(String Include) throws Exception {
 		boolean found = false;
 		console.get().trc("Engine.addInclude(): Include: " + Include);
 		if (Lang.get().getLangIncludes().containsKey(Include)) {
@@ -251,7 +251,7 @@ public class Engine implements AussomDebuggingInt {
 				for (String fname : resDir) {
 					if (fname.contains(tinc)) {
 						found = true;
-						if (!this.includes.contains(Include)) {
+						if (!this.includes.contains(tinc)) {
 							console.get().trc("Engine.addInclude(): Include " + Include + " found in '" + fname + "'");
 							this.includes.add(tinc);
 							this.parseString(tinc, Util.loadResource(tinc));

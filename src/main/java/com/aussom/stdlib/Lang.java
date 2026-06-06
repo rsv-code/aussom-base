@@ -57,10 +57,13 @@ public class Lang {
 	}
 	
 	/**
-	 * Gets a handle of the Universe object.
+	 * Gets a handle of the Universe object. Synchronized so a racing
+	 * first call cannot construct two instances or publish a
+	 * half-initialized one; the method is cold (once per include),
+	 * so the monitor cost does not matter.
 	 * @return The instance of the Lang object.
 	 */
-	public static Lang get() {
+	public static synchronized Lang get() {
 		if(instance == null) instance = new Lang();
 		return instance;
 	}
