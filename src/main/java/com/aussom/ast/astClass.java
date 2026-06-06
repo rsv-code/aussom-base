@@ -33,16 +33,20 @@ import com.aussom.types.AussomException.exType;
 public class astClass extends astNode implements astNodeInt {
 	// Has the class init ran yet? Init does things like link to
 	// extended classes ...
-	private boolean initRan = false;
+	private volatile boolean initRan = false;
 
 	// Is the class static.
 	private boolean isStatic = false;
 
-	// Is the class external.
-	private boolean isExtern = false;
+	// Is the class external. Volatile along with externClassName
+	// and externClass below: init() of a subclass reads these on
+	// the parent without holding the parent's monitor, so the
+	// writes published by the parent's init() must be visible
+	// across threads on their own.
+	private volatile boolean isExtern = false;
 
 	// External class name.
-	private String externClassName = "";
+	private volatile String externClassName = "";
 
 	// List of extended class names.
 	private ArrayList<String> extendedClasses = new ArrayList<String>();
@@ -53,7 +57,7 @@ public class astClass extends astNode implements astNodeInt {
 
 	// External class reverence.
 	@SuppressWarnings("rawtypes")
-	private Class externClass = null;
+	private volatile Class externClass = null;
 
 	// Class members.
 	private List<String> membList = new ArrayList<String>();
@@ -396,9 +400,16 @@ public class astClass extends astNode implements astNodeInt {
 	}
 
 	public void init(Environment env) throws aussomException {
-		if (!this.initRan) {
-			this.initRan = true;
+		// Fast path: one volatile read. Once initRan is true the
+		// volatile store at the end of initSync() guarantees every
+		// field it wrote is visible, so the monitor is only ever
+		// taken during first use.
+		if (this.initRan) return;
+		this.initSync(env);
+	}
 
+	private synchronized void initSync(Environment env) throws aussomException {
+		if (!this.initRan) {
 			boolean foundExtern = false;
 			if (this.isExtern) { foundExtern = true; }
 
@@ -429,6 +440,12 @@ public class astClass extends astNode implements astNodeInt {
 					throw new aussomException(this, "Extended class '" + className + "' not found.", env.stackTraceToString());
 				}
 			}
+
+			// Merge inherited dispatch state under this same lock so
+			// the tables are complete before initRan publishes them.
+			this.mergeInherited(env, this.extendedClasses);
+
+			this.initRan = true;
 		}
 	}
 
@@ -951,9 +968,6 @@ public class astClass extends astNode implements astNodeInt {
 		for(String className : extClasses) {
 			astClass ac = env.getClassByName(className);
 
-			if (!this.allExtendedClasses.contains(ac.getName()))
-				this.allExtendedClasses.add(ac.getName());
-
 			if (ac.getExtendedClasses().size() > 0)
 				this.instantiateInheritedClasses(env, cobj, ac.getExtendedClasses());
 
@@ -970,61 +984,84 @@ public class astClass extends astNode implements astNodeInt {
 				}
 
 				ac.instantiateMembers(env, cobj);
-
-				// Per-overload merge across the flat dispatchMap and
-				// the wildcard / variadic lists. Child entries
-				// shadow parent entries at the same key (or same
-				// name + signature for wildcards / variadic).
-				for (Map.Entry<String, astFunctDef> ee : ac.dispatchMap.entrySet()) {
-					if (!this.dispatchMap.containsKey(ee.getKey())) {
-						this.dispatchMap.put(ee.getKey(), ee.getValue());
-						this.inheritedFuncts.add(ee.getKey());
-						if (!this.functList.contains(ee.getValue())) {
-							this.functList.add(ee.getValue());
-						}
-						this.declaredNames.add(ee.getValue().getName());
-					}
-				}
-				for (astFunctDef pdef : ac.wildcardOverloads) {
-					boolean shadowed = false;
-					for (astFunctDef cdef : this.wildcardOverloads) {
-						if (cdef.getName().equals(pdef.getName())
-							&& cdef.getSignature().equals(pdef.getSignature())) {
-							shadowed = true;
-							break;
-						}
-					}
-					if (!shadowed) {
-						this.wildcardOverloads.add(pdef);
-						this.inheritedFuncts.add(pdef.getName() + "(" + pdef.getSignature() + ")");
-						if (!this.functList.contains(pdef)) {
-							this.functList.add(pdef);
-						}
-						this.declaredNames.add(pdef.getName());
-					}
-				}
-				for (astFunctDef pdef : ac.variadicOverloads) {
-					String pHead = headSignature(pdef.getSignature());
-					boolean shadowed = false;
-					for (astFunctDef cdef : this.variadicOverloads) {
-						if (cdef.getName().equals(pdef.getName())
-							&& headSignature(cdef.getSignature()).equals(pHead)) {
-							shadowed = true;
-							break;
-						}
-					}
-					if (!shadowed) {
-						this.variadicOverloads.add(pdef);
-						this.inheritedFuncts.add(pdef.getName() + "(" + pHead + ",...)");
-						if (!this.functList.contains(pdef)) {
-							this.functList.add(pdef);
-						}
-						this.declaredNames.add(pdef.getName());
-					}
-				}
-
 			} else {
 				throw new aussomException(this, "Extended class '" + className + "' not found.", env.stackTraceToString());
+			}
+		}
+	}
+
+	/**
+	 * Merges inherited dispatch state from the extended classes into
+	 * this class's own tables. Runs exactly once per class, from
+	 * initSync() under the class monitor, so the dispatch tables are
+	 * write-once: frozen before initRan is published and read-only
+	 * ever after. Each parent's init(env) runs before its tables are
+	 * read so the parent's own merge is complete (and frozen) first.
+	 */
+	private void mergeInherited(Environment env, ArrayList<String> extClasses) throws aussomException {
+		for(String className : extClasses) {
+			astClass ac = env.getClassByName(className);
+			if (ac == null) {
+				throw new aussomException(this, "Extended class '" + className + "' not found.", env.stackTraceToString());
+			}
+			ac.init(env);
+
+			if (!this.allExtendedClasses.contains(ac.getName()))
+				this.allExtendedClasses.add(ac.getName());
+
+			if (ac.getExtendedClasses().size() > 0)
+				this.mergeInherited(env, ac.getExtendedClasses());
+
+			// Per-overload merge across the flat dispatchMap and
+			// the wildcard / variadic lists. Child entries
+			// shadow parent entries at the same key (or same
+			// name + signature for wildcards / variadic).
+			for (Map.Entry<String, astFunctDef> ee : ac.dispatchMap.entrySet()) {
+				if (!this.dispatchMap.containsKey(ee.getKey())) {
+					this.dispatchMap.put(ee.getKey(), ee.getValue());
+					this.inheritedFuncts.add(ee.getKey());
+					if (!this.functList.contains(ee.getValue())) {
+						this.functList.add(ee.getValue());
+					}
+					this.declaredNames.add(ee.getValue().getName());
+				}
+			}
+			for (astFunctDef pdef : ac.wildcardOverloads) {
+				boolean shadowed = false;
+				for (astFunctDef cdef : this.wildcardOverloads) {
+					if (cdef.getName().equals(pdef.getName())
+						&& cdef.getSignature().equals(pdef.getSignature())) {
+						shadowed = true;
+						break;
+					}
+				}
+				if (!shadowed) {
+					this.wildcardOverloads.add(pdef);
+					this.inheritedFuncts.add(pdef.getName() + "(" + pdef.getSignature() + ")");
+					if (!this.functList.contains(pdef)) {
+						this.functList.add(pdef);
+					}
+					this.declaredNames.add(pdef.getName());
+				}
+			}
+			for (astFunctDef pdef : ac.variadicOverloads) {
+				String pHead = headSignature(pdef.getSignature());
+				boolean shadowed = false;
+				for (astFunctDef cdef : this.variadicOverloads) {
+					if (cdef.getName().equals(pdef.getName())
+						&& headSignature(cdef.getSignature()).equals(pHead)) {
+						shadowed = true;
+						break;
+					}
+				}
+				if (!shadowed) {
+					this.variadicOverloads.add(pdef);
+					this.inheritedFuncts.add(pdef.getName() + "(" + pHead + ",...)");
+					if (!this.functList.contains(pdef)) {
+						this.functList.add(pdef);
+					}
+					this.declaredNames.add(pdef.getName());
+				}
 			}
 		}
 	}
