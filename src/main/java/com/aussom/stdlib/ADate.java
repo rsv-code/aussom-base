@@ -22,11 +22,16 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.IsoFields;
 import java.util.ArrayList;
 
 import com.aussom.Util;
+import com.aussom.ast.astClass;
+import com.aussom.ast.aussomException;
 import com.aussom.types.*;
 import com.aussom.Environment;
 
@@ -170,7 +175,12 @@ public class ADate implements AussomTypeObjectInt, AussomTypeInt, Serializable {
 		String text = ((AussomString) args.get(0)).getValueString();
 		String pattern = ((AussomString) args.get(1)).getValueString();
 		try {
-			DateTimeFormatter dtf = DateTimeFormatter.ofPattern(pattern).withZone(ZONE);
+			DateTimeFormatter dtf = new DateTimeFormatterBuilder()
+				.appendPattern(pattern)
+				.parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
+				.parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
+				.parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0)
+				.toFormatter().withZone(ZONE);
 			this.instant = ZonedDateTime.parse(text, dtf).toInstant();
 			return env.getClassInstance();
 		} catch (DateTimeParseException e) {
@@ -186,6 +196,193 @@ public class ADate implements AussomTypeObjectInt, AussomTypeInt, Serializable {
 
 	public AussomType isEpoch(Environment env, ArrayList<AussomType> args) {
 		return new AussomBool(this.instant.toEpochMilli() == 0L);
+	}
+
+	/* ---- Date-component getters ---- */
+
+	public AussomType getYear(Environment env, ArrayList<AussomType> args) {
+		return new AussomInt(this.instant.atZone(ZONE).getYear());
+	}
+
+	public AussomType getMonth(Environment env, ArrayList<AussomType> args) {
+		return new AussomInt(this.instant.atZone(ZONE).getMonthValue());
+	}
+
+	public AussomType getDayOfMonth(Environment env, ArrayList<AussomType> args) {
+		return new AussomInt(this.instant.atZone(ZONE).getDayOfMonth());
+	}
+
+	public AussomType getDayOfWeek(Environment env, ArrayList<AussomType> args) {
+		return new AussomInt(this.instant.atZone(ZONE).getDayOfWeek().getValue());
+	}
+
+	public AussomType getDayOfYear(Environment env, ArrayList<AussomType> args) {
+		return new AussomInt(this.instant.atZone(ZONE).getDayOfYear());
+	}
+
+	public AussomType getWeekOfYear(Environment env, ArrayList<AussomType> args) {
+		return new AussomInt(this.instant.atZone(ZONE).get(IsoFields.WEEK_OF_WEEK_BASED_YEAR));
+	}
+
+	public AussomType getMilliseconds(Environment env, ArrayList<AussomType> args) {
+		return new AussomInt(this.instant.atZone(ZONE).get(ChronoField.MILLI_OF_SECOND));
+	}
+
+	/* ---- Date-component setters (mutate in place) ---- */
+
+	public AussomType setYear(Environment env, ArrayList<AussomType> args) {
+		int y = (int) ((AussomInt) args.get(0)).getValue();
+		this.instant = this.instant.atZone(ZONE).withYear(y).toInstant();
+		return env.getClassInstance();
+	}
+
+	public AussomType setMonth(Environment env, ArrayList<AussomType> args) {
+		int m = (int) ((AussomInt) args.get(0)).getValue();
+		this.instant = this.instant.atZone(ZONE).withMonth(m).toInstant();
+		return env.getClassInstance();
+	}
+
+	public AussomType setDayOfMonth(Environment env, ArrayList<AussomType> args) {
+		int d = (int) ((AussomInt) args.get(0)).getValue();
+		this.instant = this.instant.atZone(ZONE).withDayOfMonth(d).toInstant();
+		return env.getClassInstance();
+	}
+
+	/* ---- Date arithmetic (mutate in place; negative subtracts) ---- */
+
+	public AussomType addYears(Environment env, ArrayList<AussomType> args) {
+		long n = ((AussomInt) args.get(0)).getValue();
+		this.instant = this.instant.atZone(ZONE).plusYears(n).toInstant();
+		return env.getClassInstance();
+	}
+
+	public AussomType addMonths(Environment env, ArrayList<AussomType> args) {
+		long n = ((AussomInt) args.get(0)).getValue();
+		this.instant = this.instant.atZone(ZONE).plusMonths(n).toInstant();
+		return env.getClassInstance();
+	}
+
+	public AussomType addDays(Environment env, ArrayList<AussomType> args) {
+		long n = ((AussomInt) args.get(0)).getValue();
+		this.instant = this.instant.plus(n, ChronoUnit.DAYS);
+		return env.getClassInstance();
+	}
+
+	public AussomType addHours(Environment env, ArrayList<AussomType> args) {
+		long n = ((AussomInt) args.get(0)).getValue();
+		this.instant = this.instant.plus(n, ChronoUnit.HOURS);
+		return env.getClassInstance();
+	}
+
+	public AussomType addMinutes(Environment env, ArrayList<AussomType> args) {
+		long n = ((AussomInt) args.get(0)).getValue();
+		this.instant = this.instant.plus(n, ChronoUnit.MINUTES);
+		return env.getClassInstance();
+	}
+
+	public AussomType addSeconds(Environment env, ArrayList<AussomType> args) {
+		long n = ((AussomInt) args.get(0)).getValue();
+		this.instant = this.instant.plus(n, ChronoUnit.SECONDS);
+		return env.getClassInstance();
+	}
+
+	public AussomType addMillis(Environment env, ArrayList<AussomType> args) {
+		long n = ((AussomInt) args.get(0)).getValue();
+		this.instant = this.instant.plus(n, ChronoUnit.MILLIS);
+		return env.getClassInstance();
+	}
+
+	/* ---- Comparison and difference ---- */
+
+	public AussomType isBefore(Environment env, ArrayList<AussomType> args) {
+		return new AussomBool(this.instant.isBefore(otherInstant(args.get(0))));
+	}
+
+	public AussomType isAfter(Environment env, ArrayList<AussomType> args) {
+		return new AussomBool(this.instant.isAfter(otherInstant(args.get(0))));
+	}
+
+	public AussomType isSame(Environment env, ArrayList<AussomType> args) {
+		return new AussomBool(this.instant.equals(otherInstant(args.get(0))));
+	}
+
+	public AussomType compare(Environment env, ArrayList<AussomType> args) {
+		return new AussomInt(Integer.signum(this.instant.compareTo(otherInstant(args.get(0)))));
+	}
+
+	public AussomType between(Environment env, ArrayList<AussomType> args) {
+		Instant other = otherInstant(args.get(0));
+		String unit = (args.size() > 1 && !args.get(1).isNull())
+			? ((AussomString) args.get(1)).getValueString() : "millis";
+		ChronoUnit cu;
+		switch (unit) {
+			case "millis":  cu = ChronoUnit.MILLIS;  break;
+			case "seconds": cu = ChronoUnit.SECONDS; break;
+			case "minutes": cu = ChronoUnit.MINUTES; break;
+			case "hours":   cu = ChronoUnit.HOURS;   break;
+			case "days":    cu = ChronoUnit.DAYS;    break;
+			case "weeks":   cu = ChronoUnit.WEEKS;   break;
+			case "months":  cu = ChronoUnit.MONTHS;  break;
+			case "years":   cu = ChronoUnit.YEARS;   break;
+			default:
+				return new AussomException("Date.between(): unknown unit '" + unit
+					+ "'. Allowed units are millis, seconds, minutes, hours, days, weeks, months, years.");
+		}
+		return new AussomInt(cu.between(this.instant.atZone(ZONE), other.atZone(ZONE)));
+	}
+
+	/* ---- Current time and copying ---- */
+
+	public AussomType now(Environment env, ArrayList<AussomType> args) {
+		this.instant = Instant.now();
+		return env.getClassInstance();
+	}
+
+	public AussomType copy(Environment env, ArrayList<AussomType> args) throws aussomException {
+		astClass ac = env.getClassByName("Date");
+		AussomObject co = (AussomObject) ac.instantiate(env, false, new AussomList());
+		ADate ad = (ADate) co.getExternObject();
+		ad.setInstant(this.instant);
+		return co;
+	}
+
+	/* ---- Day boundaries ---- */
+
+	public AussomType startOfDay(Environment env, ArrayList<AussomType> args) {
+		this.instant = this.instant.atZone(ZONE).toLocalDate().atStartOfDay(ZONE).toInstant();
+		return env.getClassInstance();
+	}
+
+	public AussomType endOfDay(Environment env, ArrayList<AussomType> args) {
+		this.instant = this.instant.atZone(ZONE).toLocalDate()
+			.atTime(23, 59, 59, 999000000).atZone(ZONE).toInstant();
+		return env.getClassInstance();
+	}
+
+	/* ---- Display and calendar helpers ---- */
+
+	public AussomType getMonthName(Environment env, ArrayList<AussomType> args) {
+		return new AussomString(this.instant.atZone(ZONE).getMonth().toString());
+	}
+
+	public AussomType getDayOfWeekName(Environment env, ArrayList<AussomType> args) {
+		return new AussomString(this.instant.atZone(ZONE).getDayOfWeek().toString());
+	}
+
+	public AussomType isLeapYear(Environment env, ArrayList<AussomType> args) {
+		return new AussomBool(this.instant.atZone(ZONE).toLocalDate().isLeapYear());
+	}
+
+	public AussomType daysInMonth(Environment env, ArrayList<AussomType> args) {
+		return new AussomInt(this.instant.atZone(ZONE).toLocalDate().lengthOfMonth());
+	}
+
+	/**
+	 * Internal helper. Extracts the underlying Instant from an Aussom Date
+	 * passed as a method argument.
+	 */
+	private Instant otherInstant(AussomType arg) {
+		return ((ADate) ((AussomObject) arg).getExternObject()).getInstant();
 	}
 
 	/**

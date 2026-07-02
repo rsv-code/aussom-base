@@ -2332,6 +2332,291 @@ class interpreterTests {
 		return test.expect(d.getHours(), 14);
 	}
 
+	/* ---- Date-component getters ---- */
+
+	@Test(name = "(lang Date) getYear.")
+	public dateGetYear() {
+		d = new Date(); d.parse("2024-03-15", "yyyy-MM-dd");
+		return test.expect(d.getYear(), 2024);
+	}
+
+	@Test(name = "(lang Date) getMonth is 1-12.")
+	public dateGetMonth() {
+		d = new Date(); d.parse("2024-03-15", "yyyy-MM-dd");
+		return test.expect(d.getMonth(), 3);
+	}
+
+	@Test(name = "(lang Date) getDayOfMonth.")
+	public dateGetDayOfMonth() {
+		d = new Date(); d.parse("2024-03-15", "yyyy-MM-dd");
+		return test.expect(d.getDayOfMonth(), 15);
+	}
+
+	@Test(name = "(lang Date) getDayOfWeek is ISO (Mon=1, 2024-03-15 is Friday=5).")
+	public dateGetDayOfWeek() {
+		d = new Date(); d.parse("2024-03-15", "yyyy-MM-dd");
+		return test.expect(d.getDayOfWeek(), 5);
+	}
+
+	@Test(name = "(lang Date) getDayOfYear (2024-03-15 is day 75).")
+	public dateGetDayOfYear() {
+		d = new Date(); d.parse("2024-03-15", "yyyy-MM-dd");
+		return test.expect(d.getDayOfYear(), 75);
+	}
+
+	@Test(name = "(lang Date) getWeekOfYear (ISO week 11).")
+	public dateGetWeekOfYear() {
+		d = new Date(); d.parse("2024-03-15", "yyyy-MM-dd");
+		return test.expect(d.getWeekOfYear(), 11);
+	}
+
+	@Test(name = "(lang Date) getMilliseconds is the 0-999 sub-second part.")
+	public dateGetMilliseconds() {
+		d = new Date(); d.parse("2024-03-15 08:30:45.123", "yyyy-MM-dd HH:mm:ss.SSS");
+		return test.expect(d.getMilliseconds(), 123);
+	}
+
+	/* ---- Date-component setters ---- */
+
+	@Test(name = "(lang Date) setYear.")
+	public dateSetYear() {
+		d = new Date(); d.parse("2024-03-15", "yyyy-MM-dd");
+		d.setYear(2000);
+		return test.expect(d.getYear(), 2000);
+	}
+
+	@Test(name = "(lang Date) setMonth.")
+	public dateSetMonth() {
+		d = new Date(); d.parse("2024-03-15", "yyyy-MM-dd");
+		d.setMonth(6);
+		return test.expect(d.getMonth(), 6);
+	}
+
+	@Test(name = "(lang Date) setDayOfMonth.")
+	public dateSetDayOfMonth() {
+		d = new Date(); d.parse("2024-03-15", "yyyy-MM-dd");
+		d.setDayOfMonth(1);
+		return test.expect(d.getDayOfMonth(), 1);
+	}
+
+	@Test(name = "(lang Date) setYear returns this for chaining.")
+	public dateSetYearFluent() {
+		d = new Date();
+		return test.expectObject(d.setYear(2000), 'Date');
+	}
+
+	/* ---- Date arithmetic ---- */
+
+	@Test(name = "(lang Date) addDays.")
+	public dateAddDays() {
+		d = new Date(); d.parse("2024-03-15", "yyyy-MM-dd");
+		d.addDays(10);
+		return test.expect(d.getDayOfMonth(), 25);
+	}
+
+	@Test(name = "(lang Date) addDays negative subtracts.")
+	public dateAddDaysNegative() {
+		d = new Date(); d.parse("2024-03-15", "yyyy-MM-dd");
+		d.addDays(-5);
+		return test.expect(d.getDayOfMonth(), 10);
+	}
+
+	@Test(name = "(lang Date) addMonths.")
+	public dateAddMonths() {
+		d = new Date(); d.parse("2024-03-15", "yyyy-MM-dd");
+		d.addMonths(1);
+		return test.expect(d.getMonth(), 4);
+	}
+
+	@Test(name = "(lang Date) addYears.")
+	public dateAddYears() {
+		d = new Date(); d.parse("2024-03-15", "yyyy-MM-dd");
+		d.addYears(1);
+		return test.expect(d.getYear(), 2025);
+	}
+
+	@Test(name = "(lang Date) addHours crosses a day boundary.")
+	public dateAddHours() {
+		d = new Date(); d.parse("2024-03-15 00:00:00", "yyyy-MM-dd HH:mm:ss");
+		d.addHours(25);
+		return test.expect(d.getDayOfMonth() == 16 && d.getHours() == 1, true);
+	}
+
+	@Test(name = "(lang Date) addMinutes.")
+	public dateAddMinutes() {
+		d = new Date(0); d.addMinutes(5);
+		return test.expect(d.getMinutes(), 5);
+	}
+
+	@Test(name = "(lang Date) addSeconds.")
+	public dateAddSeconds() {
+		d = new Date(0); d.addSeconds(30);
+		return test.expect(d.getSeconds(), 30);
+	}
+
+	@Test(name = "(lang Date) addMillis.")
+	public dateAddMillis() {
+		d = new Date(0); d.addMillis(250);
+		return test.expect(d.getTime(), 250);
+	}
+
+	@Test(name = "(lang Date) addDays returns this for chaining.")
+	public dateAddDaysFluent() {
+		d = new Date(0);
+		return test.expectObject(d.addDays(1), 'Date');
+	}
+
+	/* ---- Comparison and difference ---- */
+
+	@Test(name = "(lang Date) isBefore.")
+	public dateIsBefore() {
+		a = new Date(1000); b = new Date(2000);
+		return test.expect(a.isBefore(b), true);
+	}
+
+	@Test(name = "(lang Date) isAfter.")
+	public dateIsAfter() {
+		a = new Date(1000); b = new Date(2000);
+		return test.expect(b.isAfter(a), true);
+	}
+
+	@Test(name = "(lang Date) isSame.")
+	public dateIsSame() {
+		a = new Date(1500); b = new Date(1500);
+		return test.expect(a.isSame(b), true);
+	}
+
+	@Test(name = "(lang Date) compare returns -1 / 0 / 1.")
+	public dateCompare() {
+		a = new Date(1000); b = new Date(2000); same = new Date(1000);
+		return test.expect(a.compare(b) == -1 && b.compare(a) == 1 && a.compare(same) == 0, true);
+	}
+
+	@Test(name = "(lang Date) between in days (Other minus this).")
+	public dateBetweenDays() {
+		a = new Date(); a.parse("2024-03-15", "yyyy-MM-dd");
+		b = new Date(); b.parse("2024-03-25", "yyyy-MM-dd");
+		return test.expect(a.between(b, "days"), 10);
+	}
+
+	@Test(name = "(lang Date) between in months.")
+	public dateBetweenMonths() {
+		a = new Date(); a.parse("2024-01-15", "yyyy-MM-dd");
+		b = new Date(); b.parse("2024-03-15", "yyyy-MM-dd");
+		return test.expect(a.between(b, "months"), 2);
+	}
+
+	@Test(name = "(lang Date) between defaults to millis.")
+	public dateBetweenDefaultMillis() {
+		a = new Date(1000); b = new Date(3500);
+		return test.expect(a.between(b), 2500);
+	}
+
+	@Test(name = "(lang Date) between accepts a dateunit enum value.")
+	public dateBetweenEnumUnit() {
+		a = new Date(); a.parse("2024-03-15", "yyyy-MM-dd");
+		b = new Date(); b.parse("2024-03-25", "yyyy-MM-dd");
+		return test.expect(a.between(b, dateunit.days), 10);
+	}
+
+	@Test(name = "(lang Date) between with an unknown unit throws.")
+	public dateBetweenBadUnit() {
+		a = new Date(1000); b = new Date(2000);
+		threw = false;
+		try { a.between(b, "fortnights"); } catch (e) { threw = true; }
+		return test.expect(threw, true);
+	}
+
+	/* ---- Current time and copying ---- */
+
+	@Test(name = "(lang Date) now sets to the current instant (not epoch).")
+	public dateNow() {
+		d = new Date(); d.now();
+		return test.expect(d.isEpoch(), false);
+	}
+
+	@Test(name = "(lang Date) now returns this for chaining.")
+	public dateNowFluent() {
+		return test.expectObject(new Date().now(), 'Date');
+	}
+
+	@Test(name = "(lang Date) copy has the same instant.")
+	public dateCopyEqual() {
+		a = new Date(1710460800000);
+		b = a.copy();
+		return test.expect(b.getTime(), a.getTime());
+	}
+
+	@Test(name = "(lang Date) copy is independent (mutating the copy leaves the original).")
+	public dateCopyIndependent() {
+		a = new Date(); a.parse("2024-03-15", "yyyy-MM-dd");
+		b = a.copy();
+		b.addDays(5);
+		return test.expect(a.getDayOfMonth(), 15);
+	}
+
+	/* ---- Day boundaries ---- */
+
+	@Test(name = "(lang Date) startOfDay zeroes the time.")
+	public dateStartOfDay() {
+		d = new Date(); d.parse("2024-03-15 08:30:45", "yyyy-MM-dd HH:mm:ss");
+		d.startOfDay();
+		return test.expect(d.getHours() == 0 && d.getMinutes() == 0 && d.getSeconds() == 0, true);
+	}
+
+	@Test(name = "(lang Date) endOfDay sets the time to 23:59:59.999.")
+	public dateEndOfDay() {
+		d = new Date(); d.parse("2024-03-15 08:30:45", "yyyy-MM-dd HH:mm:ss");
+		d.endOfDay();
+		return test.expect(d.getHours() == 23 && d.getMinutes() == 59 && d.getSeconds() == 59 && d.getMilliseconds() == 999, true);
+	}
+
+	/* ---- Display and calendar helpers ---- */
+
+	@Test(name = "(lang Date) getMonthName.")
+	public dateGetMonthName() {
+		d = new Date(); d.parse("2024-03-15", "yyyy-MM-dd");
+		return test.expect(d.getMonthName(), "MARCH");
+	}
+
+	@Test(name = "(lang Date) getDayOfWeekName.")
+	public dateGetDayOfWeekName() {
+		d = new Date(); d.parse("2024-03-15", "yyyy-MM-dd");
+		return test.expect(d.getDayOfWeekName(), "FRIDAY");
+	}
+
+	@Test(name = "(lang Date) isLeapYear true for 2024.")
+	public dateIsLeapYearTrue() {
+		d = new Date(); d.parse("2024-03-15", "yyyy-MM-dd");
+		return test.expect(d.isLeapYear(), true);
+	}
+
+	@Test(name = "(lang Date) isLeapYear false for 2023.")
+	public dateIsLeapYearFalse() {
+		d = new Date(); d.parse("2023-03-15", "yyyy-MM-dd");
+		return test.expect(d.isLeapYear(), false);
+	}
+
+	@Test(name = "(lang Date) daysInMonth for March is 31.")
+	public dateDaysInMonthMarch() {
+		d = new Date(); d.parse("2024-03-15", "yyyy-MM-dd");
+		return test.expect(d.daysInMonth(), 31);
+	}
+
+	@Test(name = "(lang Date) daysInMonth for Feb 2024 is 29.")
+	public dateDaysInMonthFeb() {
+		d = new Date(); d.parse("2024-02-15", "yyyy-MM-dd");
+		return test.expect(d.daysInMonth(), 29);
+	}
+
+	/* ---- Date-only parse fix ---- */
+
+	@Test(name = "(lang Date) parse accepts a date-only string (defaults time to midnight UTC).")
+	public dateParseDateOnly() {
+		d = new Date(); d.parse("2024-03-15", "yyyy-MM-dd");
+		return test.expect(d.getYear() == 2024 && d.getMonth() == 3 && d.getDayOfMonth() == 15 && d.getHours() == 0, true);
+	}
+
 	/***********************************************************************
 	 * security manager tests
 	 *********************************************************************/

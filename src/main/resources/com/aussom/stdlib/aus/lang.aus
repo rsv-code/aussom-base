@@ -1473,7 +1473,25 @@ static extern class c : com.aussom.stdlib.console {
 	public extern println(Content);
 }
 
-	    
+
+/**
+ * Defines the unit values accepted by Date.between(). Each member
+ * evaluates to its matching unit string, so between() can be called
+ * as myDate.between(other, dateunit.days) instead of passing the raw
+ * string "days". This is less error prone than typing the string.
+ */
+enum dateunit {
+	millis;
+	seconds;
+	minutes;
+	hours;
+	days;
+	weeks;
+	months;
+	years;
+}
+
+
 /**
  * The Date class holds date and time information. Internally
  * it stores a java.time.Instant. Hour, minute, and second
@@ -1593,6 +1611,231 @@ extern class Date : com.aussom.stdlib.ADate {
 	 * @r A bool with true if it's epoch and false if not.
 	 */
 	public extern isEpoch();
+
+	/**
+	 * Returns the year, for example 2024, evaluated at UTC.
+	 * @r An int with the year.
+	 */
+	public extern getYear();
+
+	/**
+	 * Returns the month of the year evaluated at UTC, 1-12 where
+	 * January is 1.
+	 * @r An int with the month, 1-12.
+	 */
+	public extern getMonth();
+
+	/**
+	 * Returns the day of the month evaluated at UTC, 1-31.
+	 * @r An int with the day of month.
+	 */
+	public extern getDayOfMonth();
+
+	/**
+	 * Returns the day of the week evaluated at UTC using ISO numbering,
+	 * 1-7 where Monday is 1 and Sunday is 7.
+	 * @r An int with the ISO day of week, 1-7.
+	 */
+	public extern getDayOfWeek();
+
+	/**
+	 * Returns the day of the year evaluated at UTC, 1-366.
+	 * @r An int with the day of year.
+	 */
+	public extern getDayOfYear();
+
+	/**
+	 * Returns the ISO week number of the year evaluated at UTC, 1-53.
+	 * @r An int with the ISO week of year.
+	 */
+	public extern getWeekOfYear();
+
+	/**
+	 * Returns the millisecond within the current second evaluated at
+	 * UTC, 0-999.
+	 * @r An int with the millisecond of second.
+	 */
+	public extern getMilliseconds();
+
+	/**
+	 * Sets the year, interpreted at UTC. Changes this Date in place. To
+	 * keep the original untouched, call copy() first.
+	 * @p Year is an int with the year to set.
+	 * @r this object
+	 */
+	public extern setYear(int Year);
+
+	/**
+	 * Sets the month, interpreted at UTC. Changes this Date in place.
+	 * @p Month is an int with the month to set, 1-12.
+	 * @r this object
+	 */
+	public extern setMonth(int Month);
+
+	/**
+	 * Sets the day of the month, interpreted at UTC. Changes this Date
+	 * in place.
+	 * @p Day is an int with the day of month to set, 1-31.
+	 * @r this object
+	 */
+	public extern setDayOfMonth(int Day);
+
+	/**
+	 * Adds the provided number of years to this Date, interpreted at
+	 * UTC. A negative value subtracts. Changes this Date in place; call
+	 * copy() first to keep the original.
+	 * @p Years is an int with the number of years to add.
+	 * @r this object
+	 */
+	public extern addYears(int Years);
+
+	/**
+	 * Adds the provided number of months to this Date, interpreted at
+	 * UTC. A negative value subtracts. Changes this Date in place.
+	 * @p Months is an int with the number of months to add.
+	 * @r this object
+	 */
+	public extern addMonths(int Months);
+
+	/**
+	 * Adds the provided number of days to this Date. A negative value
+	 * subtracts. Changes this Date in place.
+	 * @p Days is an int with the number of days to add.
+	 * @r this object
+	 */
+	public extern addDays(int Days);
+
+	/**
+	 * Adds the provided number of hours to this Date. A negative value
+	 * subtracts. Changes this Date in place.
+	 * @p Hours is an int with the number of hours to add.
+	 * @r this object
+	 */
+	public extern addHours(int Hours);
+
+	/**
+	 * Adds the provided number of minutes to this Date. A negative value
+	 * subtracts. Changes this Date in place.
+	 * @p Minutes is an int with the number of minutes to add.
+	 * @r this object
+	 */
+	public extern addMinutes(int Minutes);
+
+	/**
+	 * Adds the provided number of seconds to this Date. A negative value
+	 * subtracts. Changes this Date in place.
+	 * @p Seconds is an int with the number of seconds to add.
+	 * @r this object
+	 */
+	public extern addSeconds(int Seconds);
+
+	/**
+	 * Adds the provided number of milliseconds to this Date. A negative
+	 * value subtracts. Changes this Date in place.
+	 * @p Millis is an int with the number of milliseconds to add.
+	 * @r this object
+	 */
+	public extern addMillis(int Millis);
+
+	/**
+	 * Returns whether this Date is earlier than the other Date.
+	 * @p Other is another Date object to compare against.
+	 * @r A bool, true when this Date is before Other.
+	 */
+	public extern isBefore(Other);
+
+	/**
+	 * Returns whether this Date is later than the other Date.
+	 * @p Other is another Date object to compare against.
+	 * @r A bool, true when this Date is after Other.
+	 */
+	public extern isAfter(Other);
+
+	/**
+	 * Returns whether this Date marks the same instant as the other
+	 * Date, compared to the millisecond.
+	 * @p Other is another Date object to compare against.
+	 * @r A bool, true when both mark the same instant.
+	 */
+	public extern isSame(Other);
+
+	/**
+	 * Compares this Date to another Date. Named compare (not compareTo) so
+	 * the Date type does not accidentally satisfy java.lang.Comparable when
+	 * an embedder asks the engine for that interface.
+	 * @p Other is another Date object to compare against.
+	 * @r An int: -1 when this is before Other, 0 when equal, 1 when after.
+	 */
+	public extern compare(Other);
+
+	/**
+	 * Returns the amount of time from this Date to the other Date, in the
+	 * provided unit. The result is positive when Other is later than this
+	 * Date and negative when Other is earlier.
+	 * @p Other is another Date object.
+	 * @p Unit is an optional string with the unit: millis, seconds,
+	 * minutes, hours, days, weeks, months, or years. Defaults to millis.
+	 * The dateunit enum provides these values, for example dateunit.days,
+	 * which is less error prone than typing the raw string.
+	 * @r An int with the signed amount of time in the given unit.
+	 */
+	public extern between(Other, string Unit = "millis");
+
+	/**
+	 * Sets this Date to the current instant. Changes this Date in place.
+	 * For example: new Date().now().
+	 * @r this object
+	 */
+	public extern now();
+
+	/**
+	 * Returns a new Date with the same instant as this one. Use this
+	 * before a mutating call to keep the original unchanged, for
+	 * example: end = start.copy().addDays(30).
+	 * @r A new Date object.
+	 */
+	public extern copy();
+
+	/**
+	 * Sets the time of day to 00:00:00.000 UTC, keeping the date.
+	 * Changes this Date in place.
+	 * @r this object
+	 */
+	public extern startOfDay();
+
+	/**
+	 * Sets the time of day to 23:59:59.999 UTC, keeping the date.
+	 * Changes this Date in place.
+	 * @r this object
+	 */
+	public extern endOfDay();
+
+	/**
+	 * Returns the full English month name in upper case, for example
+	 * "MARCH", evaluated at UTC.
+	 * @r A string with the month name.
+	 */
+	public extern getMonthName();
+
+	/**
+	 * Returns the full English weekday name in upper case, for example
+	 * "FRIDAY", evaluated at UTC.
+	 * @r A string with the weekday name.
+	 */
+	public extern getDayOfWeekName();
+
+	/**
+	 * Returns whether this Date's year is a leap year, evaluated at UTC.
+	 * @r A bool, true when the year is a leap year.
+	 */
+	public extern isLeapYear();
+
+	/**
+	 * Returns the number of days in this Date's month, 28-31, evaluated
+	 * at UTC.
+	 * @r An int with the number of days in the month.
+	 */
+	public extern daysInMonth();
 }
 
 	    
