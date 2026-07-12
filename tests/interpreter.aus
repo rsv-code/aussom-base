@@ -1954,22 +1954,22 @@ class interpreterTests {
 	public listGet() { return test.expect(this.tlist.get(#this.tlist - 1), "hi"); }
 
 	@Test(name = "(lang list) List index of.")
-	public listIndexOf() { tmp = "howdy"; this.tlist @= tmp; return test.expect(this.tlist.indexOf(tmp), 6); }
+	public listIndexOf() { tmp = "howdy"; this.tlist @= tmp; return test.expect(this.tlist.indexOf("howdy"), 6); }
 
 	@Test(name = "(lang list) List is empty.")
 	public listIsEmpty() { return test.expect(this.tlist.isEmpty(), false); }
 
 	@Test(name = "(lang list) List remove.")
-	public listRemove() { tmp = "howdy"; this.tlist @= tmp; this.tlist.remove(tmp); return test.expect(#this.tlist, 7); }
+	public listRemove() { lst = [ "a", "b", "howdy" ]; lst.remove("howdy"); return test.expect(#lst, 2); }
 
 	@Test(name = "(lang list) List remove at.")
 	public listRemoveAt() { this.tlist.removeAt(6); return test.expect(#this.tlist, 6); }
 
 	@Test(name = "(lang list) List remove all.")
-	public listRemoveAll() { tmp = []; tmp @= "one"; tmp @= "two"; this.tlist @= tmp[0]; this.tlist @= tmp[1]; this.tlist.removeAll(tmp); return test.expect(#this.tlist, 6); }
+	public listRemoveAll() { lst = [ "one", "two", "three" ]; rem = [ "one", "two" ]; lst.removeAll(rem); return test.expect(#lst, 1); }
 
 	@Test(name = "(lang list) List retain all.")
-	public listRetainAll() { tmp = []; tmp @= "one"; tmp @= "two"; this.tlist @= tmp[0]; this.tlist @= tmp[1]; this.tlist.retainAll(tmp); return test.expect(#this.tlist, 2); }
+	public listRetainAll() { lst = [ "one", "two", "three" ]; lst.retainAll([ "one", "two" ]); this.tlist.clear(); this.tlist @= "one"; this.tlist @= "two"; return test.expect(#lst, 2); }
 
 	@Test(name = "(lang list) List set.")
 	public listSet() { this.tlist @= "five"; this.tlist.set(2, "three"); return test.expect(this.tlist[2], "three"); }
@@ -2014,7 +2014,7 @@ class interpreterTests {
 	public mapContainsKey() { this.tmap['name'] = "Tyler"; return test.expect(this.tmap.containsKey('name'), true); }
 
 	@Test(name = "(lang map) Map contains value.")
-	public mapContainsValue() { val = 'programmer'; this.tmap['occupation'] = val; return test.expect(this.tmap.containsVal(val), true); }
+	public mapContainsValue() { val = 'programmer'; this.tmap['occupation'] = val; return test.expect(this.tmap.containsVal('programmer'), true); }
 
 	@Test(name = "(lang map) Map get.")
 	public mapGet() { return test.expect(this.tmap.get('occupation'), 'programmer'); }

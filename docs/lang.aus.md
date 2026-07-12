@@ -2,7 +2,7 @@
 
 ## class: exception
 
-[1345:14] (extern: com.aussom.types.AussomException) **extends: object** 
+[1364:14] (extern: com.aussom.types.AussomException) **extends: object** 
 
 The exception class is the object that is created or
 thrown when an exception occurs. In your catch (e) {}
@@ -70,7 +70,7 @@ block this is the object that is provided there.
 
 ## class: Buffer
 
-[1627:14] (extern: com.aussom.stdlib.ABuffer) **extends: object** 
+[1889:14] (extern: com.aussom.stdlib.ABuffer) **extends: object** 
 
 The Buffer object provides an object for handling binary
 data. Aussom doesn't natively support something like a
@@ -501,7 +501,7 @@ functionality.
 
 ## class: charset
 
-[1602:6] `static` **extends: object** 
+[1864:6] `static` **extends: object** 
 
 Defines available character set values.
 
@@ -517,7 +517,7 @@ Defines available character set values.
 
 ## class: c
 
-[1414:21] `static` (extern: com.aussom.stdlib.console) **extends: object** 
+[1433:21] `static` (extern: com.aussom.stdlib.console) **extends: object** 
 
 The static 'c' class also known as console is
 the standard object for writing to standard output.
@@ -1138,7 +1138,7 @@ Implements list datatype methods.
 
 - **contains** (`Item`)
 
-	> Checks to see if the provided item exists in the current list. This function only works for primitive types such as null, bool, int, double, and string.
+	> Checks to see if the provided item exists in the current list. Primitive values (null, bool, int, double, and string) and callbacks are matched by value. Objects, lists, and maps are matched by reference.
 
 	- **@p** `Item` is the item to check for.
 	- **@r** `A` bool with true if found and false if not.
@@ -1146,7 +1146,7 @@ Implements list datatype methods.
 
 - **containsObjRef** (`Item`)
 
-	> Checks to see if the current list contains the provided object reference.
+	> Checks to see if the current list contains the provided item by reference. Unlike contains(), this always matches by reference (identity), even for primitive values.
 
 	- **@p** `Item` is any item to check for the reference in the list.
 	- **@r** `A` bool with true if found and false if not.
@@ -1162,7 +1162,7 @@ Implements list datatype methods.
 
 - **indexOf** (`Item`)
 
-	> Returns the index of the provided item in the list and -1 if not found.
+	> Returns the index of the provided item in the list and -1 if not found. Primitive values (null, bool, int, double, and string) and callbacks are matched by value. Objects, lists, and maps are matched by reference.
 
 	- **@p** `Item` is the item to find in the list.
 	- **@r** `An` int with the index of the item or -1 if not found.
@@ -1177,7 +1177,7 @@ Implements list datatype methods.
 
 - **remove** (`Item`)
 
-	> Removes the provided item from the list.
+	> Removes the provided item from the list. Primitive values (null, bool, int, double, and string) and callbacks are matched by value. Objects, lists, and maps are matched by reference. Only the first matching item is removed.
 
 	- **@p** `Item` is the item to remove from the list.
 	- **@r** `this` object
@@ -1193,7 +1193,7 @@ Implements list datatype methods.
 
 - **removeAll** (`list ListToRemove`)
 
-	> Removes all items from the current list with the provided list.
+	> Removes all items from the current list that are found in the provided list. Primitive values (null, bool, int, double, and string) and callbacks are matched by value. Objects, lists, and maps are matched by reference.
 
 	- **@p** `ListToRemove` is the list of items to remove from the current list.
 	- **@r** `A` bool with true if the list has changed and false if not.
@@ -1201,7 +1201,7 @@ Implements list datatype methods.
 
 - **retainAll** (`list ListToRetain`)
 
-	> Retains only those items provided in the list.
+	> Retains only those items provided in the list. Primitive values (null, bool, int, double, and string) and callbacks are matched by value. Objects, lists, and maps are matched by reference.
 
 	- **@p** `ListToRetain` is a list of items to retain in the current list.
 	- **@r** `A` bool with true if the list has changed and false if not.
@@ -1314,7 +1314,7 @@ Implements list datatype methods.
 
 ## class: cnull
 
-[1317:14] (extern: com.aussom.types.AussomNull) **extends: object** 
+[1336:14] (extern: com.aussom.types.AussomNull) **extends: object** 
 
 Implements null datatype methods.
 
@@ -1627,7 +1627,7 @@ Int.maxVal() to get the maximum integer value.
 
 ## class: Date
 
-[1482:14] (extern: com.aussom.stdlib.ADate) **extends: object** 
+[1519:14] (extern: com.aussom.stdlib.ADate) **extends: object** 
 
 The Date class holds date and time information. Internally
 it stores a java.time.Instant. Hour, minute, and second
@@ -1733,11 +1733,237 @@ accessors are evaluated at UTC.
 	- **@r** `A` bool with true if it's epoch and false if not.
 
 
+- **getYear** ()
+
+	> Returns the year, for example 2024, evaluated at UTC.
+
+	- **@r** `An` int with the year.
+
+
+- **getMonth** ()
+
+	> Returns the month of the year evaluated at UTC, 1-12 where January is 1.
+
+	- **@r** `An` int with the month, 1-12.
+
+
+- **getDayOfMonth** ()
+
+	> Returns the day of the month evaluated at UTC, 1-31.
+
+	- **@r** `An` int with the day of month.
+
+
+- **getDayOfWeek** ()
+
+	> Returns the day of the week evaluated at UTC using ISO numbering, 1-7 where Monday is 1 and Sunday is 7.
+
+	- **@r** `An` int with the ISO day of week, 1-7.
+
+
+- **getDayOfYear** ()
+
+	> Returns the day of the year evaluated at UTC, 1-366.
+
+	- **@r** `An` int with the day of year.
+
+
+- **getWeekOfYear** ()
+
+	> Returns the ISO week number of the year evaluated at UTC, 1-53.
+
+	- **@r** `An` int with the ISO week of year.
+
+
+- **getMilliseconds** ()
+
+	> Returns the millisecond within the current second evaluated at UTC, 0-999.
+
+	- **@r** `An` int with the millisecond of second.
+
+
+- **setYear** (`int Year`)
+
+	> Sets the year, interpreted at UTC. Changes this Date in place. To keep the original untouched, call copy() first.
+
+	- **@p** `Year` is an int with the year to set.
+	- **@r** `this` object
+
+
+- **setMonth** (`int Month`)
+
+	> Sets the month, interpreted at UTC. Changes this Date in place.
+
+	- **@p** `Month` is an int with the month to set, 1-12.
+	- **@r** `this` object
+
+
+- **setDayOfMonth** (`int Day`)
+
+	> Sets the day of the month, interpreted at UTC. Changes this Date in place.
+
+	- **@p** `Day` is an int with the day of month to set, 1-31.
+	- **@r** `this` object
+
+
+- **addYears** (`int Years`)
+
+	> Adds the provided number of years to this Date, interpreted at UTC. A negative value subtracts. Changes this Date in place; call copy() first to keep the original.
+
+	- **@p** `Years` is an int with the number of years to add.
+	- **@r** `this` object
+
+
+- **addMonths** (`int Months`)
+
+	> Adds the provided number of months to this Date, interpreted at UTC. A negative value subtracts. Changes this Date in place.
+
+	- **@p** `Months` is an int with the number of months to add.
+	- **@r** `this` object
+
+
+- **addDays** (`int Days`)
+
+	> Adds the provided number of days to this Date. A negative value subtracts. Changes this Date in place.
+
+	- **@p** `Days` is an int with the number of days to add.
+	- **@r** `this` object
+
+
+- **addHours** (`int Hours`)
+
+	> Adds the provided number of hours to this Date. A negative value subtracts. Changes this Date in place.
+
+	- **@p** `Hours` is an int with the number of hours to add.
+	- **@r** `this` object
+
+
+- **addMinutes** (`int Minutes`)
+
+	> Adds the provided number of minutes to this Date. A negative value subtracts. Changes this Date in place.
+
+	- **@p** `Minutes` is an int with the number of minutes to add.
+	- **@r** `this` object
+
+
+- **addSeconds** (`int Seconds`)
+
+	> Adds the provided number of seconds to this Date. A negative value subtracts. Changes this Date in place.
+
+	- **@p** `Seconds` is an int with the number of seconds to add.
+	- **@r** `this` object
+
+
+- **addMillis** (`int Millis`)
+
+	> Adds the provided number of milliseconds to this Date. A negative value subtracts. Changes this Date in place.
+
+	- **@p** `Millis` is an int with the number of milliseconds to add.
+	- **@r** `this` object
+
+
+- **isBefore** (`Other`)
+
+	> Returns whether this Date is earlier than the other Date.
+
+	- **@p** `Other` is another Date object to compare against.
+	- **@r** `A` bool, true when this Date is before Other.
+
+
+- **isAfter** (`Other`)
+
+	> Returns whether this Date is later than the other Date.
+
+	- **@p** `Other` is another Date object to compare against.
+	- **@r** `A` bool, true when this Date is after Other.
+
+
+- **isSame** (`Other`)
+
+	> Returns whether this Date marks the same instant as the other Date, compared to the millisecond.
+
+	- **@p** `Other` is another Date object to compare against.
+	- **@r** `A` bool, true when both mark the same instant.
+
+
+- **compare** (`Other`)
+
+	> Compares this Date to another Date. Named compare (not compareTo) so the Date type does not accidentally satisfy java.lang.Comparable when an embedder asks the engine for that interface.
+
+	- **@p** `Other` is another Date object to compare against.
+	- **@r** `An` int: -1 when this is before Other, 0 when equal, 1 when after.
+
+
+- **between** (`Other, string Unit = "millis"`)
+
+	> Returns the amount of time from this Date to the other Date, in the provided unit. The result is positive when Other is later than this Date and negative when Other is earlier.
+
+	- **@p** `Other` is another Date object.
+	- **@p** `Unit` is an optional string with the unit: millis, seconds, minutes, hours, days, weeks, months, or years. Defaults to millis. The dateunit enum provides these values, for example dateunit.days, which is less error prone than typing the raw string.
+	- **@r** `An` int with the signed amount of time in the given unit.
+
+
+- **now** ()
+
+	> Sets this Date to the current instant. Changes this Date in place. For example: new Date().now().
+
+	- **@r** `this` object
+
+
+- **copy** ()
+
+	> Returns a new Date with the same instant as this one. Use this before a mutating call to keep the original unchanged, for example: end = start.copy().addDays(30).
+
+	- **@r** `A` new Date object.
+
+
+- **startOfDay** ()
+
+	> Sets the time of day to 00:00:00.000 UTC, keeping the date. Changes this Date in place.
+
+	- **@r** `this` object
+
+
+- **endOfDay** ()
+
+	> Sets the time of day to 23:59:59.999 UTC, keeping the date. Changes this Date in place.
+
+	- **@r** `this` object
+
+
+- **getMonthName** ()
+
+	> Returns the full English month name in upper case, for example "MARCH", evaluated at UTC.
+
+	- **@r** `A` string with the month name.
+
+
+- **getDayOfWeekName** ()
+
+	> Returns the full English weekday name in upper case, for example "FRIDAY", evaluated at UTC.
+
+	- **@r** `A` string with the weekday name.
+
+
+- **isLeapYear** ()
+
+	> Returns whether this Date's year is a leap year, evaluated at UTC.
+
+	- **@r** `A` bool, true when the year is a leap year.
+
+
+- **daysInMonth** ()
+
+	> Returns the number of days in this Date's month, 28-31, evaluated at UTC.
+
+	- **@r** `An` int with the number of days in the month.
+
+
 
 
 ## class: securitymanager
 
-[2255:21] `static` (extern: com.aussom.stdlib.ASecurityManager) **extends: object** 
+[2517:21] `static` (extern: com.aussom.stdlib.ASecurityManager) **extends: object** 
 
 The securitymanager class provides an object that you can
 instantiate and provide to the Aussom engine to use.
@@ -1787,7 +2013,7 @@ instantiate and provide to the Aussom engine to use.
 
 ## class: secman
 
-[2201:21] `static` (extern: com.aussom.stdlib.ASecMan) **extends: object** 
+[2463:21] `static` (extern: com.aussom.stdlib.ASecMan) **extends: object** 
 
 The static secman class implements function for working with
 the security manager of the currently executing engine.
@@ -1855,13 +2081,39 @@ to parse a string value.
 
 
 
+## class: dateunit
+
+[1502:6] `static` **extends: object** 
+
+Defines the unit values accepted by Date.between(). Each member
+evaluates to its matching unit string, so between() can be called
+as myDate.between(other, dateunit.days) instead of passing the raw
+string "days". This is less error prone than typing the string.
+
+#### Members
+- **millis**
+- **seconds**
+- **minutes**
+- **hours**
+- **days**
+- **weeks**
+- **months**
+- **years**
+
+
+
 ## class: callback
 
-[1260:14] (extern: com.aussom.types.AussomCallback) **extends: object** 
+[1279:14] (extern: com.aussom.types.AussomCallback) **extends: object** 
 
 Implements callback datatype methods. The callback is
 a function reference that can be passed around. This is
 useful when needing to pass a function to call later.
+Two callbacks are considered equal when they reference
+the same function name and are bound to the same object.
+List and map lookups that match callbacks by value, such
+as contains(), indexOf(), remove(), and containsVal(), use
+this rule.
 
 #### Methods
 
@@ -1915,7 +2167,7 @@ useful when needing to pass a function to call later.
 
 ## class: json
 
-[2164:21] `static` (extern: com.aussom.stdlib.AJson) **extends: object** 
+[2426:21] `static` (extern: com.aussom.stdlib.AJson) **extends: object** 
 
 The static json class implements some functions for
 working with JSON data.
@@ -1950,7 +2202,7 @@ working with JSON data.
 
 ## class: lang
 
-[2134:21] `static` (extern: com.aussom.stdlib.ALang) **extends: object** 
+[2396:21] `static` (extern: com.aussom.stdlib.ALang) **extends: object** 
 
 The staic lang object provides some standard
 functionality for the Aussom language.
@@ -1977,7 +2229,7 @@ functionality for the Aussom language.
 
 ## class: map
 
-[1040:14] (extern: com.aussom.types.AussomMap) **extends: object** 
+[1052:14] (extern: com.aussom.types.AussomMap) **extends: object** 
 
 Implements map datatype methods.
 
@@ -2000,7 +2252,7 @@ Implements map datatype methods.
 
 - **containsVal** (`Val`)
 
-	> Checks to see if the map contains the provided value. This checks for the object reference and doesn't do any comparison of values.
+	> Checks to see if the map contains the provided value. Primitive values (null, bool, int, double, and string) and callbacks are matched by value. Objects, lists, and maps are matched by reference.
 
 	- **@p** `Val` is the value to check for.
 	- **@r** `A` bool with true if found and false if not.
@@ -2138,7 +2390,7 @@ Implements map datatype methods.
 
 ## class: byteOrder
 
-[1615:6] `static` **extends: object** 
+[1877:6] `static` **extends: object** 
 
 Defines the byte order types.
 
@@ -2150,7 +2402,7 @@ Defines the byte order types.
 
 ## class: object
 
-[1198:14] (extern: com.aussom.types.AussomObject) 
+[1211:14] (extern: com.aussom.types.AussomObject) 
 
 Implements object datatype methods.
 

@@ -56,6 +56,18 @@ public class AussomDouble extends AussomObject implements AussomTypeInt, AussomT
 	}
 
 	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof AussomDouble)) return false;
+		return Double.compare(this.value, ((AussomDouble)o).value) == 0;
+	}
+
+	@Override
+	public int hashCode() {
+		return Double.hashCode(this.value);
+	}
+
+	@Override
 	public String toString(int Level) {
 		String rstr = "";
 		rstr += AussomType.getTabs(Level) + "{\n";

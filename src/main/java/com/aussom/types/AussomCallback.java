@@ -97,6 +97,23 @@ public class AussomCallback extends AussomObject implements AussomTypeInt {
 		this.functName = functName;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof AussomCallback)) return false;
+		AussomCallback other = (AussomCallback)o;
+		// Two callbacks are equal when they name the same function
+		// AND are bound to the same object (by reference).
+		return this.obj == other.obj && this.functName.equals(other.functName);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = System.identityHashCode(this.obj);
+		result = 31 * result + this.functName.hashCode();
+		return result;
+	}
+
 	public AussomObject getObj() {
 		return obj;
 	}

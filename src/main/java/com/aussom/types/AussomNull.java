@@ -38,6 +38,16 @@ public class AussomNull extends AussomObject implements AussomTypeInt, AussomTyp
 		return new AussomNull();
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		return o instanceof AussomNull;
+	}
+
+	@Override
+	public int hashCode() {
+		return 0;
+	}
+
 	public AussomType isBlank(Environment env, ArrayList<AussomType> args) {
 		return new AussomBool(true);
 	}

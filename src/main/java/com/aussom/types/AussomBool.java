@@ -54,6 +54,18 @@ public class AussomBool extends AussomObject implements AussomTypeInt, AussomTyp
 	public void setValue(boolean value) {
 		this.value = value;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof AussomBool)) return false;
+		return this.value == ((AussomBool)o).value;
+	}
+
+	@Override
+	public int hashCode() {
+		return Boolean.hashCode(this.value);
+	}
 	
 	@Override
 	public String toString(int Level) {

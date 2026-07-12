@@ -853,8 +853,9 @@ extern class list : com.aussom.types.AussomList {
 
 	/**
      * Checks to see if the provided item exists in the current
-     * list. This function only works for primitive types such as
-     * null, bool, int, double, and string.
+     * list. Primitive values (null, bool, int, double, and string)
+     * and callbacks are matched by value. Objects, lists, and maps
+     * are matched by reference.
      * @p Item is the item to check for.
      * @r A bool with true if found and false if not.
      */
@@ -862,7 +863,8 @@ extern class list : com.aussom.types.AussomList {
 
 	/**
      * Checks to see if the current list contains the provided
-     * object reference.
+     * item by reference. Unlike contains(), this always matches
+     * by reference (identity), even for primitive values.
      * @p Item is any item to check for the reference in the list.
      * @r A bool with true if found and false if not.
      */
@@ -877,7 +879,9 @@ extern class list : com.aussom.types.AussomList {
 
 	/**
      * Returns the index of the provided item in the list
-     * and -1 if not found.
+     * and -1 if not found. Primitive values (null, bool, int,
+     * double, and string) and callbacks are matched by value.
+     * Objects, lists, and maps are matched by reference.
      * @p Item is the item to find in the list.
      * @r An int with the index of the item or -1 if not found.
      */
@@ -890,7 +894,10 @@ extern class list : com.aussom.types.AussomList {
 	public extern isEmpty();
 
 	/**
-     * Removes the provided item from the list.
+     * Removes the provided item from the list. Primitive values
+     * (null, bool, int, double, and string) and callbacks are
+     * matched by value. Objects, lists, and maps are matched by
+     * reference. Only the first matching item is removed.
      * @p Item is the item to remove from the list.
      * @r this object
      */
@@ -904,8 +911,10 @@ extern class list : com.aussom.types.AussomList {
 	public extern removeAt(int Index);
 
 	/**
-     * Removes all items from the current list with
-     * the provided list.
+     * Removes all items from the current list that are found in
+     * the provided list. Primitive values (null, bool, int,
+     * double, and string) and callbacks are matched by value.
+     * Objects, lists, and maps are matched by reference.
      * @p ListToRemove is the list of items to remove from the
      * current list.
      * @r A bool with true if the list has changed and false if not.
@@ -913,7 +922,10 @@ extern class list : com.aussom.types.AussomList {
 	public extern removeAll(list ListToRemove);
 
 	/**
-     * Retains only those items provided in the list.
+     * Retains only those items provided in the list. Primitive
+     * values (null, bool, int, double, and string) and callbacks
+     * are matched by value. Objects, lists, and maps are matched
+     * by reference.
      * @p ListToRetain is a list of items to retain in the
      * current list.
      * @r A bool with true if the list has changed and false if not.
@@ -1053,9 +1065,10 @@ extern class map : com.aussom.types.AussomMap {
 	public extern containsKey(string Key);
 
 	/**
-     * Checks to see if the map contains the
-     * provided value. This checks for the object
-     * reference and doesn't do any comparison of values.
+     * Checks to see if the map contains the provided value.
+     * Primitive values (null, bool, int, double, and string) and
+     * callbacks are matched by value. Objects, lists, and maps are
+     * matched by reference.
      * @p Val is the value to check for.
      * @r A bool with true if found and false if not.
      */
@@ -1256,6 +1269,12 @@ extern class object : com.aussom.types.AussomObject {
  * Implements callback datatype methods. The callback is
  * a function reference that can be passed around. This is
  * useful when needing to pass a function to call later.
+ *
+ * Two callbacks are considered equal when they reference
+ * the same function name and are bound to the same object.
+ * List and map lookups that match callbacks by value, such
+ * as contains(), indexOf(), remove(), and containsVal(), use
+ * this rule.
  */
 extern class callback : com.aussom.types.AussomCallback {
     /**

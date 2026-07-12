@@ -146,41 +146,17 @@ public class AussomList extends AussomObject implements AussomTypeInt, AussomTyp
 	}
 	
 	public synchronized AussomType contains(Environment env, ArrayList<AussomType> args) {
-		AussomType mn = args.get(0);
-		
-		for(AussomType n : this.value) {
-			if(mn.isNull()) {
-				if(n.isNull()) {
-					return new AussomBool(true);
-				}
-			} else if(mn instanceof AussomBool) { 
-				if((n instanceof AussomBool)&&(((AussomBool)n).getValue() == ((AussomBool)mn).getValue())) {
-					return new AussomBool(true);
-				}
-			} else if(mn instanceof AussomInt) {
-				if((n instanceof AussomInt)&&((AussomInt)n).getValue() == ((AussomInt)mn).getValue()) {
-					return new AussomBool(true);
-				}
-			} else if(mn instanceof AussomDouble) {
-				if((n instanceof AussomDouble)&&(((AussomDouble)n).getValue() == ((AussomDouble)mn).getValue())) {
-					return new AussomBool(true);
-				}
-			} else if(mn instanceof AussomString) {
-				if((n instanceof AussomString)&&(((AussomString)n).getValue().equals(((AussomString)mn).getValue()))) {
-					return new AussomBool(true);
-				}
-			} else if(mn instanceof AussomCallback) {
-				if((n instanceof AussomCallback)&&(((AussomCallback)n).getFunctName().equals(((AussomCallback)mn).getFunctName()))) {
-					return new AussomBool(true);
-				}
-			}
-		}
-		
-		return new AussomBool(false);
+		return new AussomBool(this.value.contains(args.get(0)));
 	}
 	
 	public synchronized AussomType containsObjRef(Environment env, ArrayList<AussomType> args) {
-		return new AussomBool(this.value.contains(args.get(0)));
+		AussomType target = args.get(0);
+		for(AussomType n : this.value) {
+			if(n == target) {
+				return new AussomBool(true);
+			}
+		}
+		return new AussomBool(false);
 	}
 	
 	public synchronized AussomType get(Environment env, ArrayList<AussomType> args) {
