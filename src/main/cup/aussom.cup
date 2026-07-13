@@ -1536,7 +1536,7 @@ expFor ::=
 expForExp ::=
 	/* blank */
 	{:
-		RESULT = new astNull();
+		RESULT = new astBool(true);
 	:}
 |	expression:e
 	{:

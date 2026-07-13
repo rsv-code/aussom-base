@@ -5006,7 +5006,7 @@ class CUP$parser$actions {
             {
               astNode RESULT =null;
 		
-		RESULT = new astNull();
+		RESULT = new astBool(true);
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("expForExp",60, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }

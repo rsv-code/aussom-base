@@ -1488,6 +1488,18 @@ class interpreterTests {
 	    return test.expect(thrown, true);
 	 }
 
+	 @Test(name = "(for) Empty condition loops like C-family for(;;).")
+	 public forEmptyCondition() {
+	    // An empty condition should loop like C-family for(;;). Today Aussom
+	    // treats the empty condition as false and runs the body 0 times.
+	    count = 0;
+	    for (i = 0; ; i++) {
+	        count = count + 1;
+	        if (count >= 3) { break; }
+	    }
+	    return test.expect(count, 3);
+	 }
+
 	 @Test(name = "(while) Condition exception caught by surrounding try/catch.")
 	 public whileConditionExceptionCaught() {
 	    thrown = false;
