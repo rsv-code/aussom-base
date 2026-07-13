@@ -298,7 +298,7 @@ public class astObj  extends astNode implements astNodeInt {
 				return true;
 			  }
 			} else {
-			  return true;
+			  return false;
 			}
 		  } else {
 			return true;

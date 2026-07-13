@@ -116,6 +116,20 @@ class cat {
 	public cat() { }
 }
 
+// Inheritance helpers: base declares a private and a public member;
+// the derived class adds a method that reads the inherited private
+// member through `this` (legitimate same-instance access).
+class inhBase {
+	private baseSecret = 'base-secret';
+	public basePublic = 'base-public';
+	public inhBase() {}
+}
+
+class inhDerived : inhBase {
+	public inhDerived() {}
+	public readInheritedSecret() { return this.baseSecret; }
+}
+
 static class throwingHelper {
     public boom() { throw "throwingHelper.boom()"; }
 }
@@ -1199,6 +1213,24 @@ class interpreterTests {
 
 	 @Test(name = "(object access) Method access for member variable by index expression.")
 	 public objectAccessMemVarIndexExp() { this.obj = new cont(); fname = 'pub'; ex = false; try { t = this.obj.c[fname]; }  catch(e) { ex = true; } return test.expect(ex, false); }
+
+	 // access inherited members (base-declared members reached through a derived object).
+	 // The private cases currently LEAK: a base-declared private member is reachable from
+	 // outside code when accessed through a derived-typed reference.
+	 @Test(name = "(object access) Inherited private member denied (local variable).")
+	 public objectAccessInheritedPri() { l = new inhDerived(); ex = false; try { t = l.baseSecret; } catch(e) { ex = true; } return test.expect(ex, true); }
+
+	 @Test(name = "(object access) Inherited private member denied (member variable).")
+	 public objectAccessInheritedMemVarPri() { this.obj = new inhDerived(); ex = false; try { t = this.obj.baseSecret; } catch(e) { ex = true; } return test.expect(ex, true); }
+
+	 @Test(name = "(object access) Inherited public member allowed.")
+	 public objectAccessInheritedPub() { l = new inhDerived(); ex = false; try { t = l.basePublic; } catch(e) { ex = true; } return test.expect(ex, false); }
+
+	 @Test(name = "(object access) Non-inherited private member denied.")
+	 public objectAccessBasePri() { l = new inhBase(); ex = false; try { t = l.baseSecret; } catch(e) { ex = true; } return test.expect(ex, true); }
+
+	 @Test(name = "(object access) Inherited private member reachable via this in descendant.")
+	 public objectAccessInheritedPriViaThis() { l = new inhDerived(); ex = false; try { t = l.readInheritedSecret(); } catch(e) { ex = true; } return test.expect(ex, false); }
 
 	 // Chained bracket access (3+ steps must navigate every link in the chain)
 	 @Test(name = "(index access) Three bracket chain on map of list of map.")
