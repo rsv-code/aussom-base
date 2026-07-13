@@ -112,6 +112,10 @@ class dog {
 	public dog(string Breed) { this.breed = Breed; }
 }
 
+class cat {
+	public cat() { }
+}
+
 static class throwingHelper {
     public boom() { throw "throwingHelper.boom()"; }
 }
@@ -1981,10 +1985,10 @@ class interpreterTests {
 	public listSubList() { tmp = this.tlist.subList(0, 2); return test.expect(#tmp, 2); }
 
 	@Test(name = "(lang list) List sort.")
-	public listSort() { tmp = this.tlist.sort(); return test.expect(tmp[2], 'two'); }
+	public listSort() { tmp = [ "banana", "apple", "cherry" ]; tmp.sort(); return test.expect(tmp[0], "cherry"); }
 
 	@Test(name = "(lang list) List sort ascending.")
-	public listSortAsc() { tmp = this.tlist.sortAsc(); return test.expect(tmp[2], 'one'); }
+	public listSortAsc() { tmp = [ "banana", "apple", "cherry" ]; tmp.sortAsc(); return test.expect(tmp[0], "apple"); }
 
 	@Test(name = "(lang list) List sort custom.")
 	public listSortCustom() {
@@ -1997,6 +2001,52 @@ class interpreterTests {
 		return test.expect(sortedDogs[2].breed, "Maltese");
 	}
 	public customComparator(object d1, object d2) { return d1.breed.compare(d2.breed); }
+
+	/***********************************************************************
+	 * sort()/sortAsc() coverage for each type in AussomListComparator.
+	 * sort() is expected to order descending and sortAsc() ascending.
+	 *********************************************************************/
+	@Test(name = "(lang list) List sort int descending.")
+	public listSortInt() { tmp = [ 3, 1, 2 ]; tmp.sort(); return test.expect(tmp[0], 3); }
+
+	@Test(name = "(lang list) List sortAsc int ascending.")
+	public listSortAscInt() { tmp = [ 3, 1, 2 ]; tmp.sortAsc(); return test.expect(tmp[0], 1); }
+
+	@Test(name = "(lang list) List sort double descending.")
+	public listSortDouble() { tmp = [ 3.5, 1.5, 2.5 ]; tmp.sort(); return test.expect(tmp[0], 3.5); }
+
+	@Test(name = "(lang list) List sortAsc double ascending.")
+	public listSortAscDouble() { tmp = [ 3.5, 1.5, 2.5 ]; tmp.sortAsc(); return test.expect(tmp[0], 1.5); }
+
+	@Test(name = "(lang list) List sort bool descending.")
+	public listSortBool() { tmp = [ false, true, false ]; tmp.sort(); return test.expect(tmp[0], true); }
+
+	@Test(name = "(lang list) List sortAsc bool ascending.")
+	public listSortAscBool() { tmp = [ true, false, true ]; tmp.sortAsc(); return test.expect(tmp[0], false); }
+
+	@Test(name = "(lang list) List sort mixed int/double descending.")
+	public listSortMixedNum() { tmp = [ 3, 1.5, 2 ]; tmp.sort(); return test.expect(tmp[0], 3); }
+
+	@Test(name = "(lang list) List sortAsc mixed int/double ascending.")
+	public listSortAscMixedNum() { tmp = [ 3, 1.5, 2 ]; tmp.sortAsc(); return test.expect(tmp[0], 1.5); }
+
+	@Test(name = "(lang list) List sort object descending by class name.")
+	public listSortObject() { tmp = [ new cat(), new dog("lab") ]; tmp.sort(); return test.expect(tmp[0] instanceof 'dog', true); }
+
+	@Test(name = "(lang list) List sortAsc object ascending by class name.")
+	public listSortAscObject() { tmp = [ new dog("lab"), new cat() ]; tmp.sortAsc(); return test.expect(tmp[0] instanceof 'cat', true); }
+
+	@Test(name = "(lang list) List sort nested list descending by string.")
+	public listSortList() { tmp = [ [ 3 ], [ 1 ], [ 2 ] ]; tmp.sort(); return test.expect(tmp[0][0], 3); }
+
+	@Test(name = "(lang list) List sortAsc nested list ascending by string.")
+	public listSortAscList() { tmp = [ [ 3 ], [ 1 ], [ 2 ] ]; tmp.sortAsc(); return test.expect(tmp[0][0], 1); }
+
+	@Test(name = "(lang list) List sort map descending by string.")
+	public listSortMap() { m1 = {}; m1['a'] = 3; m2 = {}; m2['a'] = 1; tmp = [ m1, m2 ]; tmp.sort(); return test.expect(tmp[0]['a'], 3); }
+
+	@Test(name = "(lang list) List sortAsc map ascending by string.")
+	public listSortAscMap() { m1 = {}; m1['a'] = 3; m2 = {}; m2['a'] = 1; tmp = [ m1, m2 ]; tmp.sortAsc(); return test.expect(tmp[0]['a'], 1); }
 
 	@Test(name = "(lang list) List clear.")
 	public listClear() { this.tlist.clear(); return test.expect(#this.tlist, 0); }

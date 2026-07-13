@@ -95,8 +95,8 @@ public class AussomListComparator implements Comparator, Serializable {
 				res = vone.compareTo(vtwo);
 			}
 			
-			if(this.order == SortOrder.DESCENDING) return res;
-			else return res * -1;
+			if(this.order == SortOrder.DESCENDING) return res * -1;
+			else return res;
 		}
 	}
 	
