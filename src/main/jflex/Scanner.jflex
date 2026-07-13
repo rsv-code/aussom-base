@@ -99,7 +99,6 @@ new_line 		= \r\n;
 <YYINITIAL> "enum"					{ return symbol(sym.ENUM); }
 <YYINITIAL> "include"				{ return symbol(sym.INCLUDE); }
 <YYINITIAL> "public"				{ return symbol(sym.PUBLIC); }
-<YYINITIAL> "protected"				{ return symbol(sym.PROTECTED); }
 <YYINITIAL> "private"				{ return symbol(sym.PRIVATE); }
 <YYINITIAL> "static"				{ return symbol(sym.STATIC); }
 <YYINITIAL> "extern"				{ return symbol(sym.EXTERN); }

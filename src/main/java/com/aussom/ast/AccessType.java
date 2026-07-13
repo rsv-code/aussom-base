@@ -18,6 +18,5 @@ package com.aussom.ast;
 
 public enum AccessType {
 	aPrivate,
-	aProtected,
 	aPublic
 }
