@@ -2048,6 +2048,15 @@ class interpreterTests {
 	@Test(name = "(lang list) List sortAsc map ascending by string.")
 	public listSortAscMap() { m1 = {}; m1['a'] = 3; m2 = {}; m2['a'] = 1; tmp = [ m1, m2 ]; tmp.sortAsc(); return test.expect(tmp[0]['a'], 1); }
 
+	public cbAaa() { return "A"; }
+	public cbZzz() { return "Z"; }
+
+	@Test(name = "(lang list) List sort callback descending by string.")
+	public listSortCallback() { tmp = [ ::cbAaa, ::cbZzz ]; tmp.sort(); return test.expect(tmp[0].call(), "Z"); }
+
+	@Test(name = "(lang list) List sortAsc callback ascending by string.")
+	public listSortAscCallback() { tmp = [ ::cbZzz, ::cbAaa ]; tmp.sortAsc(); return test.expect(tmp[0].call(), "A"); }
+
 	@Test(name = "(lang list) List clear.")
 	public listClear() { this.tlist.clear(); return test.expect(#this.tlist, 0); }
 

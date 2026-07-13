@@ -171,7 +171,6 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 
 		if (this.getClassDef().getExtern() && this.getClassDef().getExternClass() != AussomObject.class && this.externObject instanceof AussomTypeInt) {
 			AussomTypeInt ati = (AussomTypeInt)this.externObject;
-			System.out.println(ati.str());
 			rstr += getTabs(Level) + "value=" + ati.toString(Level + 1);
 			rstr += "\n";
 		}

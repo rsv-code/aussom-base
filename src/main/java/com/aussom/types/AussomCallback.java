@@ -114,6 +114,33 @@ public class AussomCallback extends AussomObject implements AussomTypeInt {
 		return result;
 	}
 
+	// Identifies the bound object by class name and reference
+	// identity, e.g. "dog@1b2c3d", or "null" when unbound.
+	private String objRef() {
+		if (this.obj == null) return "null";
+		return this.obj.getClassDef().getName() + "@" + Integer.toHexString(System.identityHashCode(this.obj));
+	}
+
+	@Override
+	public String toString(int Level) {
+		String rstr = "";
+		rstr += AussomType.getTabs(Level) + "{\n";
+		rstr += AussomType.getTabs(Level + 1) + "\"type\": \"" + this.getType().name() + "\",\n";
+		rstr += AussomType.getTabs(Level + 1) + "\"obj\": \"" + this.objRef() + "\",\n";
+		rstr += AussomType.getTabs(Level + 1) + "\"functName\": \"" + this.functName + "\"\n";
+		rstr += AussomType.getTabs(Level) + "}";
+		return rstr;
+	}
+
+	@Override
+	public String str() {
+		return "callback " + this.objRef() + "::" + this.functName;
+	}
+
+	public String str(int Level) {
+		return this.str();
+	}
+
 	public AussomObject getObj() {
 		return obj;
 	}
