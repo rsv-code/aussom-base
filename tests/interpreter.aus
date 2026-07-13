@@ -1990,6 +1990,12 @@ class interpreterTests {
 	@Test(name = "(lang list) List sort ascending.")
 	public listSortAsc() { tmp = [ "banana", "apple", "cherry" ]; tmp.sortAsc(); return test.expect(tmp[0], "apple"); }
 
+	@Test(name = "(lang list) List reverse.")
+	public listReverse() { tmp = [ 1, 2, 3 ]; tmp.reverse(); return test.expect(tmp[0], 3); }
+
+	@Test(name = "(lang list) List reverse returns this.")
+	public listReverseReturnsThis() { tmp = [ 1, 2, 3 ]; r = tmp.reverse(); return test.expect(r[2], 1); }
+
 	@Test(name = "(lang list) List sort custom.")
 	public listSortCustom() {
 		dogs = [];

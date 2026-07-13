@@ -972,6 +972,13 @@ extern class list : com.aussom.types.AussomList {
 	public extern sortAsc();
 
 	/**
+     * Reverses the order of the items in the current list
+     * in place.
+     * @r this list.
+     */
+	public extern reverse();
+
+	/**
      * Joins the items in the current list with the
      * provided string.
      * @p Glue is a string to use to join the items together.

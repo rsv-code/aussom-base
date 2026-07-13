@@ -238,6 +238,11 @@ public class AussomList extends AussomObject implements AussomTypeInt, AussomTyp
 		return this;
 	}
 	
+	public synchronized AussomType reverse(Environment env, ArrayList<AussomType> args) {
+		Collections.reverse(this.value);
+		return this;
+	}
+
 	public synchronized AussomType join(Environment env, ArrayList<AussomType> args) {
 		String glue = ((AussomString)args.get(0)).getValue();
 		ArrayList<String> parts = new ArrayList<String>();
