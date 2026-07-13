@@ -1063,6 +1063,21 @@ public class astClass extends astNode implements astNodeInt {
 					this.declaredNames.add(pdef.getName());
 				}
 			}
+
+			// Merge inherited data members into this class's member
+			// metadata so access checks (containsMember / getMember) can
+			// resolve an inherited member's access modifier. Child
+			// members shadow parent members of the same name, mirroring
+			// the dispatchMap merge above. Only the lookup map (membDefs)
+			// is populated, NOT membList: inherited members are
+			// initialized onto the instance separately by
+			// instantiateInheritedClasses, so adding them to membList
+			// would double-initialize them.
+			for (Map.Entry<String, astNode> me : ac.getMembers().entrySet()) {
+				if (!this.membDefs.containsKey(me.getKey())) {
+					this.membDefs.put(me.getKey(), me.getValue());
+				}
+			}
 		}
 	}
 
