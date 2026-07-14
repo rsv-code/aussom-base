@@ -295,6 +295,39 @@ class shape3Child : shape3Parent {
     public draw(string s) { return "child-string"; }
 }
 
+// Multiple inheritance resolution. Each group below uses its own
+// isolated parents: the shared-parent instantiation bug corrupts only
+// the parents shared by 2+ deriving classes, so keeping the parent sets
+// disjoint keeps the passing tests independent of the failing bug test.
+//
+// Resolution group: both parents define greet() and who. The child
+// declares neither, so parent resolution is observable.
+class miParentA { public miParentA() {} public greet() { return "A"; } public who = "who-A"; }
+class miParentB { public miParentB() {} public greet() { return "B"; } public who = "who-B"; }
+class miChild : miParentA, miParentB { public miChild() {} }
+
+// Shadowing group: child declares its own greet() and who.
+class miShParentX { public miShParentX() {} public greet() { return "X"; } public who = "who-X"; }
+class miShParentY { public miShParentY() {} public greet() { return "Y"; } public who = "who-Y"; }
+class miShChild : miShParentX, miShParentY {
+    public miShChild() {}
+    public greet() { return "child"; }
+    public who = "who-child";
+}
+
+// Shared-parent bug group: two classes deriving the same parents.
+class miBugParentP { public miBugParentP() {} }
+class miBugParentQ { public miBugParentQ() {} }
+class miBugC1 : miBugParentP, miBugParentQ { public miBugC1() {} }
+class miBugC2 : miBugParentP, miBugParentQ { public miBugC2() {} }
+
+// Three-level single inheritance with a member overridden at the middle
+// level. The grandchild must see the middle class's value, not the
+// grandparent's (guards descendant-over-ancestor member resolution).
+class memGrand { public memGrand() {} public label = "grand"; }
+class memParent : memGrand { public memParent() {} public label = "parent"; }
+class memChild : memParent { public memChild() {} }
+
 // Variadic with a typed required head plus untyped trailing args.
 class headVar {
     public log(string level, ...) { return level + ":" + #etc; }
@@ -3255,6 +3288,50 @@ class interpreterTests {
         return test.expect(
             c3.draw() + "/" + c3.draw(5) + "/" + c3.draw("hi"),
             "gp-no-args/parent-int/child-string");
+    }
+
+    // ---------- Multiple inheritance resolution ----------
+
+    @Test(name = "(inheritance) Method resolves to the first-listed parent.")
+    public multiInheritMethodFirstParent() {
+        o = new miChild();
+        return test.expect(o.greet(), "A");
+    }
+
+    @Test(name = "(inheritance) Member resolves to the first-listed parent.")
+    public multiInheritMemberFirstParent() {
+        o = new miChild();
+        return test.expect(o.who, "who-A");
+    }
+
+    @Test(name = "(inheritance) Child method declaration wins over parents.")
+    public multiInheritChildMethodWins() {
+        o = new miShChild();
+        return test.expect(o.greet(), "child");
+    }
+
+    @Test(name = "(inheritance) Child member declaration wins over parents.")
+    public multiInheritChildMemberWins() {
+        o = new miShChild();
+        return test.expect(o.who, "who-child");
+    }
+
+    @Test(name = "(inheritance) Two classes sharing the same parents both instantiate.")
+    public multiInheritSharedParents() {
+        ex = false;
+        try {
+            a = new miBugC1();
+            b = new miBugC2();
+        } catch (e) {
+            ex = true;
+        }
+        return test.expect(ex, false);
+    }
+
+    @Test(name = "(inheritance) Overridden member resolves to nearest ancestor across three levels.")
+    public inheritedMemberThreeLevel() {
+        o = new memChild();
+        return test.expect(o.label, "parent");
     }
 
     // ---------- Constructors ----------

@@ -418,7 +418,17 @@ public class astClass extends astNode implements astNodeInt {
 
 				if(ac != null) {
 					if(ac.getExtern()) {
-						if (ac.getName().equals("object")) {
+						// A parent whose only backing is the universal
+						// AussomObject base (the `object` root, or any user
+						// class that transitively extends it) is not a real
+						// Java-backed extern class, so it must not count
+						// toward the one-extern-parent limit. Every user
+						// class reports isExtern once initialized (they all
+						// inherit object), so checking the extern backing
+						// rather than the name is what lets a second class
+						// derive the same parents without a false
+						// "two external classes" error.
+						if (ac.getExternClass() == AussomObject.class) {
 							// Set object extern stuff to begin with if not set already.
 							if (this.externClass == null) {
 								this.isExtern = true;
@@ -502,6 +512,15 @@ public class astClass extends astNode implements astNodeInt {
 	}
 
 	public void instantiateMembers(Environment env, AussomObject ci) throws aussomException {
+		this.instantiateMembers(env, ci, false);
+	}
+
+	// preserveExisting: when true, a member already present on the
+	// instance is left untouched. Inherited members are applied with
+	// this set so an already-applied (more-derived or earlier-listed)
+	// member wins; the child's own members are applied with it false so
+	// the child overwrites its parents.
+	public void instantiateMembers(Environment env, AussomObject ci, boolean preserveExisting) throws aussomException {
 		// Push a synthetic frame so debugger pauses inside member
 		// initializers show this class as the active context, not
 		// the caller's frame. See design/debugging-callstack-update.md.
@@ -513,6 +532,9 @@ public class astClass extends astNode implements astNodeInt {
 
 		for (int i = 0; i < this.membList.size(); i++) {
 			astNode cur = this.membDefs.get(this.membList.get(i));
+			if (preserveExisting && ci.containsMember(cur.getName())) {
+				continue;
+			}
 			switch(cur.getType()) {
 			case VAR:
 				ci.addMember(cur.getName(), cur.eval(tenv));
@@ -968,9 +990,6 @@ public class astClass extends astNode implements astNodeInt {
 		for(String className : extClasses) {
 			astClass ac = env.getClassByName(className);
 
-			if (ac.getExtendedClasses().size() > 0)
-				this.instantiateInheritedClasses(env, cobj, ac.getExtendedClasses());
-
 			if(ac != null) {
 				if(ac.getExtern()) {
 					if (!ac.getName().equals("object")) {
@@ -983,7 +1002,14 @@ public class astClass extends astNode implements astNodeInt {
 					}
 				}
 
-				ac.instantiateMembers(env, cobj);
+				// Apply this class's own members before recursing into its
+				// ancestors so a more-derived class wins over its ancestors,
+				// and (with preserveExisting) an earlier-listed parent wins
+				// over a later one -- matching first-parent-wins dispatch.
+				ac.instantiateMembers(env, cobj, true);
+
+				if (ac.getExtendedClasses().size() > 0)
+					this.instantiateInheritedClasses(env, cobj, ac.getExtendedClasses());
 			} else {
 				throw new aussomException(this, "Extended class '" + className + "' not found.", env.stackTraceToString());
 			}
