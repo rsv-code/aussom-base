@@ -328,6 +328,11 @@ class memGrand { public memGrand() {} public label = "grand"; }
 class memParent : memGrand { public memParent() {} public label = "parent"; }
 class memChild : memParent { public memChild() {} }
 
+// Extending a static class is not allowed: static classes are startup
+// singletons and cannot serve as a base class.
+static class staticBase { public sval = 1; public sfn() { return "s"; } }
+class extendsStatic : staticBase { public extendsStatic() {} }
+
 // Variadic with a typed required head plus untyped trailing args.
 class headVar {
     public log(string level, ...) { return level + ":" + #etc; }
@@ -3353,6 +3358,13 @@ class interpreterTests {
     public inheritedMemberThreeLevel() {
         o = new memChild();
         return test.expect(o.label, "parent");
+    }
+
+    @Test(name = "(inheritance) Extending a static class is rejected.")
+    public inheritStaticRejected() {
+        ex = false;
+        try { o = new extendsStatic(); } catch (e) { ex = true; }
+        return test.expect(ex, true);
     }
 
     // ---------- Constructors ----------

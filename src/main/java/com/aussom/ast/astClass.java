@@ -417,6 +417,15 @@ public class astClass extends astNode implements astNodeInt {
 				astClass ac = env.getClassByName(className);
 
 				if(ac != null) {
+					// Static classes are singletons instantiated once at
+					// startup; they cannot serve as a base class. Extending
+					// one would silently produce an ordinary, independently
+					// instantiable class that no longer shares the static's
+					// singleton state, which is never what's intended.
+					if(ac.getStatic()) {
+						throw new aussomException(this, "Cannot extend static class '" + className + "'. Static classes cannot be used as a base class.", env.stackTraceToString());
+					}
+
 					if(ac.getExtern()) {
 						// A parent whose only backing is the universal
 						// AussomObject base (the `object` root, or any user
