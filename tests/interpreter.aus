@@ -1850,6 +1850,27 @@ class interpreterTests {
 	@Test(name = "(lang string) String trim.")
 	public stringTrim() { return test.expect(" Tyler ".trim(), "Tyler"); }
 
+	@Test(name = "(lang string) String format positional sequential.")
+	public stringFormatPositional() { return test.expect("Hello {}, you are {}.".format("Bob", 42), "Hello Bob, you are 42."); }
+
+	@Test(name = "(lang string) String format positional indexed and reused.")
+	public stringFormatIndexed() { return test.expect("{0}-{1}-{0}".format("a", "b"), "a-b-a"); }
+
+	@Test(name = "(lang string) String format named from map.")
+	public stringFormatNamed() { return test.expect("{greeting}, {name}!".format({ "greeting": "Hi", "name": "Bob" }), "Hi, Bob!"); }
+
+	@Test(name = "(lang string) String format escaped braces.")
+	public stringFormatEscaped() { return test.expect("literal {{ and }} val={}".format(7), "literal { and } val=7"); }
+
+	@Test(name = "(lang string) String format too few args throws.")
+	public stringFormatTooFew() { ex = false; try { x = "{} {}".format("only"); } catch (e) { ex = true; } return test.expect(ex, true); }
+
+	@Test(name = "(lang string) String format renders a list compactly.")
+	public stringFormatList() { return test.expect("items={}".format([ 1, 2, 3 ]), "items=[1,2,3]"); }
+
+	@Test(name = "(lang string) String format renders a map compactly.")
+	public stringFormatMap() { return test.expect("m={}".format({ "a": 1 }), """m={"a":1}"""); }
+
 	@Test(name = "(lang string) String to JSON.")
 	public stringToJson() { return test.expect("Tyler Durdon".toJson(), "\"Tyler Durdon\""); }
 

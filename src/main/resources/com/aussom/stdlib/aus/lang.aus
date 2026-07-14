@@ -728,6 +728,32 @@ extern class string : com.aussom.types.AussomString {
 	public extern trim();
 
 	/**
+     * Builds a new string from this string as a template, replacing
+     * placeholders with the provided arguments. This is the
+     * general-purpose alternative to building strings with '+'.
+     *
+     * Placeholders are written with curly braces:
+     *   {}     the next positional argument, in order.
+     *   {N}    the positional argument at index N (0 based). An index
+     *          may be reused, e.g. "{0} {0}".
+     *   {name} the value at key 'name' in the first map argument.
+     * Write '{{' or '}}' to include a literal brace. Scalar arguments
+     * are converted to their plain string form (a string is inserted
+     * unquoted). Lists and maps are rendered as compact JSON, e.g.
+     * [1,2,3] or {"a":1}, rather than the multi-line debug form.
+     *
+     * Examples:
+     *   "Hello {}, you are {}.".format("Bob", 42)
+     *   "{0}-{1}-{0}".format("a", "b")
+     *   "{greeting}, {name}!".format({ "greeting": "Hi", "name": "Bob" })
+     *
+     * @p etc are the arguments referenced by the placeholders.
+     * @r A new formatted string.
+     */
+	public format(...) { return this._format(etc); }
+	private extern _format(list Args);
+
+	/**
      * Converts the value to a JSON encoded string.
      * @r A JSON encoded string.
      */

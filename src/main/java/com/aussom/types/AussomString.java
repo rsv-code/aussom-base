@@ -209,7 +209,97 @@ public class AussomString extends AussomObject implements AussomTypeInt, AussomT
 	public AussomType trim(Environment env, ArrayList<AussomType> args) {
 		return new AussomString(this.value.trim());
 	}
-	
+
+	public AussomType _format(Environment env, ArrayList<AussomType> args) {
+		ArrayList<AussomType> fargs = ((AussomList)args.get(0)).getValue();
+
+		// First map argument, if any, supplies named placeholders.
+		AussomMap named = null;
+		for (AussomType a : fargs) {
+			if (a instanceof AussomMap) { named = (AussomMap)a; break; }
+		}
+
+		StringBuilder sb = new StringBuilder();
+		int autoIndex = 0;
+		int i = 0;
+		int len = this.value.length();
+		while (i < len) {
+			char ch = this.value.charAt(i);
+			if (ch == '{') {
+				// Escaped '{{' -> literal '{'.
+				if (i + 1 < len && this.value.charAt(i + 1) == '{') {
+					sb.append('{');
+					i += 2;
+					continue;
+				}
+				int close = this.value.indexOf('}', i);
+				if (close < 0) {
+					return new AussomException("string.format(): Unmatched '{' at index " + i + ".");
+				}
+				String key = this.value.substring(i + 1, close).trim();
+				AussomType val;
+				if (key.isEmpty()) {
+					// Next positional argument.
+					if (autoIndex >= fargs.size()) {
+						return new AussomException("string.format(): Not enough arguments for placeholder number " + autoIndex + ".");
+					}
+					val = fargs.get(autoIndex++);
+				} else if (isAllDigits(key)) {
+					// Indexed positional argument.
+					int idx;
+					try {
+						idx = Integer.parseInt(key);
+					} catch (NumberFormatException nfe) {
+						return new AussomException("string.format(): Argument index '" + key + "' out of range.");
+					}
+					if (idx >= fargs.size()) {
+						return new AussomException("string.format(): Argument index " + idx + " out of range.");
+					}
+					val = fargs.get(idx);
+				} else {
+					// Named argument, looked up in the first map argument.
+					if (named == null || !named.getValue().containsKey(key)) {
+						return new AussomException("string.format(): No value provided for named placeholder '" + key + "'.");
+					}
+					val = named.getValue().get(key);
+				}
+				// Lists and maps render as compact JSON; str() on those
+				// is a multi-line debug form. Everything else (including
+				// strings, which JSON would quote) uses its plain str().
+				if (val instanceof AussomList || val instanceof AussomMap) {
+					AussomType json = ((AussomTypeObjectInt)val).toJson(env, new ArrayList<AussomType>());
+					if (json.isEx()) {
+						return json;
+					}
+					sb.append(((AussomTypeInt)json).str());
+				} else {
+					sb.append(((AussomTypeInt)val).str());
+				}
+				i = close + 1;
+			} else if (ch == '}') {
+				// Escaped '}}' -> literal '}'.
+				if (i + 1 < len && this.value.charAt(i + 1) == '}') {
+					sb.append('}');
+					i += 2;
+					continue;
+				}
+				return new AussomException("string.format(): Single '}' at index " + i + "; use '}}' for a literal '}'.");
+			} else {
+				sb.append(ch);
+				i++;
+			}
+		}
+		return new AussomString(sb.toString());
+	}
+
+	private static boolean isAllDigits(String s) {
+		if (s.isEmpty()) { return false; }
+		for (int i = 0; i < s.length(); i++) {
+			if (!Character.isDigit(s.charAt(i))) { return false; }
+		}
+		return true;
+	}
+
 	@Override
 	public AussomType toJson(Environment env, ArrayList<AussomType> args) {
 		return new AussomString("\"" + JSONValue.escape(this.str()) + "\"");
