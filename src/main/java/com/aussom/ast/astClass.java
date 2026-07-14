@@ -1000,14 +1000,19 @@ public class astClass extends astNode implements astNodeInt {
 			astClass ac = env.getClassByName(className);
 
 			if(ac != null) {
-				if(ac.getExtern()) {
-					if (!ac.getName().equals("object")) {
-						AussomObject ao = (AussomObject) ac.instantiate(env);
-						if(ao != null) {
-							cobj.setExternObject(ao.getExternObject());
-						} else {
-							throw new aussomException(this, "Failed to instantiate class '" + className + "', object is null.", env.stackTraceToString());
-						}
+				// Only a genuine Java-backed extern parent contributes an
+				// extern object. Every user class reports isExtern once
+				// initialized (they all inherit object -> AussomObject), so
+				// gating on the extern backing rather than the name keeps a
+				// regular parent from overwriting a real extern backing --
+				// making extern + regular multiple inheritance order
+				// independent.
+				if(ac.getExtern() && ac.getExternClass() != AussomObject.class) {
+					AussomObject ao = (AussomObject) ac.instantiate(env);
+					if(ao != null) {
+						cobj.setExternObject(ao.getExternObject());
+					} else {
+						throw new aussomException(this, "Failed to instantiate class '" + className + "', object is null.", env.stackTraceToString());
 					}
 				}
 

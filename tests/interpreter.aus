@@ -333,6 +333,15 @@ class memChild : memParent { public memChild() {} }
 static class staticBase { public sval = 1; public sfn() { return "s"; } }
 class extendsStatic : staticBase { public extendsStatic() {} }
 
+// Extern + regular multiple inheritance. Combining a real extern parent
+// (AtomicLong) with a regular parent must work regardless of order.
+// Currently it only works when the extern is listed last: a regular
+// parent listed after the extern overwrites the extern object backing.
+class extRegA { public extRegA() {} public tag = "a"; }
+class extRegB { public extRegB() {} public tag = "b"; }
+class externLast : extRegA, AtomicLong { public externLast() {} }
+class externFirst : AtomicLong, extRegB { public externFirst() {} }
+
 // Variadic with a typed required head plus untyped trailing args.
 class headVar {
     public log(string level, ...) { return level + ":" + #etc; }
@@ -3365,6 +3374,20 @@ class interpreterTests {
         ex = false;
         try { o = new extendsStatic(); } catch (e) { ex = true; }
         return test.expect(ex, true);
+    }
+
+    @Test(name = "(inheritance) Extern parent listed after a regular parent works.")
+    public inheritExternAfterRegular() {
+        o = new externLast();
+        o.set(7);
+        return test.expect(o.get(), 7);
+    }
+
+    @Test(name = "(inheritance) Extern parent listed before a regular parent works.")
+    public inheritExternBeforeRegular() {
+        ex = false;
+        try { o = new externFirst(); o.set(7); } catch (e) { ex = true; }
+        return test.expect(ex, false);
     }
 
     // ---------- Constructors ----------
