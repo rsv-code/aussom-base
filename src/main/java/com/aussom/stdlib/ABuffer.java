@@ -50,14 +50,14 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 
 	@Override
 	public AussomType toJson(Environment env, ArrayList<AussomType> args) {
-		return new AussomString("\"" + ABase64.encode(this.buff) + "\"");
+		return new AussomString("\"" + ABase64.encodeSafe(this.buff) + "\"");
 	}
 
 	@Override
 	public AussomType pack(Environment env, ArrayList<AussomType> args) {
 		ArrayList<String> parts = new ArrayList<String>();
 		parts.add("\"type\":\"Buffer\"");
-		parts.add("\"value\":\"" + ABase64.encode(this.buff) + "\"");
+		parts.add("\"value\":\"" + ABase64.encodeSafe(this.buff) + "\"");
 		return new AussomString("{" + Util.join(parts, ",") + "}");
 	}
 

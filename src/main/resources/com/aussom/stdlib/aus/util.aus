@@ -20,32 +20,53 @@
  */
 static extern class base64 : com.aussom.stdlib.ABase64 {
     /**
-     * Converts binary Buffer object to base64 encoded hex string.
-     * @p BufferObj is the binary Buffer object to convert.
-     * @r An encoded string.
+     * Encodes a string to a standard base64 string. The string is
+     * read as UTF-8 bytes. This is the everyday string path.
+     * @p Str is the string to encode.
+     * @r A base64 encoded string.
      */
-	public extern encode(object BufferObj);
+	public extern encode(string Str);
 
 	/**
-	 * Converts binary Buffer object to raw base64 encoded string.
-	 * @p BufferObj is the binary Buffer object to convert.
-     * @r An encoded string.
-	 */
-	public extern encodeRaw(object BufferObj);
-
-	/**
-	 * Converts base64 encoded hex string to binary Buffer object.
+	 * Decodes a standard base64 string back to a string, reading the
+	 * decoded bytes as UTF-8. Use this when the base64 represents text;
+	 * use decodeBinary for arbitrary bytes.
 	 * @p B64EncodedString is a base64 encoded string.
-	 * @r A binary Buffer object with the result.
+	 * @r The decoded string.
 	 */
 	public extern decode(string B64EncodedString);
 
 	/**
-	 * Converts base64 encoded raw string to binary Buffer object.
-	 * @p B64EncodedString is a base64 encoded string.
-	 * @r A binary Buffer object with the result.
+	 * Encodes a binary Buffer object to a standard base64 string.
+	 * @p BufferObj is the binary Buffer object to encode.
+	 * @r A base64 encoded string.
 	 */
-	public extern decodeRaw(string B64EncodedString);
+	public extern encodeBinary(object BufferObj);
+
+	/**
+	 * Decodes a standard base64 string to a binary Buffer object.
+	 * @p B64EncodedString is a base64 encoded string.
+	 * @r A binary Buffer object with the decoded bytes.
+	 */
+	public extern decodeBinary(string B64EncodedString);
+
+	/**
+	 * Encodes a string to a safe encoded string. The output uses only
+	 * the characters 0-9 and a-f (hex of base64), so it needs no
+	 * escaping in URLs, filenames, headers, or other text. The string
+	 * is read as UTF-8 bytes.
+	 * @p Str is the string to encode.
+	 * @r A safe encoded string.
+	 */
+	public extern encodeSafe(string Str);
+
+	/**
+	 * Decodes a safe encoded string (see encodeSafe) back to a string,
+	 * reading the decoded bytes as UTF-8.
+	 * @p SafeEncodedString is a safe encoded string.
+	 * @r The decoded string.
+	 */
+	public extern decodeSafe(string SafeEncodedString);
 }
 
 /**

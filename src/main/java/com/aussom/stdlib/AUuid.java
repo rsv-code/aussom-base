@@ -66,7 +66,7 @@ public class AUuid {
 			throw new Exception(e.getMessage());
 		}
 		byte[] result =  sha.digest(randNum.getBytes());
-		return ABase64.encode(result);
+		return ABase64.encodeSafe(result);
 	}
 
 	public static AussomType get(Environment env, ArrayList<AussomType> args)

@@ -291,7 +291,7 @@ public class AJson {
 				AussomObject co = (AussomObject) ac.instantiate(env, false, new AussomList());
 				ABuffer ab = (ABuffer) co.getExternObject();
 				try {
-					ab.setBuffer(ABase64.decode((String) tobj));
+					ab.setBuffer(ABase64.decodeSafe((String) tobj));
 				} catch (Exception e) {
 					throw new aussomException("json.unpack(): Getting value for key '" + key + "'. Exception unpacking String (Base64 Encoded): " + e.getMessage());
 				}

@@ -2862,22 +2862,50 @@ class interpreterTests {
 	    return test.expect(decodedBuff.getString().startsWith("Aussom"), true);
 	}
 
-    @Test(name = "(util base64) Encode/Decode base64 value.")
+    @Test(name = "(util base64) Encode/Decode string base64 value.")
     public base64EncodeDecode() {
-        buff = new Buffer();
-        buff.addString("Aussom");
-	    encodedStr = base64.encode(buff);
-	    decodedBuff = base64.decode(encodedStr);
-	    return test.expect(decodedBuff.getString().startsWith("Aussom"), true);
+        encodedStr = base64.encode("Aussom");
+        decodedStr = base64.decode(encodedStr);
+        return test.expect(decodedStr, "Aussom");
     }
 
-    @Test(name = "(util base64) Encode/Decode raw base64 value.")
-    public base64EncodeDecodeRaw() {
+    @Test(name = "(util base64) Encode string to a known base64 vector.")
+    public base64EncodeVector() {
+        return test.expect(base64.encode("user:pass"), "dXNlcjpwYXNz");
+    }
+
+    @Test(name = "(util base64) Decode a known base64 vector to string.")
+    public base64DecodeVector() {
+        return test.expect(base64.decode("QXVzc29t"), "Aussom");
+    }
+
+    @Test(name = "(util base64) String round trip preserves the value.")
+    public base64StringRoundTrip() {
+        return test.expect(base64.decode(base64.encode("Hello, World!")), "Hello, World!");
+    }
+
+    @Test(name = "(util base64) Encode an empty string.")
+    public base64EncodeEmpty() {
+        return test.expect(base64.encode(""), "");
+    }
+
+    @Test(name = "(util base64) Encode/Decode binary base64 value.")
+    public base64EncodeDecodeBinary() {
         buff = new Buffer();
         buff.addString("Aussom");
-	    encodedStr = base64.encodeRaw(buff);
-	    decodedBuff = base64.decodeRaw(encodedStr);
-	    return test.expect(decodedBuff.getString().startsWith("Aussom"), true);
+        encodedStr = base64.encodeBinary(buff);
+        decodedBuff = base64.decodeBinary(encodedStr);
+        return test.expect(decodedBuff.getString().startsWith("Aussom"), true);
+    }
+
+    @Test(name = "(util base64) Encode safe (hex) to a known vector.")
+    public base64EncodeSafeVector() {
+        return test.expect(base64.encodeSafe("Aussom"), "5158567a63323974");
+    }
+
+    @Test(name = "(util base64) Safe (hex) encode/decode round trip.")
+    public base64SafeRoundTrip() {
+        return test.expect(base64.decodeSafe(base64.encodeSafe("Hello, World!")), "Hello, World!");
     }
 
     @Test(name = "(util uuid) Get uuid value.")
