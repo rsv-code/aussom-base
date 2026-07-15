@@ -1592,6 +1592,43 @@ class interpreterTests {
 	 }
 
 	 /***********************************************************************
+	  * try/catch tests
+	  *********************************************************************/
+	 public tcThrow() { throw "kaboom"; }
+	 public tcReturnCall() { try { return this.tcThrow(); } catch(e) { return "caught"; } }
+	 public tcReturnOper() { try { return 7 ~/ 0; } catch(e) { return "caught"; } }
+	 public tcSplit() { try { r = this.tcThrow(); return r; } catch(e) { return "caught"; } }
+	 public tcNonReturn() { try { this.tcThrow(); } catch(e) { return "caught"; } return "nocatch"; }
+
+	 @Test(name = "(try/catch) Exception from a call in a return statement is caught by the enclosing try.")
+	 public tryCatchReturnCall() {
+	    r = "escaped";
+	    try { r = this.tcReturnCall(); } catch(e) { r = "escaped"; }
+	    return test.expect(r, "caught");
+	 }
+
+	 @Test(name = "(try/catch) Exception from an operator in a return statement is caught by the enclosing try.")
+	 public tryCatchReturnOperator() {
+	    r = "escaped";
+	    try { r = this.tcReturnOper(); } catch(e) { r = "escaped"; }
+	    return test.expect(r, "caught");
+	 }
+
+	 @Test(name = "(try/catch) Exception from a split assign then return is caught.")
+	 public tryCatchSplitReturn() {
+	    r = "escaped";
+	    try { r = this.tcSplit(); } catch(e) { r = "escaped"; }
+	    return test.expect(r, "caught");
+	 }
+
+	 @Test(name = "(try/catch) Exception from a non-return statement in try is caught.")
+	 public tryCatchNonReturn() {
+	    r = "escaped";
+	    try { r = this.tcNonReturn(); } catch(e) { r = "escaped"; }
+	    return test.expect(r, "caught");
+	 }
+
+	 /***********************************************************************
 	  * lang tests
 	  *********************************************************************/
 	@Test(name = "(lang lang) Lang type of null.")

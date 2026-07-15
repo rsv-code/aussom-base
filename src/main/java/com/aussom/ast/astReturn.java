@@ -59,7 +59,15 @@ public class astReturn extends astNode implements astNodeInt
 	public AussomType evalImpl(Environment env, boolean getref) throws aussomException {
 		AussomReturn ret = new AussomReturn();
 		if(this.value != null) {
-			ret.setValue(this.value.eval(env, getref));
+			AussomType val = this.value.eval(env, getref);
+			// If evaluating the return expression produced an exception,
+			// propagate the exception itself so an enclosing try/catch
+			// can handle it, rather than smuggling it out wrapped inside
+			// the return (where try/catch sees a return, not an error).
+			if(val.isEx()) {
+				return val;
+			}
+			ret.setValue(val);
 		} else {
 			ret.setValue(new AussomNull());
 		}
