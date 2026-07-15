@@ -175,7 +175,7 @@ public class AJson {
 				}
 			}
 			// NULL
-			else if (type.equals("null")) {
+			else if (type.equals("null") || type.equals("cnull")) {
 				if (obj.containsKey("value")) {
 					cobj = new AussomNull();
 				} else {
@@ -186,6 +186,14 @@ public class AJson {
 			else if (type.equals("list")) {
 				if (obj.containsKey("value")) {
 					cobj = AJson.getJsonList(env, obj, "value");
+				} else {
+					throw new aussomException("json.unpack(): Malformed JSON, missing value.");
+				}
+			}
+			// MAP
+			else if (type.equals("map")) {
+				if (obj.containsKey("value")) {
+					cobj = AJson.getJsonMap(env, obj, "value");
 				} else {
 					throw new aussomException("json.unpack(): Malformed JSON, missing value.");
 				}
@@ -323,6 +331,26 @@ public class AJson {
 		}
 	}
 	
+	private static AussomMap getJsonMap(Environment env, JSONObject obj, String key) throws aussomException {
+		Object tobj = obj.get(key);
+		if (tobj instanceof JSONObject) {
+			JSONObject jm = (JSONObject) tobj;
+			AussomMap cm = new AussomMap();
+			for (Object k : jm.keySet()) {
+				String mk = (String) k;
+				Object v = jm.get(mk);
+				if (v instanceof JSONObject) {
+					cm.put(mk, AJson.unpackJsonData(env, (JSONObject) v));
+				} else {
+					throw new aussomException("json.unpack(): Malformed JSON, map value for key '" + mk + "' expecting JSON object but found '" + (v == null ? "null" : v.getClass().getName()) + "' instead.");
+				}
+			}
+			return cm;
+		} else {
+			throw new aussomException("json.unpack(): Getting value for key '" + key + "'. Expecting object of type JSONObject but found '" + tobj.getClass().getName() + "' instead.");
+		}
+	}
+
 	private static AussomType getJsonObject(Environment env, String type, JSONObject obj) throws aussomException {
 		Object tobj = obj.get("members");
 		if (tobj instanceof JSONObject) {

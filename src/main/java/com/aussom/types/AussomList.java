@@ -311,9 +311,9 @@ public class AussomList extends AussomObject implements AussomTypeInt, AussomTyp
 					|| ct instanceof AussomMap
 					|| ct instanceof AussomObject
 				) {
-				mparts.add(((AussomTypeObjectInt)ct).toJson(env, new ArrayList<AussomType>()).getValueString());
+				mparts.add(((AussomTypeObjectInt)ct).pack(env, new ArrayList<AussomType>()).getValueString());
 			} else {
-				return new AussomException("Unexpected type found '" + ct.getType().name() + "' when converting to JSON.");
+				return new AussomException("Unexpected type found '" + ct.getType().name() + "' when packing list.");
 			}
 		}
 		parts.add("\"value\":[" + Util.join(mparts, ",") + "]");

@@ -83,6 +83,17 @@ class Info {
     public buff = null;
 }
 
+// pack()/json.unpack() marshalling test helpers. All must be
+// no-arg-constructible, since unpack rebuilds via the no-arg constructor.
+class packInner { public packInner() {} public tag = "inner"; public n = 42; }
+class packScalars { public packScalars() {} public i = 7; public d = 3.14; public b = true; public s = "hi"; }
+class packNull { public packNull() {} public nul = null; }
+class packColl { public packColl() {} public lst = [ 1, 2, 3 ]; public slst = [ "a", "b" ]; public mp = { "x": 1, "y": "two" }; }
+class packSub { public packSub() {} public sub = null; }
+class packNested { public packNested() {} public items = null; public lookup = null; }
+// Has only a required-arg constructor (no no-arg): cannot be unpacked.
+class packNeedsArgs { public packNeedsArgs(int X) { this.x = X; } public x = 0; }
+
 class car {
     private make = "";
 
@@ -2352,6 +2363,63 @@ class interpreterTests {
 
         test.expect(unpacked.date.toString(), "2015-01-01T00:00:00.000Z");
         test.expect(unpacked.buff.getString(), "Hello World");
+    }
+
+    @Test(name = "(lang json) Pack/unpack scalar members (int, double, bool, string).")
+    public jsonPackScalars() {
+        u = json.unpack((new packScalars()).pack());
+        test.expect(u.i, 7);
+        test.expect(u.d, 3.14);
+        test.expect(u.b, true);
+        return test.expect(u.s, "hi");
+    }
+
+    @Test(name = "(lang json) Pack/unpack null member.")
+    public jsonPackNull() {
+        u = json.unpack((new packNull()).pack());
+        return test.expect(u.nul == null, true);
+    }
+
+    @Test(name = "(lang json) Pack/unpack list and map members.")
+    public jsonPackCollections() {
+        u = json.unpack((new packColl()).pack());
+        test.expect(u.lst[0], 1);
+        test.expect(u.lst[2], 3);
+        test.expect(u.slst[1], "b");
+        test.expect(u.mp['x'], 1);
+        return test.expect(u.mp['y'], "two");
+    }
+
+    @Test(name = "(lang json) Pack/unpack sub-object member.")
+    public jsonPackSubObject() {
+        o = new packSub();
+        o.sub = new packInner();
+        u = json.unpack(o.pack());
+        test.expect(u.sub instanceof 'packInner', true);
+        test.expect(u.sub.tag, "inner");
+        return test.expect(u.sub.n, 42);
+    }
+
+    @Test(name = "(lang json) Pack/unpack nested list of objects and map of objects.")
+    public jsonPackNested() {
+        o = new packNested();
+        o.items = [ new packInner(), new packInner() ];
+        o.items[1].tag = "second";
+        o.lookup = { "only": new packInner() };
+        o.lookup['only'].n = 99;
+        u = json.unpack(o.pack());
+        test.expect(u.items[0].tag, "inner");
+        test.expect(u.items[1].tag, "second");
+        test.expect(u.items[0] instanceof 'packInner', true);
+        return test.expect(u.lookup['only'].n, 99);
+    }
+
+    @Test(name = "(lang json) Unpack requires a no-arg constructor.")
+    public jsonPackNoArgRequired() {
+        packed = (new packNeedsArgs(5)).pack();
+        ex = false;
+        try { u = json.unpack(packed); } catch (e) { ex = true; }
+        return test.expect(ex, true);
     }
 	
 	

@@ -166,7 +166,7 @@ public class AussomInt extends AussomObject implements AussomTypeInt, AussomType
 	public AussomType pack(Environment env, ArrayList<AussomType> args) {
 		ArrayList<String> parts = new ArrayList<String>();
 		parts.add("\"type\":\"" + this.getClassDef().getName() + "\"");
-		parts.add("\"value\":" + this.toString(env, args) + "");
+		parts.add("\"value\":" + this.str(0) + "");
 		return new AussomString("{" + Util.join(parts, ",") + "}");
 	}
 }
