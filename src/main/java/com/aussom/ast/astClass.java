@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.aussom.CallStack;
@@ -78,7 +79,11 @@ public class astClass extends astNode implements astNodeInt {
 	private Map<String, astFunctDef> dispatchMap = new ConcurrentHashMap<>();
 	private List<astFunctDef> wildcardOverloads = new ArrayList<>();
 	private List<astFunctDef> variadicOverloads = new ArrayList<>();
-	private java.util.Set<String> declaredNames = ConcurrentHashMap.newKeySet();
+	private Set<String> declaredNames = ConcurrentHashMap.newKeySet();
+	// Dispatch keys where two or more reference-typed overloads accept a
+	// null argument in the same slot. A null call landing on one of these
+	// is ambiguous unless a wildcard/variadic overload absorbs it.
+	private Set<String> nullAmbiguousKeys = ConcurrentHashMap.newKeySet();
 
 	// Inherited members and functions are kept track of so we can
 	// reproduce the AST later.
@@ -250,17 +255,40 @@ public class astClass extends astNode implements astNodeInt {
 			StringBuilder sb = new StringBuilder(name.length() + 1 + arity * 2);
 			sb.append(name).append('#');
 			int rem = v;
+			// The variant is "primary" when every slot uses its declared
+			// tag (index 0). A higher index means the slot fell back to
+			// 'n' (a ref-shape type or null default accepting null).
+			boolean primary = true;
 			for (int i = 0; i < arity; i++) {
 				int idx = rem % tagsPerPos[i].length;
 				rem /= tagsPerPos[i].length;
+				if (idx != 0) primary = false;
 				if (i > 0) sb.append(',');
 				sb.append(tagsPerPos[i][idx]);
 			}
 			String key = sb.toString();
+			if (this.nullAmbiguousKeys.contains(key)) {
+				// Already ambiguous for a null argument in this slot; a
+				// third-or-later reference overload changes nothing.
+				continue;
+			}
 			astFunctDef prior = this.dispatchMap.get(key);
 			if (prior != null && prior != def) {
-				String displaySig = key.substring(name.length() + 1);
-				throw duplicateSignatureError(name, displaySig, prior, def);
+				// A collision on the primary variant is a genuine duplicate
+				// overload. A collision on a null-fallback variant is not:
+				// e.g. s(string) and s(list) both accept null in that slot,
+				// but remain distinguishable by a non-null argument. Such
+				// overloads are allowed to coexist; only a null argument is
+				// ambiguous between them. Drop the fast-path entry and mark
+				// the key so dispatch reports a clear ambiguity for null
+				// (unless a wildcard/variadic overload absorbs it).
+				if (primary) {
+					String displaySig = key.substring(name.length() + 1);
+					throw duplicateSignatureError(name, displaySig, prior, def);
+				}
+				this.dispatchMap.remove(key);
+				this.nullAmbiguousKeys.add(key);
+				continue;
 			}
 			this.dispatchMap.put(key, def);
 		}
@@ -623,6 +651,16 @@ public class astClass extends astNode implements astNodeInt {
 				if (rr.error != null) return rr.error;
 				fdef = rr.def;
 				useArgs = rr.args;
+			}
+
+			// A null argument landed on a slot where two or more
+			// reference-typed overloads apply, and no wildcard/variadic
+			// overload absorbed it in the slow paths. That is genuinely
+			// undecidable, so report it clearly rather than picking one.
+			if (fdef == null && this.nullAmbiguousKeys.contains(key)) {
+				AussomException e = new AussomException(exType.exRuntime);
+				e.setException(this.getLineNum(), "AMBIGUOUS_OVERLOAD", "Ambiguous overload for '" + functName + "': a null argument matches more than one reference-typed overload and cannot be resolved. Add a wildcard overload (e.g. " + functName + "(x)) to accept null explicitly.", env.getCallStack().getStackTrace());
+				return e;
 			}
 
 			if (fdef == null) {
@@ -1064,6 +1102,14 @@ public class astClass extends astNode implements astNodeInt {
 						this.functList.add(ee.getValue());
 					}
 					this.declaredNames.add(ee.getValue().getName());
+				}
+			}
+			// Inherit null-ambiguous dispatch keys so a child reports the
+			// same clear ambiguity, unless the child resolved it with its
+			// own concrete overload at that key.
+			for (String ak : ac.nullAmbiguousKeys) {
+				if (!this.dispatchMap.containsKey(ak)) {
+					this.nullAmbiguousKeys.add(ak);
 				}
 			}
 			for (astFunctDef pdef : ac.wildcardOverloads) {

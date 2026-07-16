@@ -295,6 +295,39 @@ class promoteBoth {
     public f(double x, double y) { return x + y; }
 }
 
+// Single-arg overload dispatch across types. Only one reference type
+// (string) is used here so the class parses today; two reference-typed
+// single-arg overloads currently collide (see the (single-arg coexist)
+// tests, which build such classes as source strings).
+class ovKind {
+    public k(int X) { return "int"; }
+    public k(double X) { return "double"; }
+    public k(bool X) { return "bool"; }
+    public k(string X) { return "string"; }
+}
+class ovVar {
+    public v(int X) { return "one"; }
+    public v(...) { return "var"; }
+}
+class ovDef {
+    public d(int X = 9) { return X; }
+}
+// Reference-typed single-arg overloads now coexist. A null argument is
+// ambiguous between them unless a wildcard overload absorbs it.
+class ovNull {
+    public s(string X) { return "string"; }
+    public s(list X) { return "list"; }
+}
+class ovNullWild {
+    public s(string X) { return "string"; }
+    public s(list X) { return "list"; }
+    public s(X) { return "wild"; }
+}
+class ovNullOne {
+    public s(string X) { return "string"; }
+}
+class ovNullChild : ovNull { public ovNullChild() {} }
+
 // Three-level inheritance with different overloads at each level.
 class shape3GP {
     public draw() { return "gp-no-args"; }
@@ -3256,6 +3289,145 @@ class interpreterTests {
     public typesSingleInt() {
         l = new location();
         return test.expect(l.set(42), "int");
+    }
+
+    // ---------- Single-arg overload by type ----------
+
+    @Test(name = "(single-arg) Int arg selects the int overload.")
+    public singleArgInt() { return test.expect((new ovKind()).k(5), "int"); }
+
+    @Test(name = "(single-arg) Double arg selects the double overload.")
+    public singleArgDouble() { return test.expect((new ovKind()).k(2.5), "double"); }
+
+    @Test(name = "(single-arg) Bool arg selects the bool overload.")
+    public singleArgBool() { return test.expect((new ovKind()).k(true), "bool"); }
+
+    @Test(name = "(single-arg) String arg selects the string overload.")
+    public singleArgString() { return test.expect((new ovKind()).k("x"), "string"); }
+
+    @Test(name = "(single-arg) Variadic coexists with a single typed overload.")
+    public singleArgVariadicOne() { return test.expect((new ovVar()).v(5), "one"); }
+
+    @Test(name = "(single-arg) Variadic catches the multi-arg call.")
+    public singleArgVariadicMany() { return test.expect((new ovVar()).v(1, 2), "var"); }
+
+    @Test(name = "(single-arg) Default single-arg overload uses default on no-arg call.")
+    public singleArgDefaultNone() { return test.expect((new ovDef()).d(), 9); }
+
+    @Test(name = "(single-arg) Default single-arg overload uses the provided value.")
+    public singleArgDefaultGiven() { return test.expect((new ovDef()).d(3), 3); }
+
+    // ---------- Single-arg overload coexistence across types ----------
+    // Two reference-typed single-arg overloads (string/list/map/object/
+    // callback) must be able to coexist on one method name; they are
+    // distinguishable by a non-null argument. Built as source strings so
+    // a parse error here can't break the whole test file.
+    // coexistOk() returns true when the source loads without error.
+
+    public coexistOk(string Name, string Body) {
+        src = "class " + Name + " { " + Body + " }\n";
+        ok = false;
+        try { r = new testRunner(); r.loadTestString(Name, src); ok = true; } catch (e) { ok = false; }
+        return ok;
+    }
+
+    @Test(name = "(single-arg coexist) string and list overloads coexist.")
+    public coexistStringList() {
+        return test.expect(this.coexistOk("ovSL", "public s(string X) { return 1; } public s(list X) { return 2; }"), true);
+    }
+
+    @Test(name = "(single-arg coexist) string and map overloads coexist.")
+    public coexistStringMap() {
+        return test.expect(this.coexistOk("ovSM", "public s(string X) { return 1; } public s(map X) { return 2; }"), true);
+    }
+
+    @Test(name = "(single-arg coexist) list and map overloads coexist.")
+    public coexistListMap() {
+        return test.expect(this.coexistOk("ovLM", "public s(list X) { return 1; } public s(map X) { return 2; }"), true);
+    }
+
+    @Test(name = "(single-arg coexist) string and object overloads coexist.")
+    public coexistStringObject() {
+        return test.expect(this.coexistOk("ovSO", "public s(string X) { return 1; } public s(object X) { return 2; }"), true);
+    }
+
+    @Test(name = "(single-arg coexist) list and callback overloads coexist.")
+    public coexistListCallback() {
+        return test.expect(this.coexistOk("ovLC", "public s(list X) { return 1; } public s(callback X) { return 2; }"), true);
+    }
+
+    @Test(name = "(single-arg coexist) reference overload with a default coexists with another.")
+    public coexistRefDefaults() {
+        return test.expect(this.coexistOk("ovRD", "public s(string X) { return 1; } public s(list X = []) { return 2; }"), true);
+    }
+
+    @Test(name = "(single-arg coexist) two defaulted single-arg overloads still conflict at zero-arg.")
+    public coexistBothDefaultsConflict() {
+        // Both accept a no-arg call via their defaults, so s() is a real
+        // ambiguity regardless of type -- this must still be rejected.
+        return test.expect(this.coexistOk("ovBD", "public s(string X = \"\") { return 1; } public s(list X = []) { return 2; }"), false);
+    }
+
+    @Test(name = "(single-arg coexist) three-way int, string, list coexist.")
+    public coexistIntStringList() {
+        return test.expect(this.coexistOk("ovISL", "public s(int X) { return 1; } public s(string X) { return 2; } public s(list X) { return 3; }"), true);
+    }
+
+    @Test(name = "(single-arg coexist) all single-arg types coexist.")
+    public coexistAllTypes() {
+        return test.expect(this.coexistOk("ovAll", "public s(int X) { return 1; } public s(double X) { return 2; } public s(bool X) { return 3; } public s(string X) { return 4; } public s(list X) { return 5; } public s(map X) { return 6; } public s(object X) { return 7; }"), true);
+    }
+
+    @Test(name = "(single-arg coexist) non-reference types coexist (control).")
+    public coexistNonRef() {
+        return test.expect(this.coexistOk("ovNR", "public s(int X) { return 1; } public s(double X) { return 2; } public s(bool X) { return 3; }"), true);
+    }
+
+    @Test(name = "(single-arg coexist) reference type coexists with variadic (control).")
+    public coexistRefVariadic() {
+        return test.expect(this.coexistOk("ovRV", "public s(string X) { return 1; } public s(...) { return 2; }"), true);
+    }
+
+    // ---------- Null argument against reference-typed overloads ----------
+
+    @Test(name = "(single-arg null) Non-null args dispatch to their reference overload.")
+    public nullArgTypedDispatch() {
+        o = new ovNull();
+        test.expect(o.s("x"), "string");
+        return test.expect(o.s([1]), "list");
+    }
+
+    @Test(name = "(single-arg null) Null arg is ambiguous between reference overloads.")
+    public nullArgAmbiguous() {
+        o = new ovNull();
+        ex = "";
+        try { o.s(null); } catch (e) { ex = e.getText(); }
+        return test.expect(ex.contains("Ambiguous overload"), true);
+    }
+
+    @Test(name = "(single-arg null) Wildcard overload absorbs a null arg.")
+    public nullArgWildcard() {
+        o = new ovNullWild();
+        test.expect(o.s("x"), "string");
+        test.expect(o.s([1]), "list");
+        return test.expect(o.s(null), "wild");
+    }
+
+    @Test(name = "(single-arg null) Single reference overload accepts null.")
+    public nullArgSingleRef() {
+        o = new ovNullOne();
+        test.expect(o.s("x"), "string");
+        return test.expect(o.s(null), "string");
+    }
+
+    @Test(name = "(single-arg null) Inherited reference overloads keep the null ambiguity.")
+    public nullArgInherited() {
+        o = new ovNullChild();
+        test.expect(o.s("x"), "string");
+        test.expect(o.s([1]), "list");
+        ex = "";
+        try { o.s(null); } catch (e) { ex = e.getText(); }
+        return test.expect(ex.contains("Ambiguous overload"), true);
     }
 
     // ---------- Numeric promotion (int -> double) ----------
