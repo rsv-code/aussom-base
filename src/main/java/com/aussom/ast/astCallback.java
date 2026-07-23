@@ -49,12 +49,20 @@ public class astCallback extends astNode implements astNodeInt {
 
 	@Override
 	public AussomType evalImpl(Environment env, boolean getref) throws aussomException {
-		AussomType ret = new AussomCallback(env, (AussomObject)env.getClassInstance(), this.functName);
+		AussomCallback cb = new AussomCallback(env, (AussomObject)env.getClassInstance(), this.functName);
+		// When the named function is a closure hoisted onto the
+		// current class, ::name captures the current locals so it
+		// behaves the same as the closure definition expression.
+		// Plain callbacks to regular functions are unaffected.
+		AussomObject ci = env.getClassInstance();
+		if (ci != null && ci.getClassDef() != null && ci.getClassDef().isClosureFunction(this.functName)) {
+			cb.setCapturedLocals(env.getLocals());
+		}
 		if (this.getChild() != null) {
-			Environment tenv = env.clone(ret);
+			Environment tenv = env.clone(cb);
 			return this.getChild().eval(tenv, getref);
 		}
-		return ret;
+		return cb;
 	}
 
 	public String getFunctName() {

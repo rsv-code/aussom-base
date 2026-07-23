@@ -4575,3 +4575,237 @@ class concurrentTests {
     public lockOuter() { return this.lk.withLock(::lockInner); }
     public lockInner() { return "nested"; }
 }
+
+/***********************************************************************
+ * closure test helpers
+ *********************************************************************/
+
+// Fires a supplied callback from a different class with a decoy
+// local of the same name in scope. Proves a closure fired through
+// its callback sees the captured defining scope, not the invoker's.
+class closureRunner {
+    public closureRunner() { }
+
+    public fire(callback cb) {
+        n = 1000;
+        return cb.call();
+    }
+
+    public fireWith(callback cb, v) {
+        n = 1000;
+        return cb.call(v);
+    }
+}
+
+// Owns closures used for cross-invocation, sibling-call, and
+// outside-access tests.
+class closureOwner {
+    public closureOwner() { }
+
+    // Returns a fresh scope-carrying callback each call. Two calls
+    // with different N capture independently.
+    public makeAdder(int n) {
+        return ::ownerAdd(int x) { return x + n; };
+    }
+
+    // Sibling method calls the closure by name with its own locals
+    // (the dynamic path from the requirements).
+    public callScaleByName() {
+        n = 5;
+        return this.ownerScale(4);
+    }
+
+    public defineScale() {
+        n = 2;
+        return ::ownerScale(int x) { return x * n; };
+    }
+}
+
+class closureTests {
+
+    @Test(name = "(closure) Definition expression evaluates to a callback.")
+    public closureIsCallback() {
+        n = 1;
+        scl = ::cloIsCb(int x) { return x * n; };
+        return test.expectCallback(scl);
+    }
+
+    @Test(name = "(closure) Basic capture of a parent local.")
+    public closureBasicCapture() {
+        n = 10;
+        scl = ::cloScale(int x) { return x * n; };
+        return test.expect(scl.call(5), 50);
+    }
+
+    @Test(name = "(closure) Captures a parent function argument.")
+    public closureCapturesArg() {
+        o = new closureOwner();
+        add = o.makeAdder(10);
+        return test.expect(add.call(5), 15);
+    }
+
+    @Test(name = "(closure) Independent captures across invocations.")
+    public closureIndependentCaptures() {
+        o = new closureOwner();
+        addTen = o.makeAdder(10);
+        addOne = o.makeAdder(1);
+        return test.expect(addTen.call(5) + addOne.call(5), 21);
+    }
+
+    @Test(name = "(closure) Assignment inside closure does not leak to parent.")
+    public closureAssignIsolated() {
+        v = 1;
+        f = ::cloSetter() { v = 99; return v; };
+        inner = f.call();
+        test.expect(inner, 99);
+        return test.expect(v, 1);
+    }
+
+    @Test(name = "(closure) Mutating a captured list is visible to parent.")
+    public closureListMutationShared() {
+        lst = [];
+        f = ::cloAdder() { lst @= "x"; return true; };
+        f.call();
+        return test.expect(#lst, 1);
+    }
+
+    @Test(name = "(closure) Closure arguments do not appear in parent scope.")
+    public closureArgsDontLeak() {
+        n = 2;
+        f = ::cloArgLeak(int marker) { return marker * n; };
+        f.call(21);
+        caught = false;
+        try { v = marker; } catch (e) { caught = true; }
+        return test.expectTrue(caught);
+    }
+
+    @Test(name = "(closure) Inline form passed directly as a call argument.")
+    public closureInlineArg() {
+        n = 3;
+        r = new closureRunner();
+        return test.expect(r.fireWith(::cloInline(int x) { return x + n; }, 100), 103);
+    }
+
+    @Test(name = "(closure) Stored callback fired from another class sees captured scope.")
+    public closureFiredElsewhere() {
+        n = 7;
+        scl = ::cloElsewhere() { return n; };
+        r = new closureRunner();
+        return test.expect(r.fire(scl), 7);
+    }
+
+    @Test(name = "(closure) Direct call by name from the defining function.")
+    public closureDirectByName() {
+        n = 4;
+        scl = ::cloDirect(int x) { return x * n; };
+        return test.expect(this.cloDirect(6), 24);
+    }
+
+    @Test(name = "(closure) Sibling method call by name sees the sibling's locals.")
+    public closureSiblingByName() {
+        o = new closureOwner();
+        return test.expect(o.callScaleByName(), 20);
+    }
+
+    @Test(name = "(closure) Recursion through the hoisted name.")
+    public closureRecursion() {
+        f = ::cloFact(int x) {
+            if (x <= 1) { return 1; }
+            return x * this.cloFact(x - 1);
+        };
+        return test.expect(f.call(5), 120);
+    }
+
+    @Test(name = "(closure) Nested closure captures the outer closure's scope.")
+    public closureNested() {
+        a = 2;
+        outer = ::cloNestOuter(int x) {
+            b = 3;
+            inner = ::cloNestInner(int y) { return y + a + b; };
+            return inner.call(x);
+        };
+        return test.expect(outer.call(1), 6);
+    }
+
+    @Test(name = "(closure) Capture is by reference: later parent writes are seen.")
+    public closureCaptureByReference() {
+        n = 6;
+        f = ::cloRefSem() { return n; };
+        n = 7;
+        return test.expect(f.call(), 7);
+    }
+
+    @Test(name = "(closure) Definitions in one invocation share the parent scope.")
+    public closureLoopSharedParent() {
+        cbs = [];
+        for (i = 0; i < 3; i++) {
+            n = i * 10;
+            cbs @= ::cloLoop() { return n; };
+        }
+        total = cbs[0].call() + cbs[1].call() + cbs[2].call();
+        return test.expect(total, 60);
+    }
+
+    @Test(name = "(closure) Overloads by signature at the same closure name.")
+    public closureOverloads() {
+        f1 = ::cloOv(int x) { return "int:" + x; };
+        f2 = ::cloOv(string s) { return "str:" + s; };
+        test.expect(this.cloOv(1), "int:1");
+        return test.expect(this.cloOv("a"), "str:a");
+    }
+
+    @Test(name = "(closure) Typed and default arguments.")
+    public closureArgKinds() {
+        f = ::cloArgs(int a, b = 5) { return a + b; };
+        test.expect(f.call(1), 6);
+        return test.expect(f.call(1, 2), 3);
+    }
+
+    @Test(name = "(closure) Etcetera arguments.")
+    public closureEtcArgs() {
+        f = ::cloEtc(int a, ...) { return a + #etc; };
+        test.expect(f.call(1), 1);
+        return test.expect(f.call(1, 2, 3, 4), 4);
+    }
+
+    @Test(name = "(closure) Empty body returns null.")
+    public closureEmptyBody() {
+        f = ::cloEmpty() { };
+        return test.expectNull(f.call());
+    }
+
+    @Test(name = "(closure) Call by name from outside the class is denied (private).")
+    public closureOutsideByNameDenied() {
+        o = new closureOwner();
+        ex = "";
+        try { o.ownerScale(4); } catch (e) { ex = e.getText(); }
+        return test.expectTrue(ex.contains("No access"));
+    }
+
+    @Test(name = "(closure) Firing the callback from outside the class succeeds.")
+    public closureOutsideCallbackAllowed() {
+        o = new closureOwner();
+        scl = o.defineScale();
+        r = new closureRunner();
+        return test.expect(r.fireWith(scl, 4), 8);
+    }
+
+    @Test(name = "(closure) ::name on a defined closure captures current locals.")
+    public closureRefCaptures() {
+        n = 9;
+        f = ::cloRefCap() { return n; };
+        g = ::cloRefCap;
+        r = new closureRunner();
+        return test.expect(r.fire(g), 9);
+    }
+
+    @Test(name = "(closure) ::name reference works before the definition statement runs.")
+    public closureHoistedEarlyRef() {
+        r = new closureRunner();
+        n = 11;
+        g = ::cloEarly;
+        early = r.fire(g);
+        f = ::cloEarly() { return n; };
+        return test.expect(early, 11);
+    }
+}

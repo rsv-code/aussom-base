@@ -1502,6 +1502,31 @@ public class Engine implements AussomDebuggingInt {
 		if (scanner.hasErrors()) {
 			this.setParseError();
 		}
+
+		// Closures defined in top-level statements never pass a
+		// classSection, so they are still pending when the parse
+		// finishes. Hoist them onto the synthetic script class. With
+		// no script class to receive them there is nowhere for the
+		// definition to live, so that is a parse error.
+		List<astFunctDef> leftovers = p.drainPendingClosures();
+		if (!leftovers.isEmpty()) {
+			if (this.scriptClass != null) {
+				try {
+					for (astFunctDef c : leftovers) {
+						this.scriptClass.addFunction(c.getName(), c);
+					}
+				} catch (aussomException e) {
+					// Duplicate closure name/signature on the script
+					// class.
+					console.get().err(e.getMessage());
+					this.setParseError();
+				}
+			} else {
+				console.get().err("PARSE_ERROR: Closure defined outside a class with no "
+					+ "script class to receive it.");
+				this.setParseError();
+			}
+		}
 	}
 
 	/**

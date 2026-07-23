@@ -28,7 +28,14 @@ public class AussomCallback extends AussomObject implements AussomTypeInt {
 	private String functName = "";
 	private AussomObject obj = null;
 	private Environment tenv = null;
-	
+
+	// Non-null only when this callback targets a closure. Holds a
+	// reference to the defining function invocation's locals, captured
+	// when the closure expression (or ::name on a closure) was
+	// evaluated. Dispatch copies it into the closure's fresh locals on
+	// every invocation. See design/closures.md.
+	private Members capturedLocals = null;
+
 	public AussomCallback() {
 		this.setType(cType.cCallback);
 
@@ -77,7 +84,7 @@ public class AussomCallback extends AussomObject implements AussomTypeInt {
 		env.setClassInstance(this.getObj());
 		try {
 			astClass ac = this.obj.getClassDef();
-			ret = ac.call(env, false, this.getFunctName(), args);
+			ret = ac.call(env, false, this.getFunctName(), args, this.capturedLocals);
 		} catch(aussomException e) {
 			env.setCurObj(tobj);
 			env.setClassInstance(tci);
@@ -95,6 +102,14 @@ public class AussomCallback extends AussomObject implements AussomTypeInt {
 
 	public void setFunctName(String functName) {
 		this.functName = functName;
+	}
+
+	public Members getCapturedLocals() {
+		return this.capturedLocals;
+	}
+
+	public void setCapturedLocals(Members CapturedLocals) {
+		this.capturedLocals = CapturedLocals;
 	}
 
 	@Override

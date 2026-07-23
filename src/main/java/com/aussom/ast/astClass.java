@@ -607,12 +607,38 @@ public class astClass extends astNode implements astNodeInt {
 	}
 
 	/**
+	 * True if any overload of Name on this class is a closure
+	 * definition. Used by astCallback to decide whether ::Name
+	 * should capture the current locals.
+	 */
+	public boolean isClosureFunction(String Name) {
+		if (!this.declaredNames.contains(Name)) return false;
+		for (astFunctDef d : this.functList) {
+			if (d.getClosure() && d.getName().equals(Name)) return true;
+		}
+		return false;
+	}
+
+	/**
 	 * Dispatches a call to one of this class's overloaded methods.
 	 * Resolution order: exact signature match -> numeric promotion
 	 * (int->double) -> wildcard candidates -> variadic. Falls
 	 * through to a stored callback member if no overload matches.
 	 */
 	public AussomType call (Environment env, boolean getRef, String functName, AussomList args) throws aussomException {
+		return this.call(env, getRef, functName, args, null);
+	}
+
+	/**
+	 * Dispatch overload with an explicit parent-locals argument for
+	 * closure calls. When the resolved overload is a closure, its
+	 * fresh locals are seeded with a shallow copy of ClosureParentLocals
+	 * (the scope captured on the callback at the definition site), or
+	 * of the invoker's env locals when ClosureParentLocals is null
+	 * (direct call by name). Non-closure targets ignore it entirely.
+	 * See design/closures.md.
+	 */
+	public AussomType call (Environment env, boolean getRef, String functName, AussomList args, Members closureParentLocals) throws aussomException {
 		AussomType ret = null;
 		AussomObject cobj = null;
 		if (env.getCurObj() != null && env.getCurObj() instanceof AussomObject) {
@@ -685,8 +711,23 @@ public class astClass extends astNode implements astNodeInt {
 				return e;
 			}
 
-			// Set up call environment.
+			// Set up call environment. A closure's locals are seeded
+			// with a shallow copy of the parent scope: the captured
+			// locals when invoked through a callback, or the invoker's
+			// locals when called directly by name. initArgs then layers
+			// the closure's own arguments on top, shadowing copied
+			// names. Copying fresh on every invocation keeps recursion
+			// and repeated calls isolated from each other.
 			Members locals = new Members();
+			if (fdef.getClosure()) {
+				Members parent = closureParentLocals;
+				if (parent == null) {
+					parent = env.getLocals();
+				}
+				if (parent != null) {
+					locals.getMap().putAll(parent.getMap());
+				}
+			}
 			Environment tenv = new Environment(env.getEngine());
 			if (cobj != null) ci = cobj;
 			tenv.setEnvironment(ci, locals, env.getCallStack());

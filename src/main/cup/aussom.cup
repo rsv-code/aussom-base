@@ -43,6 +43,21 @@ parser code {:
   // top-level statements are rejected with a parse error.
   astStatementList scriptStmtTarget = null;
 
+  // Closure definitions (::name(args) { ... }) reduce inside
+  // function bodies, long before the enclosing classSection does,
+  // so they cannot be attached to their class from the expClosure
+  // action. They accumulate here and are drained into the class
+  // by the classSection actions. Leftovers at end of parse are
+  // top-level script-mode closures; Engine.parseStatements drains
+  // those into the synthetic script class.
+  List<astFunctDef> pendingClosures = new ArrayList<astFunctDef>();
+
+  public List<astFunctDef> drainPendingClosures() {
+      List<astFunctDef> out = this.pendingClosures;
+      this.pendingClosures = new ArrayList<astFunctDef>();
+      return out;
+  }
+
   public parser(Lexer lex, Engine Eng, String FileName, boolean LoadExternClasses) {
       this(lex, Eng, FileName, LoadExternClasses, null);
   }
@@ -242,6 +257,7 @@ non terminal astNode								expFor;
 non terminal astNode								expForExp;
 non terminal astNode								expEtcetera;
 non terminal astNode								expCallback;
+non terminal astNode								expClosure;
 non terminal astNode								expNewList;
 non terminal astList								expNewListItems;
 non terminal astNode								expNewMap;
@@ -533,10 +549,16 @@ classSection ::=
 	LBRACKET RBRACKET
 	{:
 		astClass ac = new astClass();
+		for (astFunctDef c : this.parser.drainPendingClosures()) {
+			ac.addFunction(c.getName(), c);
+		}
 		RESULT = ac;
 	:}
 |	LBRACKET classBlocks:ac RBRACKET
 	{:
+		for (astFunctDef c : this.parser.drainPendingClosures()) {
+			((astClass)ac).addFunction(c.getName(), c);
+		}
 		RESULT = ac;
 	:}
 ;
@@ -916,6 +938,10 @@ expression ::=
 |	expCallback:cb
 	{:
 		RESULT = cb;
+	:}
+|	expClosure:cl
+	{:
+		RESULT = cl;
 	:}
 |	expression:el INSERT expression:er
 	{:
@@ -1806,6 +1832,36 @@ expCallback ::=
 		astCallback cb = new astCallback(s);
 		cb.setParserInfo(this.parser.fileName, cleft, cright, this.parser.cur_token.left, this.parser.cur_token.right);
 		RESULT = cb;
+	:}
+;
+
+expClosure ::=
+	CALLBACK:c expFunctDef:f LPAREN functDefArgList:al RPAREN LBRACKET instructionList:il RBRACKET
+	{:
+		astFunctDef fd = (astFunctDef)f;
+		fd.setParserInfo(this.parser.fileName, fleft, fright, this.parser.cur_token.left, this.parser.cur_token.right);
+		fd.setArgList(al);
+		fd.setInstructionList(il);
+		fd.setAccessType(AccessType.aPrivate);
+		fd.setClosure(true);
+		this.parser.pendingClosures.add(fd);
+
+		astClosure cl = new astClosure(fd.getName());
+		cl.setParserInfo(this.parser.fileName, cleft, cright, this.parser.cur_token.left, this.parser.cur_token.right);
+		RESULT = cl;
+	:}
+|	CALLBACK:c expFunctDef:f LPAREN functDefArgList:al RPAREN LBRACKET RBRACKET
+	{:
+		astFunctDef fd = (astFunctDef)f;
+		fd.setParserInfo(this.parser.fileName, fleft, fright, this.parser.cur_token.left, this.parser.cur_token.right);
+		fd.setArgList(al);
+		fd.setAccessType(AccessType.aPrivate);
+		fd.setClosure(true);
+		this.parser.pendingClosures.add(fd);
+
+		astClosure cl = new astClosure(fd.getName());
+		cl.setParserInfo(this.parser.fileName, cleft, cright, this.parser.cur_token.left, this.parser.cur_token.right);
+		RESULT = cl;
 	:}
 ;
 

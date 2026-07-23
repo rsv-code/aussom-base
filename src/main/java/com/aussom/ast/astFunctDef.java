@@ -30,7 +30,13 @@ public class astFunctDef extends astNode implements astNodeInt {
 	private astFunctDefArgsList argList = new astFunctDefArgsList();
 	private astStatementList instructionList = new astStatementList();
 	private boolean isExtern = false;
-	
+
+	// True when this definition was written as a closure expression
+	// (::name(args) { ... }) inside another function body and hoisted
+	// onto the class. Drives the parent-locals copy in astClass.call,
+	// the ::name capture check in astCallback, and doc generation.
+	private boolean isClosure = false;
+
 	public astFunctDef() {
 		this.setType(astNodeType.FUNCTDEF);
 	}
@@ -59,9 +65,17 @@ public class astFunctDef extends astNode implements astNodeInt {
 	public void setExtern(boolean extern) {
 		this.isExtern = extern;
 	}
-	
+
 	public boolean getExtern() {
 		return this.isExtern;
+	}
+
+	public void setClosure(boolean closure) {
+		this.isClosure = closure;
+	}
+
+	public boolean getClosure() {
+		return this.isClosure;
 	}
 
 	/**
@@ -551,6 +565,7 @@ public class astFunctDef extends astNode implements astNodeInt {
 		AussomMap ret = new AussomMap();
 
 		ret.put("name", new AussomString(this.getName()));
+		ret.put("isClosure", new AussomBool(this.isClosure));
 
 		List<astNode> args = this.argList.getArgs();
 		AussomList cargs = new AussomList();
