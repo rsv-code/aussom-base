@@ -4808,4 +4808,692 @@ class closureTests {
         f = ::cloEarly() { return n; };
         return test.expect(early, 11);
     }
+
+    /***********************************************************************
+     * Operator overloading tests.
+     * See design/operator-overloading.md.
+     *********************************************************************/
+
+    // Helper that builds an opVec with the provided values.
+    private mkVec(X, Y) {
+        v = new opVec();
+        v.setXY(X, Y);
+        return v;
+    }
+
+    /*
+     * Happy path.
+     */
+    @Test(name = "(operator overloading) Add two objects via __opAdd__.")
+    public opOvAddObjects() {
+        a = this.mkVec(1, 2);
+        b = this.mkVec(10, 20);
+        r = a + b;
+        return test.expectTrue(r.x == 11 && r.y == 22);
+    }
+
+    @Test(name = "(operator overloading) Typed int overload of __opAdd__ wins for int args.")
+    public opOvAddTypedInt() {
+        a = this.mkVec(1, 2);
+        r = a + 5;
+        return test.expectTrue(r.x == 6 && r.y == 7);
+    }
+
+    @Test(name = "(operator overloading) Subtract, multiply, divide, floor divide, modulus.")
+    public opOvArithmetic() {
+        a = this.mkVec(10, 20);
+        b = this.mkVec(1, 2);
+        s = a - b;
+        m = a * 3;
+        d = a / 2;
+        f = a ~/ 3;
+        o = a % 3;
+        return test.expectTrue(s.x == 9 && s.y == 18 && m.x == 30 && m.y == 60
+            && d.x == 5.0 && d.y == 10.0 && f.x == 3 && f.y == 6 && o.x == 1 && o.y == 2);
+    }
+
+    @Test(name = "(operator overloading) Reflected multiply: 3 * vec calls __opRightMul__.")
+    public opOvReflectedMul() {
+        a = this.mkVec(1, 2);
+        r = 3 * a;
+        return test.expectTrue(r.x == 3 && r.y == 6);
+    }
+
+    @Test(name = "(operator overloading) Mirrored comparison: 2 < vec calls vec.__opGt__(2).")
+    public opOvMirroredCompare() {
+        a = this.mkVec(1, 2);
+        return test.expectTrue((2 < a) && !(3 < a) && (3 <= a) && (4 > a) && (3 >= a));
+    }
+
+    @Test(name = "(operator overloading) Comparisons between objects use __opLt__ family.")
+    public opOvCompareObjects() {
+        a = this.mkVec(1, 2);
+        b = this.mkVec(10, 20);
+        return test.expectTrue((a < b) && (b > a) && (a <= b) && (b >= a) && !(b < a));
+    }
+
+    @Test(name = "(operator overloading) Equality via __opEq__ and negated inequality.")
+    public opOvEquality() {
+        a = this.mkVec(1, 2);
+        b = this.mkVec(1, 2);
+        d = this.mkVec(9, 9);
+        return test.expectTrue((a == b) && !(a == d) && (a != d) && !(a != b));
+    }
+
+    @Test(name = "(operator overloading) __opNotEq__ is preferred over negating __opEq__.")
+    public opOvNotEqPreferred() {
+        a = new opNotEqPref();
+        b = new opNotEqPref();
+        return test.expect(a != b, "notEqCalled");
+    }
+
+    @Test(name = "(operator overloading) __opEq__ may return a non-bool and == passes it through.")
+    public opOvEqNonBoolPassThrough() {
+        a = new opEqNonBool();
+        b = new opEqNonBool();
+        return test.expect(a == b, "same");
+    }
+
+    @Test(name = "(operator overloading) Unary ! and # call __opNot__ and __opCount__.")
+    public opOvUnary() {
+        z = this.mkVec(0, 0);
+        a = this.mkVec(1, 2);
+        return test.expectTrue((!z) && !(!a) && (#a == 2));
+    }
+
+    @Test(name = "(operator overloading) @= calls __opInsert__ and returns this.")
+    public opOvInsert() {
+        a = this.mkVec(1, 2);
+        r = (a @= 7);
+        (a @= 8) @= 9;
+        return test.expectTrue(r.x == 1 && #a.items == 3 && a.items[0] == 7 && a.items[2] == 9);
+    }
+
+    @Test(name = "(operator overloading) := calls __opSet__ with a map and yields the left object.")
+    public opOvSetMap() {
+        v = new opVec();
+        r = (v := { "x": 5, "y": 6 });
+        r.x = 77;
+        return test.expectTrue(v.x == 77 && v.y == 6);
+    }
+
+    @Test(name = "(operator overloading) := with __opSet__ accepts a non-map right side.")
+    public opOvSetNonMap() {
+        a = this.mkVec(3, 4);
+        v = new opVec();
+        v := a;
+        return test.expectTrue(v.x == 3 && v.y == 4);
+    }
+
+    @Test(name = "(operator overloading) & and | call __opAnd__ and __opOr__ on objects.")
+    public opOvAndOrObjects() {
+        a = this.mkVec(1, 0);
+        b = this.mkVec(1, 1);
+        r1 = a & b;
+        r2 = a | b;
+        return test.expectTrue(r1.x == 1 && r1.y == 0 && r2.x == 1 && r2.y == 1);
+    }
+
+    @Test(name = "(operator overloading) Reflected &: int & vec calls __opRightAnd__.")
+    public opOvReflectedAnd() {
+        a = this.mkVec(1, 1);
+        r = 1 & a;
+        return test.expectTrue(r.x == 1 && r.y == 1);
+    }
+
+    @Test(name = "(operator overloading) Every reflected method fires with the object on the right.")
+    public opOvReflectedAll() {
+        o = new opRefl();
+        return test.expectTrue((5 + o) == "radd:5" && (5 - o) == "rsub:5"
+            && (6 * o) == "rmul:6" && (8 / o) == "rdiv:8" && (9 ~/ o) == "rfdiv:9"
+            && (7 % o) == "rmod:7" && (4 & o) == "rand:4" && (4 | o) == "ror:4");
+    }
+
+    @Test(name = "(operator overloading) Equality with the overloading object on the right side.")
+    public opOvEqualityRightSide() {
+        o = new opEqRight();
+        n = new opNotEqPref();
+        return test.expectTrue((5 == o) && !(6 == o) && !(5 != o) && (6 != o)
+            && (1 != n) == "notEqCalled");
+    }
+
+    @Test(name = "(operator overloading) __opIndex__ reads with string and int keys.")
+    public opOvIndexRead() {
+        a = this.mkVec(4, 5);
+        return test.expectTrue(a["x"] == 4 && a["y"] == 5 && a[0] == 4 && a[1] == 5);
+    }
+
+    @Test(name = "(operator overloading) Chained access through an __opIndex__ result.")
+    public opOvIndexChained() {
+        a = this.mkVec(4, 5);
+        return test.expectTrue(a["list"][0] == 4 && a["list"][1] == 5);
+    }
+
+    @Test(name = "(operator overloading) __opIndexSet__ writes with string and int keys.")
+    public opOvIndexWrite() {
+        a = this.mkVec(1, 2);
+        a["x"] = 40;
+        a[1] = 50;
+        return test.expectTrue(a.x == 40 && a.y == 50);
+    }
+
+    @Test(name = "(operator overloading) Compound assignment desugars through __opAdd__.")
+    public opOvCompoundAssign() {
+        a = this.mkVec(1, 2);
+        b = this.mkVec(10, 20);
+        a += b;
+        return test.expectTrue(a.x == 11 && a.y == 22);
+    }
+
+    @Test(name = "(operator overloading) Compound assignment through member, list and map slots.")
+    public opOvCompoundSlots() {
+        h = new opPlain();
+        h.v = this.mkVec(1, 2);
+        h.v += this.mkVec(10, 20);
+        l = [ this.mkVec(1, 1) ];
+        l[0] += this.mkVec(2, 2);
+        m = { "k": this.mkVec(5, 5) };
+        m["k"] += this.mkVec(1, 1);
+        return test.expectTrue(h.v.x == 11 && l[0].x == 3 && m["k"].x == 6);
+    }
+
+    @Test(name = "(operator overloading) Compound assignment through an overloaded index.")
+    public opOvCompoundIndex() {
+        a = this.mkVec(1, 2);
+        a["x"] += 5;
+        return test.expectTrue(a.x == 6 && a.y == 2);
+    }
+
+    @Test(name = "(operator overloading) Operator methods are inherited and overridable.")
+    public opOvInheritance() {
+        ch = new opChild();
+        ch.setXY(1, 2);
+        b = this.mkVec(10, 20);
+        r = ch + b;
+        co = new opChildOverride();
+        r2 = co + b;
+        return test.expectTrue(r.x == 11 && r2.x == 999);
+    }
+
+    @Test(name = "(operator overloading) Operators work in deep expression positions.")
+    public opOvDeepPositions() {
+        a = this.mkVec(1, 2);
+        b = this.mkVec(10, 20);
+        lst = [ a + b ];
+        cond = false;
+        if (a < b) { cond = true; }
+        return test.expectTrue(lst[0].mag() == 33 && cond && this.takeMag(a + b) == 33);
+    }
+
+    // Non-test helper used by opOvDeepPositions.
+    private takeMag(v) {
+        return v.mag();
+    }
+
+    @Test(name = "(operator overloading) Operator call on an object stored in a collection.")
+    public opOvInCollection() {
+        lst = [ this.mkVec(1, 2) ];
+        r = lst[0] + this.mkVec(10, 20);
+        return test.expectTrue(r.x == 11 && r.y == 22);
+    }
+
+    @Test(name = "(operator overloading) A private operator method is still called via its operator.")
+    public opOvPrivateCall() {
+        p = new opPrivateAdd();
+        return test.expect(p + 1, 42);
+    }
+
+    /*
+     * Built-in & and | behavior.
+     */
+    @Test(name = "(bitwise operators) Int operands produce bitwise results.")
+    public opOvBitwiseInts() {
+        return test.expectTrue((6 & 3) == 2 && (6 | 3) == 7 && (12 | 1) == 13 && (6&3) == 2);
+    }
+
+    @Test(name = "(bitwise operators) Bool operands coerce to 0/1 and return int.")
+    public opOvBitwiseBoolCoerce() {
+        return test.expectTrue((true & 1) == 1 && (true & true) == 1 && (false | true) == 1 && (false & true) == 0);
+    }
+
+    @Test(name = "(bitwise operators) Precedence sits between comparisons and logical operators.")
+    public opOvBitwisePrecedence() {
+        pr1 = 2 > 1 & 3 > 2;
+        pr2 = 1 | 2 & 3;
+        pr3 = 4 & 2 && true;
+        return test.expectTrue(pr1 == 1 && pr2 == 3 && pr3 == false);
+    }
+
+    @Test(name = "(bitwise operators) Non-int operands raise an error naming the operator method.")
+    public opOvBitwiseNonInt() {
+        ex = "";
+        try { r = 1.5 & 2; } catch (e) { ex = e.getText(); }
+        return test.expectTrue(ex.contains("requires int operands") && ex.contains("cDouble"));
+    }
+
+    @Test(name = "(bitwise operators) The & and | characters still lex inside strings.")
+    public opOvBitwiseInStrings() {
+        s = "a & b | c";
+        return test.expect(#s, 9);
+    }
+
+    /*
+     * Negative and edge cases.
+     */
+    @Test(name = "(operator overloading) Plain objects keep today's operator errors, with hints.")
+    public opOvPlainErrors() {
+        p = new opPlain();
+        exSub = "";
+        exRightSub = "";
+        exCount = "";
+        exAnd = "";
+        exIdx = "";
+        try { r = p - 1; } catch (e) { exSub = e.getText(); }
+        try { r = 1 - p; } catch (e) { exRightSub = e.getText(); }
+        try { r = #p; } catch (e) { exCount = e.getText(); }
+        try { r = p & 1; } catch (e) { exAnd = e.getText(); }
+        try { r = p["k"]; } catch (e) { exIdx = e.getText(); }
+        return test.expectTrue(exSub.contains("__opSub__") && exRightSub.contains("__opSub__")
+            && exCount.contains("__opCount__") && exAnd.contains("__opAnd__")
+            && exIdx.contains("doesn't have member"));
+    }
+
+    @Test(name = "(operator overloading) Plain objects keep string concatenation for +.")
+    public opOvPlainConcat() {
+        p = new opPlain();
+        r1 = p + 5;
+        r2 = "x: " + p;
+        return test.expectTrue(#r1 > 0 && #r2 > 3);
+    }
+
+    @Test(name = "(operator overloading) __opRightAdd__ takes over string + object when defined.")
+    public opOvRightAddString() {
+        o = new opRStr();
+        return test.expect("x: " + o, "R:x: ");
+    }
+
+    @Test(name = "(operator overloading) Signature miss raises FUNCT_NOT_FOUND, no concat fallback.")
+    public opOvSignatureMiss() {
+        t = new opTypedOnly();
+        z = new opZeroArg();
+        exTyped = "";
+        exZero = "";
+        try { r = t + "str"; } catch (e) { exTyped = e.getText(); }
+        try { r = z + 1; } catch (e) { exZero = e.getText(); }
+        return test.expectTrue((t + 2) == 102 && exTyped.contains("no overload")
+            && exTyped.contains("Operator '+'") && exZero.contains("no overload"));
+    }
+
+    @Test(name = "(operator overloading) Null right side lands on the wildcard overload.")
+    public opOvNullOperand() {
+        a = this.mkVec(1, 2);
+        r = a + null;
+        return test.expectTrue(r.x == -1 && r.y == -1);
+    }
+
+    @Test(name = "(operator overloading) Null argument over ambiguous overloads raises the ambiguity error.")
+    public opOvNullAmbiguous() {
+        na = new opNullAmb();
+        ex = "";
+        try { r = na + null; } catch (e) { ex = e.getText(); }
+        return test.expectTrue(ex.contains("Ambiguous"));
+    }
+
+    @Test(name = "(operator overloading) Exceptions from operator methods propagate and are catchable.")
+    public opOvThrows() {
+        t = new opThrower();
+        exAdd = "";
+        exMiss = "";
+        try { r = t + 1; } catch (e) { exAdd = e.getText(); }
+        try { q = ?(t + 1); } catch (e) { exMiss = e.getText(); }
+        return test.expectTrue(exAdd.contains("add boom") && exMiss.contains("add boom"));
+    }
+
+    @Test(name = "(operator overloading) A failed __opIndexSet__ leaves the target unchanged.")
+    public opOvIndexSetThrows() {
+        t = new opThrower();
+        ex = "";
+        try { t["k"] = 5; } catch (e) { ex = e.getText(); }
+        return test.expectTrue(ex.contains("set boom") && t.n == 0);
+    }
+
+    @Test(name = "(operator overloading) Index write without __opIndexSet__ raises a clear error.")
+    public opOvIndexHalfDefined() {
+        ro = new opIdxOnly();
+        wo = new opIdxSetOnly();
+        exWrite = "";
+        exRead = "";
+        try { ro["k"] = 5; } catch (e) { exWrite = e.getText(); }
+        try { r = wo["k"]; } catch (e) { exRead = e.getText(); }
+        wo["k"] = 5;
+        return test.expectTrue(ro["k"] == 7 && exWrite.contains("__opIndexSet__")
+            && exRead.contains("__opIndex__") && wo.last == 5);
+    }
+
+    @Test(name = "(operator overloading) __opInsert__ returning non-this documents broken chaining.")
+    public opOvInsertBadReturn() {
+        ib = new opInsertBad();
+        r = (ib @= 1);
+        ex = "";
+        try { (ib @= 1) @= 2; } catch (e) { ex = e.getText(); }
+        return test.expectTrue(r == 7 && ex.contains("not a list"));
+    }
+
+    @Test(name = "(operator overloading) != with a non-bool __opEq__ and no __opNotEq__ errors.")
+    public opOvNotEqNonBool() {
+        a = new opEqNonBool();
+        b = new opEqNonBool();
+        ex = "";
+        try { r = a != b; } catch (e) { ex = e.getText(); }
+        return test.expectTrue(ex.contains("__opNotEq__"));
+    }
+
+    @Test(name = "(operator overloading) := on plain classes still requires a map.")
+    public opOvSetPlainStillMap() {
+        p = new opPlain();
+        ex = "";
+        try { p := 5; } catch (e) { ex = e.getText(); }
+        return test.expectTrue(ex.contains("map"));
+    }
+
+    /*
+     * Regression: short-circuit order of && and || is unchanged.
+     */
+    @Test(name = "(operator overloading) && and || still short-circuit with side effects.")
+    public opOvShortCircuitRegression() {
+        sc = new opCounter();
+        r1 = sc.bumpFalse() && sc.bumpTrue();
+        n1 = sc.n;
+        sc2 = new opCounter();
+        r2 = sc2.bumpTrue() || sc2.bumpTrue();
+        n2 = sc2.n;
+        return test.expectTrue(r1 == false && n1 == 1 && r2 == true && n2 == 1);
+    }
+
+    @Test(name = "(operator overloading) Primitive operator behavior is unchanged.")
+    public opOvPrimitiveRegression() {
+        s = "ab" + 1;
+        return test.expectTrue((1 + 2) == 3 && (5 - 2) == 3 && (2 * 3) == 6
+            && (7 % 3) == 1 && (7 ~/ 2) == 3 && (1 < 2) && ("a" < "b")
+            && s == "ab1" && #"abc" == 3 && !false);
+    }
+}
+
+/***********************************************************************
+ * Operator overloading helper classes.
+ * See design/operator-overloading.md.
+ *********************************************************************/
+
+/**
+ * Vector-like class overloading most operators. Comparisons compare
+ * by magnitude (x + y) against either another opVec or a number.
+ */
+class opVec {
+    public x = 0;
+    public y = 0;
+    public items = [];
+
+    public opVec() {}
+
+    public setXY(X, Y) {
+        this.x = X;
+        this.y = Y;
+        return this;
+    }
+
+    public mag() {
+        return this.x + this.y;
+    }
+
+    public __opAdd__(int rhs) {
+        r = new opVec();
+        return r.setXY(this.x + rhs, this.y + rhs);
+    }
+
+    public __opAdd__(rhs) {
+        if (rhs == null) {
+            // Marker result for the null operand test.
+            r = new opVec();
+            return r.setXY(-1, -1);
+        }
+        r = new opVec();
+        return r.setXY(this.x + rhs.x, this.y + rhs.y);
+    }
+
+    public __opSub__(rhs) {
+        r = new opVec();
+        return r.setXY(this.x - rhs.x, this.y - rhs.y);
+    }
+
+    public __opMul__(int rhs) {
+        r = new opVec();
+        return r.setXY(this.x * rhs, this.y * rhs);
+    }
+
+    public __opRightMul__(int lhs) {
+        return this.__opMul__(lhs);
+    }
+
+    public __opDiv__(int rhs) {
+        r = new opVec();
+        return r.setXY(this.x / rhs, this.y / rhs);
+    }
+
+    public __opFloorDiv__(int rhs) {
+        r = new opVec();
+        return r.setXY(this.x ~/ rhs, this.y ~/ rhs);
+    }
+
+    public __opMod__(int rhs) {
+        r = new opVec();
+        return r.setXY(this.x % rhs, this.y % rhs);
+    }
+
+    public __opEq__(rhs) {
+        if (rhs == null) { return false; }
+        return this.mag() == rhs.mag();
+    }
+
+    public __opLt__(rhs) {
+        if (rhs instanceof "opVec") { return this.mag() < rhs.mag(); }
+        return this.mag() < rhs;
+    }
+
+    public __opGt__(rhs) {
+        if (rhs instanceof "opVec") { return this.mag() > rhs.mag(); }
+        return this.mag() > rhs;
+    }
+
+    public __opLtEq__(rhs) {
+        if (rhs instanceof "opVec") { return this.mag() <= rhs.mag(); }
+        return this.mag() <= rhs;
+    }
+
+    public __opGtEq__(rhs) {
+        if (rhs instanceof "opVec") { return this.mag() >= rhs.mag(); }
+        return this.mag() >= rhs;
+    }
+
+    public __opNot__() {
+        return this.mag() == 0;
+    }
+
+    public __opCount__() {
+        return 2;
+    }
+
+    public __opInsert__(item) {
+        this.items @= item;
+        return this;
+    }
+
+    public __opSet__(init) {
+        if (init instanceof "opVec") {
+            this.x = init.x;
+            this.y = init.y;
+        } else {
+            this.x = init["x"];
+            this.y = init["y"];
+        }
+    }
+
+    public __opIndex__(key) {
+        if (key == "x" || key == 0) { return this.x; }
+        if (key == "y" || key == 1) { return this.y; }
+        if (key == "list") { return [ this.x, this.y ]; }
+        throw "opVec bad key";
+    }
+
+    public __opIndexSet__(key, value) {
+        if (key == "x" || key == 0) { this.x = value; }
+        else if (key == "y" || key == 1) { this.y = value; }
+        else { throw "opVec bad set key"; }
+    }
+
+    public __opAnd__(rhs) {
+        r = new opVec();
+        rx = 0;
+        ry = 0;
+        if (this.x != 0 && rhs.x != 0) { rx = 1; }
+        if (this.y != 0 && rhs.y != 0) { ry = 1; }
+        return r.setXY(rx, ry);
+    }
+
+    public __opOr__(rhs) {
+        r = new opVec();
+        rx = 0;
+        ry = 0;
+        if (this.x != 0 || rhs.x != 0) { rx = 1; }
+        if (this.y != 0 || rhs.y != 0) { ry = 1; }
+        return r.setXY(rx, ry);
+    }
+
+    public __opRightAnd__(lhs) {
+        r = new opVec();
+        rx = 0;
+        ry = 0;
+        if (lhs != 0 && this.x != 0) { rx = 1; }
+        if (lhs != 0 && this.y != 0) { ry = 1; }
+        return r.setXY(rx, ry);
+    }
+}
+
+// Inherits every operator method from opVec.
+class opChild : opVec {
+    public opChild() {}
+}
+
+// Overrides the wildcard __opAdd__ from opVec.
+class opChildOverride : opVec {
+    public opChildOverride() {}
+    public __opAdd__(rhs) {
+        r = new opVec();
+        return r.setXY(999, 999);
+    }
+}
+
+// No operator methods at all; used for unchanged-behavior tests.
+class opPlain {
+    public v = 1;
+    public opPlain() {}
+}
+
+// Only a typed int overload; other arg types must miss loudly.
+class opTypedOnly {
+    public opTypedOnly() {}
+    public __opAdd__(int rhs) { return 100 + rhs; }
+}
+
+// Zero-arg operator method never matches a binary operator call.
+class opZeroArg {
+    public opZeroArg() {}
+    public __opAdd__() { return 0; }
+}
+
+// __opEq__ returning a non-bool (elementwise style result).
+class opEqNonBool {
+    public opEqNonBool() {}
+    public __opEq__(rhs) { return "same"; }
+}
+
+// Defines both equality methods; __opNotEq__ must win for !=.
+class opNotEqPref {
+    public opNotEqPref() {}
+    public __opEq__(rhs) { return false; }
+    public __opNotEq__(rhs) { return "notEqCalled"; }
+}
+
+// Two reference-typed overloads make a null argument ambiguous.
+class opNullAmb {
+    public opNullAmb() {}
+    public __opAdd__(string rhs) { return "s"; }
+    public __opAdd__(list rhs) { return "l"; }
+}
+
+// Operator methods that throw; n proves no partial mutation.
+class opThrower {
+    public n = 0;
+    public opThrower() {}
+    public __opAdd__(rhs) { throw "add boom"; }
+    public __opIndex__(key) { throw "read boom"; }
+    public __opIndexSet__(key, value) { throw "set boom"; }
+}
+
+// Read-only overloaded index.
+class opIdxOnly {
+    public opIdxOnly() {}
+    public __opIndex__(key) { return 7; }
+}
+
+// Write-only overloaded index.
+class opIdxSetOnly {
+    public last = null;
+    public opIdxSetOnly() {}
+    public __opIndexSet__(key, value) { this.last = value; }
+}
+
+// __opInsert__ that breaks the return-this convention.
+class opInsertBad {
+    public opInsertBad() {}
+    public __opInsert__(item) { return 7; }
+}
+
+// Private operator method; the call documents the access behavior.
+class opPrivateAdd {
+    public opPrivateAdd() {}
+    private __opAdd__(rhs) { return 42; }
+}
+
+// Side-effect counter proving && and || still short-circuit.
+class opCounter {
+    public n = 0;
+    public opCounter() {}
+    public bumpTrue() { this.n = this.n + 1; return true; }
+    public bumpFalse() { this.n = this.n + 1; return false; }
+}
+
+// Reflected add on the right side of string + object.
+class opRStr {
+    public opRStr() {}
+    public __opRightAdd__(rhs) { return "R:" + rhs; }
+}
+
+// Every reflected method, each returning a tagged string so tests
+// can prove exactly which one fired.
+class opRefl {
+    public opRefl() {}
+    public __opRightAdd__(lhs) { return "radd:" + lhs; }
+    public __opRightSub__(lhs) { return "rsub:" + lhs; }
+    public __opRightMul__(lhs) { return "rmul:" + lhs; }
+    public __opRightDiv__(lhs) { return "rdiv:" + lhs; }
+    public __opRightFloorDiv__(lhs) { return "rfdiv:" + lhs; }
+    public __opRightMod__(lhs) { return "rmod:" + lhs; }
+    public __opRightAnd__(lhs) { return "rand:" + lhs; }
+    public __opRightOr__(lhs) { return "ror:" + lhs; }
+}
+
+// Equality overload used with the object on the right side.
+class opEqRight {
+    public opEqRight() {}
+    public __opEq__(rhs) { return rhs == 5; }
 }

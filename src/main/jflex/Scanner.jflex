@@ -154,6 +154,8 @@ new_line 		= \r\n;
 <YYINITIAL> "!"						{ return symbol(sym.NOT); }
 <YYINITIAL> "&&"					{ return symbol(sym.AND); }
 <YYINITIAL> "||"					{ return symbol(sym.OR); }
+<YYINITIAL> "&"						{ return symbol(sym.ANDB); }
+<YYINITIAL> "|"						{ return symbol(sym.ORB); }
 <YYINITIAL> "true"					{ return symbol(sym.BOOL, true); }
 <YYINITIAL> "false"					{ return symbol(sym.BOOL, false); }
 <YYINITIAL> "..."					{ return symbol(sym.ETCETERA); }

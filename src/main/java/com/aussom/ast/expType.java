@@ -35,6 +35,8 @@ public enum expType {
 	MISSNULL,
 	AND,
 	OR,
+	ANDB,
+	ORB,
 	COUNT,
 	INSERT,
 	PLEQ,

@@ -21,6 +21,7 @@ import com.aussom.types.AussomBool;
 import com.aussom.types.AussomDouble;
 import com.aussom.types.AussomException;
 import com.aussom.types.AussomException.exType;
+import com.aussom.types.AussomIndexRef;
 import com.aussom.types.AussomInt;
 import com.aussom.types.AussomList;
 import com.aussom.types.AussomMap;
@@ -156,6 +157,12 @@ public class astExpression extends astNode implements astNodeInt {
 				} case OR: {
 					ret = this.oper(env, getRef);
 					break;
+				} case ANDB: {
+					ret = this.oper(env, getRef);
+					break;
+				} case ORB: {
+					ret = this.oper(env, getRef);
+					break;
 				} case INSERT: {
 					ret = this.oper(env, getRef);
 					break;
@@ -228,6 +235,20 @@ public class astExpression extends astNode implements astNodeInt {
 		AussomType lres = this.left.eval(env, true);
 		if (!lres.isEx()) {
 		  if (lres.getType() == cType.cRef) {
+			// Overloaded index write target: obj[key] = value where the
+			// class defines __opIndexSet__. Call it here instead of
+			// ref.assign() so exceptions from the method propagate.
+			if (lres instanceof AussomIndexRef) {
+			  AussomIndexRef iref = (AussomIndexRef)lres;
+			  AussomType ival = this.right.eval(env, getRef);
+			  if (ival.isEx()) return ival;
+			  AussomList iargs = new AussomList();
+			  iargs.add(iref.getKey());
+			  iargs.add(ival);
+			  AussomType ires = OperOverload.call(env, this, "[]=", iref.getTarget(), OperOverload.OP_INDEX_SET, iargs);
+			  if (ires.isEx()) return ires;
+			  return ival;
+			}
 			AussomRef ref = (AussomRef)lres;
 			AussomType rval = this.right.eval(env, getRef);
 			if (!rval.isEx()) {
@@ -254,6 +275,18 @@ public class astExpression extends astNode implements astNodeInt {
 		if (!lres.isEx()) {
 			if (lres instanceof AussomObject) {
 				AussomObject ao = (AussomObject)lres;
+
+				// Overloaded init: a class defining __opSet__ takes over
+				// the := behavior and may accept any right-side type. The
+				// expression result stays the left object either way so
+				// init chains like a = new x() := {...} keep working.
+				if (OperOverload.hasOp(lres, OperOverload.OP_SET)) {
+					AussomType orres = this.right.eval(env, false);
+					if (orres.isEx()) return orres;
+					AussomType oret = OperOverload.callOne(env, this, ":=", ao, OperOverload.OP_SET, orres);
+					if (oret.isEx()) return oret;
+					return lres;
+				}
 
 				AussomType rres = this.right.eval(env, false);
 				if (!rres.isEx()) {
@@ -303,6 +336,27 @@ public class astExpression extends astNode implements astNodeInt {
 
 			AussomType r_right = right.eval(env, getRef);
 			if(!r_right.isEx()) {
+				// Operator overloading: a class instance operand may
+				// define an operator method. The left side wins, then
+				// the reflected/mirrored form on the right side. When
+				// neither overloads, the built-in behavior below runs
+				// unchanged. See design/operator-overloading.md.
+				if (this.eType == expType.EQEQ || this.eType == expType.NOTEQ) {
+					AussomType oret = this.callEqualityOverload(env, r_left, r_right);
+					if (oret != null) return oret;
+				} else {
+					String opName = OperOverload.binaryMethod(this.eType);
+					if (opName != null) {
+						if (OperOverload.hasOp(r_left, opName)) {
+							return OperOverload.callOne(env, this, OperOverload.symbol(this.eType), (AussomObject)r_left, opName, r_right);
+						}
+						String refl = OperOverload.reflectedMethod(this.eType);
+						if (OperOverload.hasOp(r_right, refl)) {
+							return OperOverload.callOne(env, this, OperOverload.symbol(this.eType), (AussomObject)r_right, refl, r_left);
+						}
+					}
+				}
+
 				switch(this.eType) {
 					case ADD: {
 						ret = evalPlus(env, r_left, r_right);
@@ -346,6 +400,12 @@ public class astExpression extends astNode implements astNodeInt {
 					} case OR: {
 						ret = evalOr(env, r_right);
 						break;
+					} case ANDB: {
+						ret = evalBitAnd(env, r_left, r_right);
+						break;
+					} case ORB: {
+						ret = evalBitOr(env, r_left, r_right);
+						break;
 					} case INSERT: {
 						ret = evalInsert(env, r_left, r_right);
 						break;
@@ -369,6 +429,86 @@ public class astExpression extends astNode implements astNodeInt {
 		return ret;
 	}
 	
+	/**
+	 * Overload handling for == and !=. Equality calls the same
+	 * method name on either side (the argument is always the other
+	 * operand). != prefers __opNotEq__, then falls back to negating
+	 * __opEq__, which then must return a bool. Returns null when
+	 * neither operand overloads so the built-in behavior runs.
+	 */
+	private AussomType callEqualityOverload(Environment env, AussomType r_left, AussomType r_right) throws aussomException {
+		if (this.eType == expType.NOTEQ) {
+			if (OperOverload.hasOp(r_left, OperOverload.OP_NOT_EQ)) {
+				return OperOverload.callOne(env, this, OperOverload.symbol(this.eType), (AussomObject)r_left, OperOverload.OP_NOT_EQ, r_right);
+			}
+			if (OperOverload.hasOp(r_right, OperOverload.OP_NOT_EQ)) {
+				return OperOverload.callOne(env, this, OperOverload.symbol(this.eType), (AussomObject)r_right, OperOverload.OP_NOT_EQ, r_left);
+			}
+			AussomType eqRes = null;
+			if (OperOverload.hasOp(r_left, OperOverload.OP_EQ)) {
+				eqRes = OperOverload.callOne(env, this, OperOverload.symbol(this.eType), (AussomObject)r_left, OperOverload.OP_EQ, r_right);
+			} else if (OperOverload.hasOp(r_right, OperOverload.OP_EQ)) {
+				eqRes = OperOverload.callOne(env, this, OperOverload.symbol(this.eType), (AussomObject)r_right, OperOverload.OP_EQ, r_left);
+			}
+			if (eqRes == null) return null;
+			if (eqRes.isEx()) return eqRes;
+			if (eqRes.getType() == cType.cBool) {
+				return new AussomBool(!((AussomBool)eqRes).getValue());
+			}
+			AussomException e = new AussomException(exType.exRuntime);
+			e.setException(this.getLineNum(), "OPERATOR_RETURN_NOT_BOOL", "astExpression.callEqualityOverload(): __opEq__ returned type '" + eqRes.getType().name() + "'; '!=' needs a bool to negate. Define __opNotEq__ for non-bool equality results.", env.getCallStack().getStackTrace());
+			return e;
+		} else {
+			if (OperOverload.hasOp(r_left, OperOverload.OP_EQ)) {
+				return OperOverload.callOne(env, this, OperOverload.symbol(this.eType), (AussomObject)r_left, OperOverload.OP_EQ, r_right);
+			}
+			if (OperOverload.hasOp(r_right, OperOverload.OP_EQ)) {
+				return OperOverload.callOne(env, this, OperOverload.symbol(this.eType), (AussomObject)r_right, OperOverload.OP_EQ, r_left);
+			}
+			return null;
+		}
+	}
+
+	/**
+	 * Builds an operator method hint for error messages when an
+	 * operand is a class instance that could overload but does not.
+	 * Returns an empty string for non-object operands so primitive
+	 * error messages stay exactly as they were.
+	 */
+	private String opHint(AussomType r_left, AussomType r_right) {
+		if (r_left.getType() != cType.cObject && (r_right == null || r_right.getType() != cType.cObject)) {
+			return "";
+		}
+		String name;
+		if (this.eType == expType.NOT) {
+			name = OperOverload.OP_NOT;
+		} else if (this.eType == expType.COUNT) {
+			name = OperOverload.OP_COUNT;
+		} else {
+			name = OperOverload.binaryMethod(this.eType);
+		}
+		if (name == null) return "";
+		return " Define " + name + " in the class to overload the '" + OperOverload.symbol(this.eType) + "' operator.";
+	}
+
+	private AussomType evalBitAnd(Environment env, AussomType r_left, AussomType r_right) {
+		if (this.isInt(r_left) && this.isInt(r_right)) {
+			return new AussomInt(this.getValueInt(r_left) & this.getValueInt(r_right));
+		}
+		AussomException e = new AussomException(exType.exRuntime);
+		e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalBitAnd(): Bitwise and (&) requires int operands, found '" + r_left.getType().name() + "' and '" + r_right.getType().name() + "'." + this.opHint(r_left, r_right), env.getCallStack().getStackTrace());
+		return e;
+	}
+
+	private AussomType evalBitOr(Environment env, AussomType r_left, AussomType r_right) {
+		if (this.isInt(r_left) && this.isInt(r_right)) {
+			return new AussomInt(this.getValueInt(r_left) | this.getValueInt(r_right));
+		}
+		AussomException e = new AussomException(exType.exRuntime);
+		e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalBitOr(): Bitwise or (|) requires int operands, found '" + r_left.getType().name() + "' and '" + r_right.getType().name() + "'." + this.opHint(r_left, r_right), env.getCallStack().getStackTrace());
+		return e;
+	}
+
 	private AussomType evalPlus(Environment env, AussomType r_left, AussomType r_right) {
 		AussomType ret;
 
@@ -409,11 +549,11 @@ public class astExpression extends astNode implements astNodeInt {
 		} else {
 		  if (!this.isNumber(r_left)) {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalMinus(): Left side of expression isn't a number.", env.getCallStack().getStackTrace());
+			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalMinus(): Left side of expression isn't a number, found type \'" + r_left.getType().name() + "\'." + this.opHint(r_left, r_right), env.getCallStack().getStackTrace());
 			return e;
 		  } else {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalMinus(): Right side of expression isn't a number.", env.getCallStack().getStackTrace());
+			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalMinus(): Right side of expression isn't a number, found type \'" + r_right.getType().name() + "\'." + this.opHint(r_left, r_right), env.getCallStack().getStackTrace());
 			return e;
 		  }
 		}
@@ -437,11 +577,11 @@ public class astExpression extends astNode implements astNodeInt {
 		} else {
 		  if (!this.isNumber(r_left)) {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalMult(): Left side of expression isn't a number.", env.getCallStack().getStackTrace());
+			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalMult(): Left side of expression isn't a number, found type \'" + r_left.getType().name() + "\'." + this.opHint(r_left, r_right), env.getCallStack().getStackTrace());
 			return e;
 		  } else {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalMult(): Right side of expression isn't a number.", env.getCallStack().getStackTrace());
+			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalMult(): Right side of expression isn't a number, found type \'" + r_right.getType().name() + "\'." + this.opHint(r_left, r_right), env.getCallStack().getStackTrace());
 			return e;
 		  }
 		}
@@ -475,11 +615,11 @@ public class astExpression extends astNode implements astNodeInt {
 		} else {
 		  if (!this.isNumber(r_left)) {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalDiv(): Left side of expression isn't a number.", env.getCallStack().getStackTrace());
+			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalDiv(): Left side of expression isn't a number, found type \'" + r_left.getType().name() + "\'." + this.opHint(r_left, r_right), env.getCallStack().getStackTrace());
 			return e;
 		  } else {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalDiv(): Right side of expression isn't a number.", env.getCallStack().getStackTrace());
+			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalDiv(): Right side of expression isn't a number, found type \'" + r_right.getType().name() + "\'." + this.opHint(r_left, r_right), env.getCallStack().getStackTrace());
 			return e;
 		  }
 		}
@@ -513,11 +653,11 @@ public class astExpression extends astNode implements astNodeInt {
 		} else {
 		  if (!this.isNumber(r_left)) {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalModulus(): Left side of expression isn't a number.", env.getCallStack().getStackTrace());
+			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalModulus(): Left side of expression isn't a number, found type \'" + r_left.getType().name() + "\'." + this.opHint(r_left, r_right), env.getCallStack().getStackTrace());
 			return e;
 		  } else {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalModulus(): Right side of expression isn't a number.", env.getCallStack().getStackTrace());
+			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalModulus(): Right side of expression isn't a number, found type \'" + r_right.getType().name() + "\'." + this.opHint(r_left, r_right), env.getCallStack().getStackTrace());
 			return e;
 		  }
 		}
@@ -551,11 +691,11 @@ public class astExpression extends astNode implements astNodeInt {
 		} else {
 		  if (!this.isNumber(r_left)) {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalFloorDiv(): Left side of expression isn't a number.", env.getCallStack().getStackTrace());
+			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalFloorDiv(): Left side of expression isn't a number, found type \'" + r_left.getType().name() + "\'." + this.opHint(r_left, r_right), env.getCallStack().getStackTrace());
 			return e;
 		  } else {
 			AussomException e = new AussomException(exType.exRuntime);
-			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalFloorDiv(): Right side of expression isn't a number.", env.getCallStack().getStackTrace());
+			e.setException(getLineNum(), "INVALID_EXPRESSION", "astExpression.evalFloorDiv(): Right side of expression isn't a number, found type \'" + r_right.getType().name() + "\'." + this.opHint(r_left, r_right), env.getCallStack().getStackTrace());
 			return e;
 		  }
 		}
@@ -612,7 +752,7 @@ public class astExpression extends astNode implements astNodeInt {
 		}
 		else {
 		  AussomException e = new AussomException(exType.exRuntime);
-		  e.setException(getLineNum(), "INVALID_COMPARISON", "astExpression.evalLessThan(): Less than comparison of non-number.", env.getCallStack().getStackTrace());
+		  e.setException(getLineNum(), "INVALID_COMPARISON", "astExpression.evalLessThan(): Less than comparison of non-number, found types \'" + r_left.getType().name() + "\' and \'" + r_right.getType().name() + "\'." + this.opHint(r_left, r_right), env.getCallStack().getStackTrace());
 		  return e;
 		}
 
@@ -640,7 +780,7 @@ public class astExpression extends astNode implements astNodeInt {
 		}
 		else {
 		  AussomException e = new AussomException(exType.exRuntime);
-		  e.setException(getLineNum(), "INVALID_COMPARISON", "astExpression.evalGreaterThan(): Greater than comparison of non-number.", env.getCallStack().getStackTrace());
+		  e.setException(getLineNum(), "INVALID_COMPARISON", "astExpression.evalGreaterThan(): Greater than comparison of non-number, found types \'" + r_left.getType().name() + "\' and \'" + r_right.getType().name() + "\'." + this.opHint(r_left, r_right), env.getCallStack().getStackTrace());
 		  return e;
 		}
 
@@ -668,7 +808,7 @@ public class astExpression extends astNode implements astNodeInt {
 		}
 		else {
 		  AussomException e = new AussomException(exType.exRuntime);
-		  e.setException(getLineNum(), "INVALID_COMPARISON", "astExpression.evalLessThanEquals(): Less than equals comparison of non-number.", env.getCallStack().getStackTrace());
+		  e.setException(getLineNum(), "INVALID_COMPARISON", "astExpression.evalLessThanEquals(): Less than equals comparison of non-number, found types \'" + r_left.getType().name() + "\' and \'" + r_right.getType().name() + "\'." + this.opHint(r_left, r_right), env.getCallStack().getStackTrace());
 		  return e;
 		}
 
@@ -696,7 +836,7 @@ public class astExpression extends astNode implements astNodeInt {
 		}
 		else {
 		  AussomException e = new AussomException(exType.exRuntime);
-		  e.setException(getLineNum(), "INVALID_COMPARISON", "astExpression.evalGreaterThanEquals(): Greater than equals comparison of non-number.", env.getCallStack().getStackTrace());
+		  e.setException(getLineNum(), "INVALID_COMPARISON", "astExpression.evalGreaterThanEquals(): Greater than equals comparison of non-number, found types \'" + r_left.getType().name() + "\' and \'" + r_right.getType().name() + "\'." + this.opHint(r_left, r_right), env.getCallStack().getStackTrace());
 		  return e;
 		}
 
@@ -717,7 +857,7 @@ public class astExpression extends astNode implements astNodeInt {
 		  return r_left;
 		} else {
 		  AussomException e = new AussomException(exType.exRuntime);
-		  e.setException(getLineNum(), "INSERT_NOT_POSSIBLE", "astExpression.evalInsert(): Left side of insert expression not a list.", env.getCallStack().getStackTrace());
+		  e.setException(getLineNum(), "INSERT_NOT_POSSIBLE", "astExpression.evalInsert(): Left side of insert expression not a list." + this.opHint(r_left, r_right), env.getCallStack().getStackTrace());
 		  return e;
 		}
 	}
@@ -958,6 +1098,14 @@ public class astExpression extends astNode implements astNodeInt {
 		} else {
 			AussomType r_left  = left.eval(env, getRef);
 			if(!r_left.isEx()) {
+				// Unary operator overloading: call __opNot__ / __opCount__
+				// on class instances that define them.
+				if (this.eType == expType.NOT && OperOverload.hasOp(r_left, OperOverload.OP_NOT)) {
+					return OperOverload.call(env, this, "!", (AussomObject)r_left, OperOverload.OP_NOT, new AussomList());
+				}
+				if (this.eType == expType.COUNT && OperOverload.hasOp(r_left, OperOverload.OP_COUNT)) {
+					return OperOverload.call(env, this, "#", (AussomObject)r_left, OperOverload.OP_COUNT, new AussomList());
+				}
 				switch(this.eType) {
 					case NOT: {
 						ret = evalNot(env, r_left);
@@ -1017,7 +1165,7 @@ public class astExpression extends astNode implements astNodeInt {
 		  return new AussomInt(((AussomString)r_left).getValue().length());
 		} else {
 		  AussomException e = new AussomException(exType.exRuntime);
-		  e.setException(getLineNum(), "ASSIGN_NOT_POSSIBLE", "astExpression.evalCount(): Count operator (#) cannot be used for data type '" + r_left.getType().name() + "'.", env.getCallStack().getStackTrace());
+		  e.setException(getLineNum(), "ASSIGN_NOT_POSSIBLE", "astExpression.evalCount(): Count operator (#) cannot be used for data type '" + r_left.getType().name() + "'." + this.opHint(r_left, null), env.getCallStack().getStackTrace());
 		  return e;
 		}
 	}

@@ -185,6 +185,8 @@ terminal				GTEQ;
 terminal				NOT;
 terminal				AND;
 terminal				OR;
+terminal				ANDB;
+terminal				ORB;
 terminal				COUNT;
 terminal				ETCETERA;
 terminal				CALLBACK;
@@ -277,6 +279,8 @@ precedence right SET;
 precedence right MIEQ, PLEQ, DIEQ, MODULUSEQ, MUEQ, INSERT;
 precedence left OR;
 precedence left AND;
+precedence left ORB;
+precedence left ANDB;
 precedence left EQEQ, NOTEQ, LT, GT, LTEQ, GTEQ;
 precedence left MI, PL;
 precedence left DI, MU, MODULUS, FLOORDIV;
@@ -1287,6 +1291,22 @@ operExp ::=
 		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
 		e.setRight(er);
 		e.seteType(expType.OR);
+		RESULT = e;
+	:}
+|	expression:el ANDB expression:er
+	{:
+		astExpression e = new astExpression(el);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
+		e.setRight(er);
+		e.seteType(expType.ANDB);
+		RESULT = e;
+	:}
+|	expression:el ORB expression:er
+	{:
+		astExpression e = new astExpression(el);
+		e.setParserInfo(this.parser.fileName, erleft, erright, this.parser.cur_token.left, this.parser.cur_token.right);
+		e.setRight(er);
+		e.seteType(expType.ORB);
 		RESULT = e;
 	:}
 ;

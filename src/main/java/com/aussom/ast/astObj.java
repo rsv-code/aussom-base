@@ -245,6 +245,44 @@ public class astObj  extends astNode implements astNodeInt {
 
 		// Object index likely found.
 		else if (env.getCurObj() instanceof AussomObject && this.getName().equals("") && this.index != null) {
+			// Overloaded index: a class defining __opIndex__ /
+			// __opIndexSet__ takes over dereference for its instances.
+			// See design/operator-overloading.md.
+			AussomObject idxObj = (AussomObject) env.getCurObj();
+			astClass idxCls = idxObj.getClassDef();
+			boolean hasIdx = idxCls != null && idxCls.hasAnyFunctionByName(OperOverload.OP_INDEX);
+			boolean hasIdxSet = idxCls != null && idxCls.hasAnyFunctionByName(OperOverload.OP_INDEX_SET);
+			if (hasIdx || hasIdxSet) {
+				Environment kenv = env.clone(null);
+				AussomType key = this.index.eval(kenv, false);
+				if (key.isEx()) {
+					return key;
+				}
+				// Terminal write target: hand back an index ref so
+				// astExpression.assignment() calls __opIndexSet__.
+				if (getRef && this.getChild() == null) {
+					if (hasIdxSet) {
+						return new AussomIndexRef(idxObj, key);
+					}
+					AussomException e = new AussomException(exType.exRuntime);
+					e.setException(this.getLineNum(), "ASSIGN_NOT_POSSIBLE", "astObj.evalObj(): Object '" + idxCls.getName() + "' overloads " + OperOverload.OP_INDEX + " but not " + OperOverload.OP_INDEX_SET + ", so index assignment isn't possible.", env.getCallStack().getStackTrace());
+					return e;
+				}
+				if (!hasIdx) {
+					AussomException e = new AussomException(exType.exRuntime);
+					e.setException(this.getLineNum(), "INDEX_NOT_FOUND", "astObj.evalObj(): Object '" + idxCls.getName() + "' overloads " + OperOverload.OP_INDEX_SET + " but not " + OperOverload.OP_INDEX + ", so index reads aren't possible.", env.getCallStack().getStackTrace());
+					return e;
+				}
+				AussomType res = OperOverload.callOne(env, this, "[]", idxObj, OperOverload.OP_INDEX, key);
+				if (res.isEx()) {
+					return res;
+				}
+				if (this.getChild() != null) {
+					Environment tenv = env.clone(res);
+					return this.getChild().eval(tenv, getRef);
+				}
+				return res;
+			}
 			Environment ienv = env.clone(null);
 			AussomType ctindex = this.index.eval(ienv, false);
 			if (ctindex.isEx()) {
