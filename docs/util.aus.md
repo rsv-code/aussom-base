@@ -9,43 +9,59 @@ encoding and decoding.
 
 #### Methods
 
-- **encode** (`object BufferObj`)
+- **encode** (`string Str`)
 
-	> Converts binary Buffer object to base64 encoded hex string.
+	> Encodes a string to a standard base64 string. The string is read as UTF-8 bytes. This is the everyday string path.
 
-	- **@p** `BufferObj` is the binary Buffer object to convert.
-	- **@r** `An` encoded string.
-
-
-- **encodeRaw** (`object BufferObj`)
-
-	> Converts binary Buffer object to raw base64 encoded string.
-
-	- **@p** `BufferObj` is the binary Buffer object to convert.
-	- **@r** `An` encoded string.
+	- **@p** `Str` is the string to encode.
+	- **@r** `A` base64 encoded string.
 
 
 - **decode** (`string B64EncodedString`)
 
-	> Converts base64 encoded hex string to binary Buffer object.
+	> Decodes a standard base64 string back to a string, reading the decoded bytes as UTF-8. Use this when the base64 represents text; use decodeBinary for arbitrary bytes.
 
 	- **@p** `B64EncodedString` is a base64 encoded string.
-	- **@r** `A` binary Buffer object with the result.
+	- **@r** `The` decoded string.
 
 
-- **decodeRaw** (`string B64EncodedString`)
+- **encodeBinary** (`object BufferObj`)
 
-	> Converts base64 encoded raw string to binary Buffer object.
+	> Encodes a binary Buffer object to a standard base64 string.
+
+	- **@p** `BufferObj` is the binary Buffer object to encode.
+	- **@r** `A` base64 encoded string.
+
+
+- **decodeBinary** (`string B64EncodedString`)
+
+	> Decodes a standard base64 string to a binary Buffer object.
 
 	- **@p** `B64EncodedString` is a base64 encoded string.
-	- **@r** `A` binary Buffer object with the result.
+	- **@r** `A` binary Buffer object with the decoded bytes.
+
+
+- **encodeSafe** (`string Str`)
+
+	> Encodes a string to a safe encoded string. The output uses only the characters 0-9 and a-f (hex of base64), so it needs no escaping in URLs, filenames, headers, or other text. The string is read as UTF-8 bytes.
+
+	- **@p** `Str` is the string to encode.
+	- **@r** `A` safe encoded string.
+
+
+- **decodeSafe** (`string SafeEncodedString`)
+
+	> Decodes a safe encoded string (see encodeSafe) back to a string, reading the decoded bytes as UTF-8.
+
+	- **@p** `SafeEncodedString` is a safe encoded string.
+	- **@r** `The` decoded string.
 
 
 
 
 ## class: uuid
 
-[76:21] `static` (extern: com.aussom.stdlib.AUuid) **extends: object** 
+[97:21] `static` (extern: com.aussom.stdlib.AUuid) **extends: object** 
 
 The static uuid class provides universal ID
 creation functionality.
@@ -70,7 +86,7 @@ creation functionality.
 
 ## class: hex
 
-[55:21] `static` (extern: com.aussom.stdlib.AHex) **extends: object** 
+[76:21] `static` (extern: com.aussom.stdlib.AHex) **extends: object** 
 
 The static hex class provides functions for hex
 encoding and decoding.
@@ -97,7 +113,7 @@ encoding and decoding.
 
 ## class: regex
 
-[97:21] `static` (extern: com.aussom.stdlib.ARegex) **extends: object** 
+[118:21] `static` (extern: com.aussom.stdlib.ARegex) **extends: object** 
 
 The static regex class provides various regular
 expression functionality. Aussom uses Java

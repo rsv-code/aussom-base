@@ -2547,7 +2547,7 @@ static extern class secman : com.aussom.stdlib.ASecMan {
  * The securitymanager class provides an object that you can
  * instantiate and provide to the Aussom engine to use.
  */
-static extern class securitymanager : com.aussom.stdlib.ASecurityManager {
+extern class securitymanager : com.aussom.stdlib.ASecurityManager {
     /**
      * Gets the security manager property value with
      * the provided property name. This function requires

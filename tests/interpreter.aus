@@ -377,6 +377,15 @@ class memChild : memParent { public memChild() {} }
 static class staticBase { public sval = 1; public sfn() { return "s"; } }
 class extendsStatic : staticBase { public extendsStatic() {} }
 
+// Instantiating a static class is not allowed either. A static class is a
+// singleton created once at startup, so any second instance would carry its
+// own copy of the members and silently drift from the singleton.
+static class staticNoNew {
+	public sval = 1;
+	public staticNoNew() {}
+	public sfn() { return "s"; }
+}
+
 // Extern + regular multiple inheritance. Combining a real extern parent
 // (AtomicLong) with a regular parent must work regardless of order.
 // Currently it only works when the extern is listed last: a regular
@@ -3679,6 +3688,51 @@ class interpreterTests {
         ex = false;
         try { o = new extendsStatic(); } catch (e) { ex = true; }
         return test.expect(ex, true);
+    }
+
+    // ---------- Static classes ----------
+
+    @Test(name = "(static class) Instantiating a static class with new is rejected.")
+    public staticNewRejected() {
+        ex = false;
+        try { o = new staticNoNew(); } catch (e) { ex = true; }
+        return test.expect(ex, true);
+    }
+
+    @Test(name = "(static class) Instantiating a static extern stdlib class with new is rejected.")
+    public staticExternNewRejected() {
+        ex = false;
+        try { o = new c(); } catch (e) { ex = true; }
+        return test.expect(ex, true);
+    }
+
+    @Test(name = "(static class) Instantiating a static class in a chained expression is rejected.")
+    public staticNewChainedRejected() {
+        ex = false;
+        try { v = (new staticNoNew()).sfn(); } catch (e) { ex = true; }
+        return test.expect(ex, true);
+    }
+
+    @Test(name = "(static class) reflect.instantiate on a static class is rejected.")
+    public staticReflectInstantiateRejected() {
+        ex = false;
+        try { o = reflect.instantiate("staticNoNew"); } catch (e) { ex = true; }
+        return test.expect(ex, true);
+    }
+
+    @Test(name = "(static class) json.unpack into a static class type is rejected.")
+    public staticJsonUnpackRejected() {
+        ex = false;
+        try {
+            o = json.unpack('{"type":"staticNoNew","members":{"sval":{"type":"int","value":9}}}');
+        } catch (e) { ex = true; }
+        return test.expect(ex, true);
+    }
+
+    @Test(name = "(static class) Static class singleton stays reachable by name.")
+    public staticSingletonAccessible() {
+        test.expect(staticNoNew.sval, 1);
+        return test.expect(staticNoNew.sfn(), "s");
     }
 
     @Test(name = "(inheritance) Extern parent listed after a regular parent works.")

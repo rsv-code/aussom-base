@@ -73,6 +73,16 @@ public class astNewInst extends astNode implements astNodeInt {
 			AussomList cargs = (AussomList) targs;
 			astClass ac = env.getEngine().getClassByName(this.getName());
 			if (ac != null) {
+				// A static class is a singleton built once at startup and
+				// reached by class name, so `new` on one is always a mistake.
+				// Catch it here rather than letting astClass throw so the
+				// script sees the reason instead of a generic wrapper.
+				if (ac.getStatic()) {
+					AussomException e = new AussomException(AussomException.exType.exRuntime);
+					e.setException(this.getLineNum(), "STATIC_INSTANTIATION", "Cannot instantiate static class '" + this.getName() + "' with 'new'. Static classes are singletons and are accessed by class name.", env.getCallStack().getStackTrace());
+					return e;
+				}
+
                 AussomObject cobj = null;
                 try {
                     cobj = (AussomObject) ac.instantiate(env, getref, cargs);

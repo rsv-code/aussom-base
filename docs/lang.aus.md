@@ -2,7 +2,7 @@
 
 ## class: exception
 
-[1364:14] (extern: com.aussom.types.AussomException) **extends: object** 
+[1397:14] (extern: com.aussom.types.AussomException) **extends: object** 
 
 The exception class is the object that is created or
 thrown when an exception occurs. In your catch (e) {}
@@ -70,7 +70,7 @@ block this is the object that is provided there.
 
 ## class: Buffer
 
-[1889:14] (extern: com.aussom.stdlib.ABuffer) **extends: object** 
+[1922:14] (extern: com.aussom.stdlib.ABuffer) **extends: object** 
 
 The Buffer object provides an object for handling binary
 data. Aussom doesn't natively support something like a
@@ -501,7 +501,7 @@ functionality.
 
 ## class: charset
 
-[1864:6] `static` **extends: object** 
+[1897:6] `static` **extends: object** 
 
 Defines available character set values.
 
@@ -517,7 +517,7 @@ Defines available character set values.
 
 ## class: c
 
-[1433:21] `static` (extern: com.aussom.stdlib.console) **extends: object** 
+[1466:21] `static` (extern: com.aussom.stdlib.console) **extends: object** 
 
 The static 'c' class also known as console is
 the standard object for writing to standard output.
@@ -899,6 +899,17 @@ Implements string datatype methods.
 	- **@r** `A` string with the leading and training whitespace removed.
 
 
+- **format** (`...`)
+
+	> Builds a new string from this string as a template, replacing placeholders with the provided arguments. This is the general-purpose alternative to building strings with '+'. Placeholders are written with curly braces: {}     the next positional argument, in order. {N}    the positional argument at index N (0 based). An index may be reused, e.g. "{0} {0}". {name} the value at key 'name' in the first map argument. Write '{{' or '}}' to include a literal brace. Scalar arguments are converted to their plain string form (a string is inserted unquoted). Lists and maps are rendered as compact JSON, e.g. [1,2,3] or {"a":1}, rather than the multi-line debug form. Examples: "Hello {}, you are {}.".format("Bob", 42) "{0}-{1}-{0}".format("a", "b") "{greeting}, {name}!".format({ "greeting": "Hi", "name": "Bob" })
+
+	- **@p** `etc` are the arguments referenced by the placeholders.
+	- **@r** `A` new formatted string.
+
+
+- **\_format** (`list Args`)
+
+
 - **toJson** ()
 
 	> Converts the value to a JSON encoded string.
@@ -1091,7 +1102,7 @@ functions can be used on any int value.
 
 ## class: list
 
-[816:14] (extern: com.aussom.types.AussomList) **extends: object** 
+[842:14] (extern: com.aussom.types.AussomList) **extends: object** 
 
 Implements list datatype methods.
 
@@ -1246,6 +1257,13 @@ Implements list datatype methods.
 	- **@r** `A` sorted list.
 
 
+- **reverse** ()
+
+	> Reverses the order of the items in the current list in place.
+
+	- **@r** `this` list.
+
+
 - **join** (`string Glue`)
 
 	> Joins the items in the current list with the provided string.
@@ -1314,7 +1332,7 @@ Implements list datatype methods.
 
 ## class: cnull
 
-[1336:14] (extern: com.aussom.types.AussomNull) **extends: object** 
+[1369:14] (extern: com.aussom.types.AussomNull) **extends: object** 
 
 Implements null datatype methods.
 
@@ -1627,7 +1645,7 @@ Int.maxVal() to get the maximum integer value.
 
 ## class: Date
 
-[1519:14] (extern: com.aussom.stdlib.ADate) **extends: object** 
+[1552:14] (extern: com.aussom.stdlib.ADate) **extends: object** 
 
 The Date class holds date and time information. Internally
 it stores a java.time.Instant. Hour, minute, and second
@@ -1963,7 +1981,7 @@ accessors are evaluated at UTC.
 
 ## class: securitymanager
 
-[2517:21] `static` (extern: com.aussom.stdlib.ASecurityManager) **extends: object** 
+[2550:14] (extern: com.aussom.stdlib.ASecurityManager) **extends: object** 
 
 The securitymanager class provides an object that you can
 instantiate and provide to the Aussom engine to use.
@@ -2013,7 +2031,7 @@ instantiate and provide to the Aussom engine to use.
 
 ## class: secman
 
-[2463:21] `static` (extern: com.aussom.stdlib.ASecMan) **extends: object** 
+[2496:21] `static` (extern: com.aussom.stdlib.ASecMan) **extends: object** 
 
 The static secman class implements function for working with
 the security manager of the currently executing engine.
@@ -2083,7 +2101,7 @@ to parse a string value.
 
 ## class: dateunit
 
-[1502:6] `static` **extends: object** 
+[1535:6] `static` **extends: object** 
 
 Defines the unit values accepted by Date.between(). Each member
 evaluates to its matching unit string, so between() can be called
@@ -2104,7 +2122,7 @@ string "days". This is less error prone than typing the string.
 
 ## class: callback
 
-[1279:14] (extern: com.aussom.types.AussomCallback) **extends: object** 
+[1312:14] (extern: com.aussom.types.AussomCallback) **extends: object** 
 
 Implements callback datatype methods. The callback is
 a function reference that can be passed around. This is
@@ -2167,7 +2185,7 @@ this rule.
 
 ## class: json
 
-[2426:21] `static` (extern: com.aussom.stdlib.AJson) **extends: object** 
+[2459:21] `static` (extern: com.aussom.stdlib.AJson) **extends: object** 
 
 The static json class implements some functions for
 working with JSON data.
@@ -2202,7 +2220,7 @@ working with JSON data.
 
 ## class: lang
 
-[2396:21] `static` (extern: com.aussom.stdlib.ALang) **extends: object** 
+[2429:21] `static` (extern: com.aussom.stdlib.ALang) **extends: object** 
 
 The staic lang object provides some standard
 functionality for the Aussom language.
@@ -2229,7 +2247,7 @@ functionality for the Aussom language.
 
 ## class: map
 
-[1052:14] (extern: com.aussom.types.AussomMap) **extends: object** 
+[1085:14] (extern: com.aussom.types.AussomMap) **extends: object** 
 
 Implements map datatype methods.
 
@@ -2390,7 +2408,7 @@ Implements map datatype methods.
 
 ## class: byteOrder
 
-[1877:6] `static` **extends: object** 
+[1910:6] `static` **extends: object** 
 
 Defines the byte order types.
 
@@ -2402,7 +2420,7 @@ Defines the byte order types.
 
 ## class: object
 
-[1211:14] (extern: com.aussom.types.AussomObject) 
+[1244:14] (extern: com.aussom.types.AussomObject) 
 
 Implements object datatype methods.
 

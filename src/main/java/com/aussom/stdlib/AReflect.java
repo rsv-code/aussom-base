@@ -123,6 +123,15 @@ public class AReflect {
 	
 	public static AussomType instantiate(Environment env, ArrayList<AussomType> args) {
 		String ClassName = ((AussomString)args.get(0)).getValue();
+
+		// Reflection must not be a back door around the `new` restriction:
+		// a static class is a singleton and is reached by class name, so
+		// refuse it here with a message that names the actual reason.
+		astClass target = env.getEngine().getClassByName(ClassName);
+		if (target != null && target.getStatic()) {
+			return new AussomException("reflect.instantiate(): Cannot instantiate static class '" + ClassName + "'. Static classes are singletons and are accessed by class name.");
+		}
+
 		try {
 			AussomObject co = env.getEngine().instantiateObject(ClassName);
 			return co;

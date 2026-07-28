@@ -78,7 +78,7 @@ the runtime that may not be granted.
 
 - **instantiate** (`string ClassName`)
 
-	> Instantiates a new object of the class type provided.
+	> Instantiates a new object of the class type provided. Static classes are rejected because they are singletons that are created once at startup and accessed by class name.
 
 	- **@p** `ClassName` is a string with the class name to instantiate.
 	- **@r** `A` new instance of that class.
@@ -98,7 +98,7 @@ the runtime that may not be granted.
 
 ## class: RClass
 
-[115:14] (extern: com.aussom.stdlib.AClass) **extends: object** 
+[117:14] (extern: com.aussom.stdlib.AClass) **extends: object** 
 
 The RClass object is an object that is returned
 when calling reflect.getClassDef(). It provides a way

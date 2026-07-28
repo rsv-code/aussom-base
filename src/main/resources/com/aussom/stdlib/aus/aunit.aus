@@ -326,7 +326,7 @@ static extern class test : com.aussom.stdlib.ATest {
 }
 
 
-static extern class testRunner : com.aussom.stdlib.ATestRunner {
+extern class testRunner : com.aussom.stdlib.ATestRunner {
     /**
      * Loads a test file with the provided file name and path. This
      * function also identifies and saves the test classes that can

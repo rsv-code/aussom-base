@@ -632,7 +632,7 @@ public class Engine implements AussomDebuggingInt {
 				ac.getName(), "<static-init>", "Static class initializer.");
 			staticFrame.setParent(this.mainCallStack);
 			tenv.setEnvironment((AussomObject) aci, locals, staticFrame);
-			aci = (AussomObject) ac.instantiate(tenv, false, new AussomList());
+			aci = (AussomObject) ac.instantiateStaticSingleton(tenv);
 			if (!aci.isEx()) {
 				this.staticClasses.put(ac.getName(), aci);
 			} else {
@@ -682,7 +682,15 @@ public class Engine implements AussomDebuggingInt {
 		Members locals = new Members();
 		tenv.setEnvironment(null, locals, this.mainCallStack);
 
-		AussomType tci = this.mainClassDef.instantiate(tenv, false, new AussomList());
+		// A static main class was already built once during the static
+		// startup pass, so reuse that singleton rather than instantiating a
+		// second, detached copy. Only a regular class is instantiated here.
+		AussomType tci;
+		if (this.mainClassDef.getStatic() && this.staticClasses.containsKey(this.mainClassDef.getName())) {
+			tci = this.staticClasses.get(this.mainClassDef.getName());
+		} else {
+			tci = this.mainClassDef.instantiate(tenv, false, new AussomList());
+		}
 		if(!tci.isEx())
 		{
 			this.mainClassInstance = (AussomObject) tci;
@@ -759,7 +767,12 @@ public class Engine implements AussomDebuggingInt {
 			Members locals = new Members();
 			tenv.setEnvironment(this.mainClassInstance, locals, this.mainCallStack);
 
-			AussomType result = this.classes.get(Name).instantiate(tenv, false, Args == null ? new AussomList() : Args);
+			AussomList cargs = Args;
+			if (cargs == null) {
+				cargs = new AussomList();
+			}
+
+			AussomType result = this.classes.get(Name).instantiate(tenv, false, cargs);
 			if (result.isEx()) {
 				throw new aussomException("instantiateObject('" + Name + "') failed: "
 					+ ((AussomException) result).stackTraceToString());
@@ -1497,6 +1510,7 @@ public class Engine implements AussomDebuggingInt {
 			// Convert any thrown parser-level exception (semantic
 			// action raise, lexer fatal, etc.) to the parse-error
 			// flag.
+			console.get().err(e.getMessage());
 			this.setParseError();
 		}
 		if (scanner.hasErrors()) {

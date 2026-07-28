@@ -238,7 +238,7 @@ should hold.
 
 ## class: testRunner
 
-[329:21] `static` (extern: com.aussom.stdlib.ATestRunner) **extends: object** 
+[329:14] (extern: com.aussom.stdlib.ATestRunner) **extends: object** 
 
 #### Methods
 

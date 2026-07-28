@@ -139,6 +139,10 @@ public class astClass extends astNode implements astNodeInt {
 		return this.membDefs;
 	}
 
+	public List<String> getMembersList() {
+		return this.membList;
+	}
+
 	/**
 	 * Adds a function definition to this class. The def is
 	 * classified by signature shape (exact, wildcard, variadic)
@@ -504,6 +508,30 @@ public class astClass extends astNode implements astNodeInt {
 	}
 
 	public AussomType instantiate(Environment env, boolean getRef, AussomList args) throws aussomException {
+		// A static class is a singleton: the engine builds its one and only
+		// object at startup and every reference to the class name resolves to
+		// that object. Building another one here would hand back a detached
+		// copy of the members that silently drifts from the singleton, so all
+		// callers other than the engine's startup path are refused.
+		if (this.isStatic) {
+			throw new aussomException(this, "Cannot instantiate static class '" + this.getName() + "'. Static classes are singletons and are accessed by class name.", env.stackTraceToString());
+		}
+		return this.instantiateImpl(env, getRef, args);
+	}
+
+	/**
+	 * Builds the single instance of a static class. This is the only way past
+	 * the static check in instantiate and is reserved for the engine's startup
+	 * pass over the static class definitions.
+	 * @param env is the Environment to instantiate against.
+	 * @return The newly built AussomObject for the static class.
+	 * @throws aussomException on member init or constructor failure.
+	 */
+	public AussomType instantiateStaticSingleton(Environment env) throws aussomException {
+		return this.instantiateImpl(env, false, new AussomList());
+	}
+
+	private AussomType instantiateImpl(Environment env, boolean getRef, AussomList args) throws aussomException {
 		// First run init if it hasn't been ran for the class.
 		this.init(env);
 
