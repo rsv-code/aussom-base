@@ -81,6 +81,11 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 		this.props.put("reflect.eval.string", false);
 		this.props.put("reflect.eval.file", false);
 		this.props.put("reflect.include.module", false);
+		// Discards collected parse diagnostics, so it is gated with
+		// the other reflect actions that change engine state.
+		// Reading them back (reflect.parseDiagnostics) is not gated,
+		// matching the other read-only reflect accessors.
+		this.props.put("reflect.clear.diagnostics", false);
 
 		/*
 		 * Aussomdoc actions. See com.aussom.stdlib.ALang.java.

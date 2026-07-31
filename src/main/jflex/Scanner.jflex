@@ -41,9 +41,17 @@ import com.aussom.stdlib.console;
   // via Engine.parseStatements) can pretend a snippet starts at any line.
   // Defaults to 0, leaving line numbers unchanged for every existing parse.
   int lineOffset = 0;
+  // Engine that receives structured diagnostics, or null when the
+  // lexer is used standalone. The lexer has no Engine reference of
+  // its own; Engine sets this at construction.
+  Engine diagEngine = null;
 
   public void setLineOffset(int offset) {
     this.lineOffset = offset;
+  }
+
+  public void setDiagnosticSink(Engine eng) {
+    this.diagEngine = eng;
   }
 
   private Symbol symbol(int sym) {
@@ -56,8 +64,17 @@ import com.aussom.stdlib.console;
 
   private void error(String message) {
     this.hasErrors = true;
-    console.get().err(this.fileName + " [" + (yyline+1) + "]: Error at line "
-      + (yyline+1) + ", column " + (yycolumn+1) + " : " + message);
+    // lineOffset must be applied here exactly as it is in symbol(),
+    // or a lexer error reports snippet-relative while every parser
+    // error and AST node reports absolute.
+    int line = yyline + 1 + lineOffset;
+    int col = yycolumn + 1;
+    console.get().err(this.fileName + " [" + line + "]: Error at line "
+      + line + ", column " + col + " : " + message);
+    if (this.diagEngine != null) {
+      this.diagEngine.addParseDiagnostic(
+        new ParseDiagnostic(this.fileName, line, col, message));
+    }
   }
 
   public boolean hasErrors() {

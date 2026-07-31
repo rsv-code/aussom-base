@@ -26,6 +26,10 @@ static extern class reflect : com.aussom.stdlib.AReflect {
 	/**
 	 * Evaluates the provided Aussom code string. Using this function
 	 * requires 'reflect.eval.string' security manager permission.
+	 *
+	 * Throws if the provided code fails to parse. Call
+	 * reflect.parseDiagnostics() in the catch block for the line,
+	 * column, and message.
 	 * @p CodeStr is a string with the code to evaluate.
 	 * @p Name is an optional name to be used as the file
 	 * name of the code.
@@ -63,6 +67,28 @@ static extern class reflect : com.aussom.stdlib.AReflect {
 	 * @r A list of strings with the class names loaded.
 	 */
 	public extern loadedClasses();
+
+	/**
+	 * Gets the structured parse diagnostics collected by the engine.
+	 * Each diagnostic carries its source position as data, so tooling
+	 * does not have to read it back out of the console output.
+	 *
+	 * Each entry is a map with the keys 'file', 'line', 'col',
+	 * 'severity', and 'message'. A line or col of 0 means the
+	 * diagnostic applies to the file as a whole and no position is
+	 * available.
+	 * @r A list of maps with one entry per diagnostic.
+	 */
+	public extern parseDiagnostics();
+
+	/**
+	 * Clears the collected parse diagnostics. Useful before an
+	 * evalStr call when only that call's diagnostics are of interest.
+	 * This function requires Security Manager permission
+	 * reflect.clear.diagnostics.
+	 * @r This object.
+	 */
+	public extern clearParseDiagnostics();
 
 	/**
 	 * Checks to see if the provided module name has been loaded.

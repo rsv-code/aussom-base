@@ -20,11 +20,14 @@ import java.util.ArrayList;
 
 import com.aussom.types.AussomType;
 import com.aussom.Environment;
+import com.aussom.ParseDiagnostic;
 import com.aussom.ast.astClass;
 import com.aussom.ast.aussomException;
 import com.aussom.types.AussomBool;
 import com.aussom.types.AussomException;
+import com.aussom.types.AussomInt;
 import com.aussom.types.AussomList;
+import com.aussom.types.AussomMap;
 import com.aussom.types.AussomNull;
 import com.aussom.types.AussomObject;
 import com.aussom.types.AussomString;
@@ -35,7 +38,26 @@ public class AReflect {
 			String code = ((AussomString)args.get(0)).getValue();
 			String name = ((AussomString)args.get(1)).getValue();
 			try {
+				// parseString reports a parse error by setting the
+				// engine flag and printing; it does not throw. Without
+				// the check below a script had no way at all to learn
+				// that the code it just evaluated failed to parse.
+				//
+				// The flag is engine-wide and sticky, so clear it
+				// first and observe only what this parse sets.
+				env.getEngine().clearParseError();
 				env.getEngine().parseString(name, code);
+				if (env.getEngine().hasParseErrors()) {
+					// Clear again before returning. The failure is
+					// reported to the caller as an exception, so the
+					// flag has done its job. Leaving it set poisons
+					// the engine: parseScriptLine consults it, so
+					// every later evalLine would throw a spurious
+					// parse error. Diagnostics are deliberately left
+					// in place for reflect.parseDiagnostics().
+					env.getEngine().clearParseError();
+					return new AussomException("reflect.evalStr(): Parse error in evaluated string '" + name + "'. Call reflect.parseDiagnostics() for the position and message.");
+				}
 				return env.getClassInstance();
 			} catch (aussomException e) {
 				return new AussomException(e.getMessage());
@@ -85,6 +107,29 @@ public class AReflect {
 		return list;
 	}
 	
+	public static AussomType parseDiagnostics(Environment env, ArrayList<AussomType> args) {
+		AussomList list = new AussomList();
+		for (ParseDiagnostic diag : env.getEngine().getParseDiagnostics()) {
+			AussomMap entry = new AussomMap();
+			entry.put("file", new AussomString(diag.getFileName()));
+			entry.put("line", new AussomInt((long)diag.getLine()));
+			entry.put("col", new AussomInt((long)diag.getCol()));
+			entry.put("severity", new AussomString(diag.getSeverity()));
+			entry.put("message", new AussomString(diag.getMessage()));
+			list.add(entry);
+		}
+		return list;
+	}
+
+	public static AussomType clearParseDiagnostics(Environment env, ArrayList<AussomType> args) {
+		if ((Boolean)env.getEngine().getSecurityManager().getProperty("reflect.clear.diagnostics")) {
+			env.getEngine().clearParseDiagnostics();
+			return env.getClassInstance();
+		} else {
+			return new AussomException("reflect.clearParseDiagnostics(): Security exception, action 'reflect.clear.diagnostics' not permitted.");
+		}
+	}
+
 	public static AussomType loadedClasses(Environment env, ArrayList<AussomType> args) {
 		AussomList list = new AussomList();
 		for (String cls : env.getEngine().getClasses().keySet()) {

@@ -19,6 +19,7 @@ package com.aussom;
 import java.io.File;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -86,9 +87,18 @@ public class Engine implements AussomDebuggingInt {
 	 * set to true the interpreter will fail to start.
 	 */
 	private boolean hasParseErrors = false;
-	
+
 	/**
-	 * Allowed resource include paths. These are includes that are 
+	 * Structured parse diagnostics collected during parsing. These
+	 * carry the source position as integers so tooling does not have
+	 * to recover it with regular expressions over the console
+	 * output. Populated alongside -- never instead of -- the existing
+	 * console messages. See design/error-reporting-fix.md.
+	 */
+	private List<ParseDiagnostic> parseDiagnostics = new ArrayList<ParseDiagnostic>();
+
+	/**
+	 * Allowed resource include paths. These are includes that are
 	 * located within the JAR package.
 	 */
 	private List<String> resourceIncludePaths = new ArrayList<String>();
@@ -536,6 +546,9 @@ public class Engine implements AussomDebuggingInt {
 	 */
 	public void parseString(String FileName, String Contents) throws Exception {
 		Lexer scanner = new Lexer(new StringReader(Contents), FileName);
+		// Diagnostics accumulate here; a file and its includes are
+		// separate parseString calls but one logical load.
+		scanner.setDiagnosticSink(this);
 		parser p = new parser(scanner, this, FileName, this.loadExternClasses);
 		p.parse();
 		// P2: lexer errors (e.g. illegal characters) are reported via
@@ -796,9 +809,54 @@ public class Engine implements AussomDebuggingInt {
 	 * Clears the parse-error flag. Lets a long-lived embedder
 	 * (e.g. the JSR 223 engine) recover from a failed parse so the
 	 * next call to parseString / run starts from a clean slate.
+	 *
+	 * Deliberately does NOT clear the parse diagnostics. Callers
+	 * clear the flag precisely when they are about to report the
+	 * failure (parseScriptLine does this before throwing), so
+	 * clearing diagnostics here would discard them at the moment the
+	 * consumer needs them. Use clearParseDiagnostics for that.
 	 */
 	public void clearParseError() {
 		this.hasParseErrors = false;
+	}
+
+	/**
+	 * Gets the structured parse diagnostics collected so far. Each
+	 * entry carries the file, line, column, severity, and message as
+	 * separate fields, so consumers do not have to parse the console
+	 * output to find a position.
+	 *
+	 * Lifetime differs by parse entry point, deliberately:
+	 * parseString accumulates, so a file and everything it includes
+	 * report as one batch (matching the sticky hasParseErrors flag);
+	 * parseStatements clears on entry, so a script-mode caller sees
+	 * only the diagnostics for the submission it just made. An
+	 * embedder mixing both on one engine must read diagnostics before
+	 * the next parseStatements call.
+	 *
+	 * @return An unmodifiable List of ParseDiagnostic.
+	 */
+	public List<ParseDiagnostic> getParseDiagnostics() {
+		return Collections.unmodifiableList(this.parseDiagnostics);
+	}
+
+	/**
+	 * Adds a structured parse diagnostic. Called by the lexer, the
+	 * parser, and the engine's own parse paths at the same points
+	 * they write a message to the console.
+	 * @param diag is the ParseDiagnostic to add.
+	 */
+	public void addParseDiagnostic(ParseDiagnostic diag) {
+		this.parseDiagnostics.add(diag);
+	}
+
+	/**
+	 * Clears the collected parse diagnostics. parseStatements calls
+	 * this on entry so each script-mode submission starts clean; a
+	 * caller driving parseString can call it to start a fresh batch.
+	 */
+	public void clearParseDiagnostics() {
+		this.parseDiagnostics.clear();
 	}
 
 	/* ============================================================
@@ -1501,16 +1559,25 @@ public class Engine implements AussomDebuggingInt {
 	 *        top-level statements.
 	 */
 	protected void parseStatements(String fileName, String source, int lineOffset, astStatementList target) {
+		// One submission is one parse. Drop diagnostics from any
+		// previous submission so the caller reads only its own.
+		this.clearParseDiagnostics();
+
 		Lexer scanner = new Lexer(new StringReader(source), fileName);
 		scanner.setLineOffset(lineOffset);
+		scanner.setDiagnosticSink(this);
 		parser p = new parser(scanner, this, fileName, this.loadExternClasses, target);
 		try {
 			p.parse();
 		} catch (Exception e) {
 			// Convert any thrown parser-level exception (semantic
 			// action raise, lexer fatal, etc.) to the parse-error
-			// flag.
+			// flag. The exception carries no position we can rely on,
+			// so the diagnostic is file-level.
 			console.get().err(e.getMessage());
+			this.addParseDiagnostic(new ParseDiagnostic(fileName,
+				ParseDiagnostic.NO_POSITION, ParseDiagnostic.NO_POSITION,
+				e.getMessage()));
 			this.setParseError();
 		}
 		if (scanner.hasErrors()) {
@@ -1525,19 +1592,30 @@ public class Engine implements AussomDebuggingInt {
 		List<astFunctDef> leftovers = p.drainPendingClosures();
 		if (!leftovers.isEmpty()) {
 			if (this.scriptClass != null) {
+				// Tracks the closure being added so a failure can be
+				// attributed to it rather than to the file at large.
+				astFunctDef adding = null;
 				try {
 					for (astFunctDef c : leftovers) {
+						adding = c;
 						this.scriptClass.addFunction(c.getName(), c);
 					}
 				} catch (aussomException e) {
 					// Duplicate closure name/signature on the script
 					// class.
 					console.get().err(e.getMessage());
+					this.addParseDiagnostic(new ParseDiagnostic(fileName,
+						adding.getLineNum(), adding.getColNum(),
+						e.getMessage()));
 					this.setParseError();
 				}
 			} else {
-				console.get().err("PARSE_ERROR: Closure defined outside a class with no "
-					+ "script class to receive it.");
+				astFunctDef orphan = leftovers.get(0);
+				String msg = "PARSE_ERROR: Closure defined outside a class with no "
+					+ "script class to receive it.";
+				console.get().err(fileName + " [" + orphan.getLineNum() + "]: " + msg);
+				this.addParseDiagnostic(new ParseDiagnostic(fileName,
+					orphan.getLineNum(), orphan.getColNum(), msg));
 				this.setParseError();
 			}
 		}

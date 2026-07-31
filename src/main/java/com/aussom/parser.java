@@ -1795,12 +1795,13 @@ public class parser extends java_cup.runtime.lr_parser {
       if (this.scriptStmtTarget == null) {
           this.syntaxErrors = true;
           this.eng.setParseError();
-          aussomException ce = new aussomException(n,
-              "PARSE_ERROR: Top-level statements are not allowed in this "
+          String msg = "PARSE_ERROR: Top-level statements are not allowed in this "
               + "parse context. Use Engine.setScriptMode(true) and "
-              + "Engine.evalLine for script-mode evaluation.",
-              "");
+              + "Engine.evalLine for script-mode evaluation.";
+          aussomException ce = new aussomException(n, msg, "");
           console.get().err(ce.getMessage());
+          this.eng.addParseDiagnostic(new ParseDiagnostic(this.fileName,
+              n.getLineNum(), n.getColNum(), msg));
           return;
       }
       this.scriptStmtTarget.addNode(n);
@@ -1817,8 +1818,10 @@ public class parser extends java_cup.runtime.lr_parser {
 	
 	astNode n = new astNode();
 	n.setParserInfo(this.fileName, symbol.left, symbol.right);
-	aussomException ce = new aussomException(n, "PARSE_ERROR: Unknown symbol found at line " + symbol.left + " column " + symbol.right + ".", "");
+	String msg = "PARSE_ERROR: Unknown symbol found at line " + symbol.left + " column " + symbol.right + ".";
+	aussomException ce = new aussomException(n, msg, "");
 	console.get().err(ce.getMessage());
+	this.eng.addParseDiagnostic(new ParseDiagnostic(this.fileName, symbol.left, symbol.right, msg));
 	this.eng.setParseError();
 	this.done_parsing();					// Forces parser to quit
   }
