@@ -405,7 +405,9 @@ public class astFunctDef extends astNode implements astNodeInt {
 			try {
 				Class<?> aclass = callingObj.getClassDef().getExternClass();
 				if (aclass == null) {
-					System.out.println("aclass null");
+					AussomException ex = new AussomException(exType.exRuntime);
+					ex.setException(this.getLineNum(), "EXTERN_CLASS_NOT_FOUND", "External class '" + callingObj.getClassDef().getExternClassName() + "' not found when calling '" + this.getName() + "'.", env.getCallStack().getStackTrace());
+					return ex;
 				}
 				Method meth = aclass.getMethod(this.getName(), Environment.class, ArrayList.class);
 				AussomType tmp = (AussomType)meth.invoke(o, env, fargs);

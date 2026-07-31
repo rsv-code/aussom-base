@@ -16,6 +16,8 @@
 
 package com.aussom;
 
+import com.aussom.stdlib.console;
+
 import java.io.*;
 import java.util.ArrayList;
 
@@ -103,7 +105,12 @@ public class Util {
 	public static String loadResource(String ResourceName) {
 		String ret = "";
 		
-		InputStream in = Util.class.getResourceAsStream(ResourceName); 
+		InputStream in = Util.class.getResourceAsStream(ResourceName);
+		if (in == null) {
+			console.get().err("Lang.loadResource(): InputStream for '" + ResourceName + "' is null.");
+			return "";
+		}
+
 		InputStreamReader rdr = new InputStreamReader(in);
 		try {
 			int len = -1;
@@ -113,7 +120,7 @@ public class Util {
 	        
 	        ret = buffer.toString();
 		} catch (IOException e) {
-			System.err.println("Lang.loadResource(): Failed to load resource '" + ResourceName + "'.");
+			console.get().err("Lang.loadResource(): Failed to load resource '" + ResourceName + "'.");
 		} finally {
 			if(rdr != null) {
 		        try { rdr.close(); }

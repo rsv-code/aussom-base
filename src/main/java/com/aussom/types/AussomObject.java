@@ -22,6 +22,7 @@ import com.aussom.Util;
 import com.aussom.ast.astClass;
 import com.aussom.ast.astFunctDef;
 import com.aussom.ast.aussomException;
+import com.aussom.stdlib.console;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -219,7 +220,7 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 			if (ret.getType() == cType.cString) {
 				return ((AussomString)ret).getValue();
 			} else if (ret.isEx()) {
-			  System.out.println(((AussomException)ret).stackTraceToString());
+				console.get().err(((AussomException)ret).stackTraceToString());
 			}
 		  }
 		return "cObject@" + Integer.toHexString(System.identityHashCode(this));
