@@ -1346,6 +1346,27 @@ public class Engine implements AussomDebuggingInt {
 	}
 
 	/**
+	 * Returns the long-lived Environment that script mode evaluates
+	 * top-level statements against, or null if script mode has not
+	 * been enabled. Its locals hold every top-level binding the
+	 * session has made, so this accessor is the bridge for tooling
+	 * that needs to read or manage session scope (e.g. a REPL
+	 * inspector listing what is currently defined).
+	 *
+	 * The returned Environment is the live one, not a copy, and its
+	 * locals are the live Members. Callers that mutate it change the
+	 * running session's scope.
+	 *
+	 * Read-only; does not trigger initialization, parsing, or
+	 * evaluation.
+	 *
+	 * @return An Environment for the script scope, or null.
+	 */
+	public Environment getScriptEnvironment() {
+		return this.scriptEnv;
+	}
+
+	/**
 	 * Single-argument convenience wrapper that calls
 	 * evalLine(source, 1).
 	 * @param source is the Aussom source string to parse and run.
