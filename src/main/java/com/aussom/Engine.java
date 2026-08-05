@@ -176,6 +176,14 @@ public class Engine implements AussomDebuggingInt {
 	private volatile DebuggerInt debugger = null;
 	private final ThreadLocal<Throwable> lastSeenThrowable = new ThreadLocal<Throwable>();
 
+	/*
+	 * Cancellation state. Set by cancel() from any thread and read at
+	 * every loop back edge by astWhile and astFor. Volatile because
+	 * the canceling thread is never the interpreter thread. See the
+	 * "Cancellation" section further down for the full contract.
+	 */
+	private volatile boolean cancelled = false;
+
 	/**
 	 * Default constructor. When called this gets an instance of the Universe object 
 	 * and initializes it if not already done. It loads universe classes and instantiates 
@@ -857,6 +865,84 @@ public class Engine implements AussomDebuggingInt {
 	 */
 	public void clearParseDiagnostics() {
 		this.parseDiagnostics.clear();
+	}
+
+	/* ============================================================
+	 * Cancellation
+	 *
+	 * A running Aussom program is stopped by asking it to stop, not
+	 * by killing the thread it runs on. cancel() raises a flag that
+	 * the interpreter reads at every loop back edge (astWhile and
+	 * astFor). When the flag is set, the loop stops and hands back an
+	 * AussomException whose id is CANCELLED_EXCEPTION_ID.
+	 *
+	 * Three properties matter to callers:
+	 *
+	 * 1. The result is a value, not a thrown Java exception. Runtime
+	 *    errors already travel back to the caller as AussomException
+	 *    values, so cancellation needs no special unwinding path.
+	 *
+	 * 2. The id is distinct. A host that runs untrusted code on a
+	 *    timeout must be able to tell "this program ran too long"
+	 *    apart from "this program has a bug", because the two call
+	 *    for completely different handling. Match on
+	 *    Engine.CANCELLED_EXCEPTION_ID, or on
+	 *    AussomException.isCancellation().
+	 *
+	 * 3. Aussom code cannot catch it. A cancellation is a decision
+	 *    made by the host, so a try/catch in the script re-raises it
+	 *    instead of swallowing it. See astTryCatch.
+	 *
+	 * cancel() is the only way to stop a program. Thread interrupt
+	 * status is deliberately not consulted, and that omission is a
+	 * decision rather than an oversight. Interruption is per-thread
+	 * state that any code on the stack can set or clear, while
+	 * cancellation is a property of the whole engine: a host may run
+	 * many threads against one Engine (see
+	 * design/aussom-concurrency.md), so treating one thread's
+	 * interrupt as a reason to stop the entire program invites
+	 * failures nobody asked for. A host that wants an interrupt to
+	 * stop a program calls cancel() itself. Callers using an
+	 * ExecutorService should therefore pair future.cancel(true) with
+	 * an explicit cancel(); the interrupt alone does nothing here.
+	 *
+	 * Only loop back edges are checked. That is enough to stop any
+	 * nonterminating program: running forever takes either a loop or
+	 * unbounded recursion, and unbounded recursion ends itself when
+	 * the Java stack runs out.
+	 * ============================================================ */
+
+	/**
+	 * Exception id reported when a program is stopped by cancel().
+	 */
+	public static final String CANCELLED_EXCEPTION_ID = "EXECUTION_CANCELLED";
+
+	/**
+	 * Requests that the running program stop. Safe to call from any
+	 * thread, including before run() starts. The flag is sticky: it
+	 * stays set until clearCancel() is called, so an engine that is
+	 * reused must be cleared first.
+	 */
+	public void cancel() {
+		this.cancelled = true;
+	}
+
+	/**
+	 * Returns true if cancel() has been called and not yet cleared.
+	 * @return A boolean with true for cancelled and false for not.
+	 */
+	public boolean isCancelled() {
+		return this.cancelled;
+	}
+
+	/**
+	 * Clears the cancellation flag so the engine can run again.
+	 * @return A boolean with the flag value before it was cleared.
+	 */
+	public boolean clearCancel() {
+		boolean prev = this.cancelled;
+		this.cancelled = false;
+		return prev;
 	}
 
 	/* ============================================================

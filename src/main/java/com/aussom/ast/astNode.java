@@ -416,6 +416,37 @@ public class astNode {
 		return ret;
 	}
 
+	/**
+	 * Loop back-edge cancellation check. Returns the cancellation
+	 * exception when the engine has been cancelled, and null
+	 * otherwise. Callers treat a non-null result the way they treat
+	 * any other exception value: stop looping and hand it back to the
+	 * caller.
+	 *
+	 * The returned exception carries Engine.CANCELLED_EXCEPTION_ID and
+	 * has its cancellation flag set, so a host can tell a stopped
+	 * program apart from a broken one, and astTryCatch can keep a
+	 * catch block from swallowing it.
+	 *
+	 * Engine.cancel() is the only thing consulted here. Thread
+	 * interrupt status is deliberately not read; see the
+	 * "Cancellation" section of Engine for why.
+	 *
+	 * @param env is the current Environment.
+	 * @return An AussomException to propagate, or null to keep going.
+	 */
+	protected AussomException checkCancellation(Environment env) {
+		if (!env.getEngine().isCancelled()) return null;
+
+		AussomException ex = new AussomException(AussomException.exType.exRuntime);
+		ex.setException(this.getLineNum(), Engine.CANCELLED_EXCEPTION_ID,
+			"Execution cancelled.",
+			"Execution was cancelled by the host via Engine.cancel().",
+			env.getCallStack().getStackTrace());
+		ex.setCancellation(true);
+		return ex;
+	}
+
 	public static boolean isBreakReturnEvent(AussomType ret) {
 		if((ret != null)&&((ret.getType() == cType.cReturn)||(ret.getType() == cType.cBreak))) return true;
 		return false;

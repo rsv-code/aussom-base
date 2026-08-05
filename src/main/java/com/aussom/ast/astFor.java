@@ -80,6 +80,11 @@ public class astFor extends astNode implements astNodeInt {
 		if(titems.getType() == cType.cList) {
 			AussomList al = (AussomList)titems;
 			for(int i = 0; i < al.getValue().size(); i++) {
+				// Cancellation check on the back edge. See the
+				// "Cancellation" section of Engine.
+				AussomType cancelled = this.checkCancellation(env);
+				if (cancelled != null) return cancelled;
+
 				AussomType item = al.getValue().get(i);
 				env.getLocals().add(this.eachVar.getName(), item);
 				
@@ -100,6 +105,11 @@ public class astFor extends astNode implements astNodeInt {
 			AussomMap am = (AussomMap)titems;
 			
 			for(String key : am.getValue().keySet()) {
+				// Cancellation check on the back edge. See the
+				// "Cancellation" section of Engine.
+				AussomType cancelled = this.checkCancellation(env);
+				if (cancelled != null) return cancelled;
+
 				AussomString tmp = new AussomString(key);
 				env.getLocals().add(this.eachVar.getName(), tmp);
 				
@@ -136,6 +146,11 @@ public class astFor extends astNode implements astNodeInt {
 		if (etmp.isEx()) return etmp;
 		AussomBool cond = etmp.evalExpressionBool();
 		while(cond.getValue()) {
+			// Cancellation check on the back edge. See the
+			// "Cancellation" section of Engine.
+			AussomType cancelled = this.checkCancellation(env);
+			if (cancelled != null) return cancelled;
+
 			for(astNode inst : this.instructions.getStatements()) {
 				ret = inst.eval(env, getref);
 				if(astNode.isBreakReturnExcept(ret))

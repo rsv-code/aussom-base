@@ -78,6 +78,14 @@ public class astTryCatch extends astNode implements astNodeInt
 		}
 		
 		if(!except.isNull()){
+			// A cancellation is a decision made by the host, not a
+			// fault in the program, so the catch block does not get
+			// to swallow it. Hand it straight back and let it unwind.
+			// See the "Cancellation" section of Engine.
+			if(((AussomException)except).isCancellation()) {
+				return except;
+			}
+
 			// Set the local object flag. This is needed or else
 			// when the exception object is used in the catch block
 			// it will be see as a regular exception and continue
