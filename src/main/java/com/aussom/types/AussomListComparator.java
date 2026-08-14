@@ -71,8 +71,8 @@ public class AussomListComparator implements Comparator, Serializable {
 					String vtwo = ((AussomTypeInt)two).str();
 					res = vone.compareTo(vtwo);
 				} else if(one.getType() == cType.cObject) {
-					String vone = ((AussomObject)one).getClassDef().getName();
-					String vtwo = ((AussomObject)two).getClassDef().getName();
+					String vone = ((AussomObject)one).getTypeName();
+					String vtwo = ((AussomObject)two).getTypeName();
 					res = vone.compareTo(vtwo);
 				} else if(one.isNull()) {
 					res = 0;

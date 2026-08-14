@@ -32,7 +32,6 @@ import com.aussom.Engine;
 import com.aussom.ParseDiagnostic;
 import com.aussom.TestSecurityManagerImpl;
 import com.aussom.ast.astStatementList;
-import com.aussom.stdlib.console;
 import com.aussom.types.AussomInt;
 import com.aussom.types.AussomString;
 
@@ -51,7 +50,6 @@ public class ParseDiagnostics {
 
 	@BeforeEach
 	void setUp() {
-		console.get().register(new DefaultLoggingImpl());
 	}
 
 	/**

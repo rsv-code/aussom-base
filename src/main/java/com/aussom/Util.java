@@ -16,7 +16,6 @@
 
 package com.aussom;
 
-import com.aussom.stdlib.console;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -97,18 +96,27 @@ public class Util {
 	}
 	
 	/**
-	 * Loads a file resource with the provided path 
+	 * Loads a file resource with the provided path
 	 * within the project/jar and returns it as a String.
+	 *
+	 * <p>Reports failure by throwing rather than by writing to a
+	 * global logger. This runs during bootstrap, before any Engine
+	 * exists to own a logger, and a missing or unreadable standard
+	 * library resource is not a condition any caller can continue
+	 * past. Previously it logged and returned an empty string, which
+	 * turned a packaging error into a confusing parse failure much
+	 * later.
+	 *
 	 * @param ResourceName is a String with the resource to get.
 	 * @return A String with the contents of the resource.
+	 * @throws IllegalStateException if the resource is missing or cannot be read.
 	 */
 	public static String loadResource(String ResourceName) {
 		String ret = "";
-		
+
 		InputStream in = Util.class.getResourceAsStream(ResourceName);
 		if (in == null) {
-			console.get().err("Lang.loadResource(): InputStream for '" + ResourceName + "' is null.");
-			return "";
+			throw new IllegalStateException("Util.loadResource(): resource '" + ResourceName + "' not found on the classpath.");
 		}
 
 		InputStreamReader rdr = new InputStreamReader(in);
@@ -117,10 +125,10 @@ public class Util {
 			char[] buff = new char[4096];
 			final StringBuffer buffer = new StringBuffer();
 			while ((len = rdr.read(buff)) > 0) { buffer.append(buff, 0, len); }
-	        
+
 	        ret = buffer.toString();
 		} catch (IOException e) {
-			console.get().err("Lang.loadResource(): Failed to load resource '" + ResourceName + "'.");
+			throw new IllegalStateException("Util.loadResource(): failed to read resource '" + ResourceName + "': " + e.getMessage(), e);
 		} finally {
 			if(rdr != null) {
 		        try { rdr.close(); }

@@ -865,7 +865,8 @@ public class astExpression extends astNode implements astNodeInt {
 	private AussomType evalInstanceOf(Environment env, AussomType r_left, AussomType r_right) {
 		if (r_left instanceof AussomObject) {
 			if (r_right instanceof AussomString) {
-				  if (((AussomObject)r_left).getClassDef().instanceOf(((AussomString)r_right).getValue())) {
+				  astClass leftDef = ((AussomObject)r_left).getClassDef(env);
+				  if (leftDef != null && leftDef.instanceOf(((AussomString)r_right).getValue())) {
 					  return new AussomBool(true);
 				  } else {
 					  return new AussomBool(false);
@@ -1255,7 +1256,7 @@ public class astExpression extends astNode implements astNodeInt {
 				// overload (any signature) for us.
 				if (key.length() < 2) {
 					AussomException e = new AussomException(exType.exRuntime);
-					e.setException(this.getLineNum(), "INIT_VAL_NOT_FOUND", "astExpression.init(): The provided init value '" + key + "' not found in object '" + ao.getClassDef().getName() + "'.", env.getCallStack().getStackTrace());
+					e.setException(this.getLineNum(), "INIT_VAL_NOT_FOUND", "astExpression.init(): The provided init value '" + key + "' not found in object '" + ao.getTypeName() + "'.", env.getCallStack().getStackTrace());
 					return e;
 				}
 				String setterName = "set" + key.substring(0, 1).toUpperCase() + key.substring(1);
@@ -1271,7 +1272,7 @@ public class astExpression extends astNode implements astNodeInt {
 					}
 				} else {
 					AussomException e = new AussomException(exType.exRuntime);
-					e.setException(this.getLineNum(), "INIT_VAL_NOT_FOUND", "astExpression.init(): The provided init value '" + key + "' not found in object '" + ao.getClassDef().getName() + "'.", env.getCallStack().getStackTrace());
+					e.setException(this.getLineNum(), "INIT_VAL_NOT_FOUND", "astExpression.init(): The provided init value '" + key + "' not found in object '" + ao.getTypeName() + "'.", env.getCallStack().getStackTrace());
 					return e;
 				}
 			}

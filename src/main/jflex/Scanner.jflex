@@ -20,7 +20,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import java_cup.runtime.Symbol;
-import com.aussom.stdlib.console;
 
 %%
 %class Lexer
@@ -69,11 +68,18 @@ import com.aussom.stdlib.console;
     // error and AST node reports absolute.
     int line = yyline + 1 + lineOffset;
     int col = yycolumn + 1;
-    console.get().err(this.fileName + " [" + line + "]: Error at line "
-      + line + ", column " + col + " : " + message);
+    String text = this.fileName + " [" + line + "]: Error at line "
+      + line + ", column " + col + " : " + message;
+    // Route through the owning engine's logger. diagEngine is null
+    // only when the lexer is driven standalone, in which case there
+    // is no engine to attribute the message to and stderr is the
+    // only sensible destination.
     if (this.diagEngine != null) {
+      this.diagEngine.getLogger().err(text);
       this.diagEngine.addParseDiagnostic(
         new ParseDiagnostic(this.fileName, line, col, message));
+    } else {
+      System.err.println(text);
     }
   }
 

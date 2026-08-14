@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
@@ -39,7 +41,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.aussom.DefaultLoggingImpl;
 import com.aussom.DefaultSecurityManagerImpl;
 import com.aussom.Engine;
-import com.aussom.stdlib.Lang;
+import com.aussom.ast.astClass;
+import com.aussom.stdlib.LangRegistry;
 import com.aussom.types.AussomInt;
 import com.aussom.types.AussomList;
 import com.aussom.types.AussomNull;
@@ -65,7 +68,8 @@ import com.aussom.types.MockFunctionSpyRecord;
  *    a shared object no longer loses members to a double-allocated
  *    Members instance.
  *  - Mock/MockFunction: spy records survive concurrent appends.
- *  - Lang.get(): one instance under concurrent first call.
+ *  - Engine construction: concurrent cold starts produce engines
+ *    that share no class definition and no LangRegistry.
  *
  * Also here: the cross-thread exactness stress tests for the
  * concurrent stdlib module (include concurrent;). The module's API
@@ -87,7 +91,6 @@ public class ConcurrencyRegressionTest {
 
 	@BeforeAll
 	void startPool() {
-		com.aussom.stdlib.console.get().register(new DefaultLoggingImpl());
 		pool = Executors.newFixedThreadPool(THREADS);
 	}
 
@@ -98,7 +101,6 @@ public class ConcurrencyRegressionTest {
 
 	@BeforeEach
 	void setUp() {
-		com.aussom.stdlib.console.get().register(new DefaultLoggingImpl());
 	}
 
 	/**
@@ -231,21 +233,35 @@ public class ConcurrencyRegressionTest {
 	}
 
 	@Test
-	@DisplayName("5. Lang.get() returns one instance under concurrent calls")
-	void langSingletonRace() throws Exception {
-		// Lang.instance is likely set by earlier engine use in this
-		// JVM; this still verifies every concurrent caller observes
-		// the same instance through the synchronized getter.
-		AtomicReference<Lang> seen = new AtomicReference<>();
+	@DisplayName("5. Concurrent engine construction yields fully independent engines")
+	void concurrentEngineConstruction() throws Exception {
+		// Replaces an older test that asserted the Lang singleton
+		// handed every caller the same instance. There is no singleton
+		// now: each engine parses lang.aus into its own table. What
+		// matters is the opposite property -- that concurrent cold
+		// starts produce engines that share nothing.
+		Set<astClass> stringDefs = ConcurrentHashMap.newKeySet();
+		Set<LangRegistry> registries = ConcurrentHashMap.newKeySet();
+		AtomicInteger built = new AtomicInteger();
 		int failures = raceThreads(() -> {
-			Lang l = Lang.get();
-			Lang prev = seen.getAndSet(l);
-			if (prev != null && prev != l) {
-				throw new IllegalStateException("two Lang instances observed");
+			try {
+				Engine e = new Engine(new DefaultSecurityManagerImpl());
+				astClass def = e.getClassByName("string");
+				if (def == null) {
+					throw new IllegalStateException("engine came up without a string class def");
+				}
+				stringDefs.add(def);
+				registries.add(e.getLangRegistry());
+				built.incrementAndGet();
+			} catch (Exception ex) {
+				throw new IllegalStateException(ex);
 			}
 		});
-		assertEquals(0, failures, "Lang.get() returned different instances");
-		assertSame(seen.get(), Lang.get());
+		assertEquals(0, failures, "concurrent engine construction threw");
+		assertEquals(built.get(), stringDefs.size(),
+			"engines shared a 'string' class definition; each must own its own");
+		assertEquals(built.get(), registries.size(),
+			"engines shared a LangRegistry; each must own its own");
 	}
 
 	/* ============================================================ */

@@ -16,13 +16,12 @@
 
 package com.aussom;
 
-import com.aussom.stdlib.console;
-
 /**
- * This interface provides the functions required
- * to implement a logger that can be registered with
- * the console. In order to register an interface
- * implementation call console.get().register(loggingImpl).
+ * This interface provides the functions required to implement a logger.
+ * Install one on the engine whose output you want with
+ * {@code engine.setLogger(loggingImpl)}. Output is a property of the
+ * engine that produced it, not of the thread that ran it, so two
+ * engines in one JVM never cross-route.
  */
 public interface LoggingInt {
     public void log(String Str);

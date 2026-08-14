@@ -17,7 +17,6 @@
 package com.aussom.types;
 
 import com.aussom.Environment;
-import com.aussom.Universe;
 import com.aussom.Util;
 import com.aussom.ast.astClass;
 import com.aussom.types.AussomListComparator.SortOrder;
@@ -33,8 +32,8 @@ public class AussomList extends AussomObject implements AussomTypeInt, AussomTyp
 	}
 	
 	public AussomList(boolean LinkClass) {
-		// Call parent AussomObject constructor with passed LinkClass arg or end up with 
-		// Universe freaking out because it can't find object class reference.
+		// Pass LinkClass through so a caller opting out of the extern
+		// self-linkage opts out of it on the parent too.
 		super(LinkClass);
 		
 		this.setType(cType.cList);
@@ -42,8 +41,10 @@ public class AussomList extends AussomObject implements AussomTypeInt, AussomTyp
 		if (LinkClass) {
 			// Setup linkage for string object.
 			this.setExternObject(this);
-			astClass def = Universe.get().LIST_CLASS_DEF;
-			if (def != null) this.setClassDef(def);
+			// No class definition is bound here; see
+			// design/multitenancy-safety.md section 7.2. LinkClass still
+			// controls the extern self-linkage, which is what callers
+			// passing false are actually opting out of.
 		}
 	}
 
@@ -297,7 +298,7 @@ public class AussomList extends AussomObject implements AussomTypeInt, AussomTyp
 		ArrayList<String> parts = new ArrayList<String>();
 		
 		// Object metadata.
-		parts.add("\"type\":\"" + this.getClassDef().getName() + "\"");
+		parts.add("\"type\":\"" + this.getTypeName() + "\"");
 		
 		ArrayList<String> mparts = new ArrayList<String>();
 		for (AussomType ct : this.value) {

@@ -16,11 +16,16 @@
 
 package com.aussom;
 
-import com.aussom.stdlib.console;
-
 import java.io.File;
 
 public class GenDocBase {
+    /*
+     * This is a build-time entry point with no Engine of its own --
+     * Main.getAussomdocMarkdown builds and discards one per file -- so
+     * it owns a plain logger rather than reaching for a global.
+     */
+    private static final LoggingInt LOG = new DefaultLoggingImpl();
+
     public static void main(String[] args) throws Exception {
         // Generates all the docs
         genDoc("src/main/resources/com/aussom/stdlib/aus/aunit.aus", "doc");
@@ -39,14 +44,14 @@ public class GenDocBase {
             buildOutDir(outDir);
 
             String aussomFile = ifile.getName();
-            console.get().info("Now to generate doc for file '" + aussomFile + "'.");
+            LOG.info("Now to generate doc for file '" + aussomFile + "'.");
             String outFile = aussomFile + ".md";
             if (!outDir.trim().equals(""))
                 outFile = outDir + "/" + outFile;
             Util.write(outFile, Main.getAussomdocMarkdown(inFile), false);
-            console.get().info("Wrote doc to '" + outFile + "'.");
+            LOG.info("Wrote doc to '" + outFile + "'.");
         } else {
-            console.get().err("Provided input file '" + inFile + "' wasn't found.");
+            LOG.err("Provided input file '" + inFile + "' wasn't found.");
         }
     }
 

@@ -48,7 +48,6 @@ import com.aussom.LoggingInt;
 import com.aussom.ast.astClass;
 import com.aussom.ast.astFunctDef;
 import com.aussom.ast.aussomException;
-import com.aussom.stdlib.console;
 import com.aussom.types.AussomException;
 import com.aussom.types.AussomList;
 import com.aussom.types.AussomMap;
@@ -66,7 +65,7 @@ import com.aussom.types.Members;
  * is serialized on a per-engine lock; the run path builds a fresh
  * Environment + CallStack + Members per call so concurrent evals do
  * not share mutable state. Console output is routed through the
- * per-thread ThreadLocal in com.aussom.stdlib.console.
+ * engine-owned logger (Engine.setLogger).
  */
 public class AussomScriptEngine extends AbstractScriptEngine
 		implements Compilable, Invocable {
@@ -262,8 +261,8 @@ public class AussomScriptEngine extends AbstractScriptEngine
 
 		AussomMap inBindings = collectBindingsAsMap(context);
 
-		LoggingInt prior = console.get().getLoggingInt();
-		console.get().register(new AussomScriptContextLogger(context));
+		LoggingInt prior = this.engine.getLogger();
+		this.engine.setLogger(new AussomScriptContextLogger(context));
 		try {
 			Environment env = new Environment(this.engine);
 			env.setEnvironment(null, new Members(), new CallStack());
@@ -308,7 +307,7 @@ public class AussomScriptEngine extends AbstractScriptEngine
 
 			return AussomBindingsMarshaller.fromAussom(ret);
 		} finally {
-			console.get().register(prior);
+			this.engine.setLogger(prior);
 		}
 	}
 
@@ -488,8 +487,8 @@ public class AussomScriptEngine extends AbstractScriptEngine
 			throw new ScriptException(
 				"Aussom engine: class '" + className + "' not found.");
 		}
-		LoggingInt prior = console.get().getLoggingInt();
-		console.get().register(new AussomScriptContextLogger(getContext()));
+		LoggingInt prior = this.engine.getLogger();
+		this.engine.setLogger(new AussomScriptContextLogger(getContext()));
 		try {
 			Environment env = new Environment(this.engine);
 			env.setEnvironment(null, new Members(), new CallStack());
@@ -506,16 +505,16 @@ public class AussomScriptEngine extends AbstractScriptEngine
 			AussomObject inst = (AussomObject) instTy;
 			return invokeOnInstance(cls, inst, name, args);
 		} finally {
-			console.get().register(prior);
+			this.engine.setLogger(prior);
 		}
 	}
 
 	private Object invokeOnInstance(astClass cls, AussomObject inst,
 			String name, Object[] args) throws ScriptException {
-		LoggingInt prior = console.get().getLoggingInt();
+		LoggingInt prior = this.engine.getLogger();
 		boolean weRegistered = false;
 		if (prior == null) {
-			console.get().register(new AussomScriptContextLogger(getContext()));
+			this.engine.setLogger(new AussomScriptContextLogger(getContext()));
 			weRegistered = true;
 		}
 		try {
@@ -544,7 +543,7 @@ public class AussomScriptEngine extends AbstractScriptEngine
 			return AussomBindingsMarshaller.fromAussom(ret);
 		} finally {
 			if (weRegistered) {
-				console.get().register(prior);
+				this.engine.setLogger(prior);
 			}
 		}
 	}

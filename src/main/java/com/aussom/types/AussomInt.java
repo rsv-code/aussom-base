@@ -17,7 +17,6 @@
 package com.aussom.types;
 
 import com.aussom.Environment;
-import com.aussom.Universe;
 import com.aussom.Util;
 import com.aussom.ast.astClass;
 
@@ -31,8 +30,12 @@ public class AussomInt extends AussomObject implements AussomTypeInt, AussomType
 
 		// Setup linkage for string object.
 		this.setExternObject(this);
-		astClass def = Universe.get().INT_CLASS_DEF;
-		if (def != null) this.setClassDef(def);
+		// No class definition is bound here. A primitive does not need
+		// one to exist, only to dispatch, and dispatch always has an
+		// Environment to resolve it from. Binding one at construction
+		// would mean reaching for a process-wide global, which is what
+		// let one engine's classes leak into another's.
+		// See design/multitenancy-safety.md section 7.2.
 	}
 
 	@Override
@@ -165,7 +168,7 @@ public class AussomInt extends AussomObject implements AussomTypeInt, AussomType
 	@Override
 	public AussomType pack(Environment env, ArrayList<AussomType> args) {
 		ArrayList<String> parts = new ArrayList<String>();
-		parts.add("\"type\":\"" + this.getClassDef().getName() + "\"");
+		parts.add("\"type\":\"" + this.getTypeName() + "\"");
 		parts.add("\"value\":" + this.str(0) + "");
 		return new AussomString("{" + Util.join(parts, ",") + "}");
 	}

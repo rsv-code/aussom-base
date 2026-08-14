@@ -17,12 +17,10 @@
 package com.aussom.types;
 
 import com.aussom.Environment;
-import com.aussom.Universe;
 import com.aussom.Util;
 import com.aussom.ast.astClass;
 import com.aussom.ast.astFunctDef;
 import com.aussom.ast.aussomException;
-import com.aussom.stdlib.console;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +51,23 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 
 	private Object externObject = null;
 
-	public AussomObject(astClass classDef) {}
+	/**
+	 * Builds an object bound to the provided class definition. This is
+	 * the way Java code should construct a typed Aussom object when it
+	 * has an engine to resolve the definition from, for example
+	 * {@code new AussomObject(env.getEngine().getClassByName("Buffer"))}.
+	 *
+	 * <p>This constructor previously had an empty body: it accepted the
+	 * definition and discarded it, which is why callers all followed it
+	 * with an explicit setClassDef.
+	 *
+	 * @param classDef is the astClass definition to bind, or null for none.
+	 */
+	public AussomObject(astClass classDef) {
+		this.setType(cType.cObject);
+		this.setExternObject(this);
+		if (classDef != null) this.setClassDef(classDef);
+	}
 
 	public AussomObject() {
 		this(true);
@@ -65,8 +79,10 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 		if (LinkClass) {
 			// Setup linkage for string object.
 			this.setExternObject(this);
-			astClass def = Universe.get().OBJECT_CLASS_DEF;
-			if (def != null) this.setClassDef(def);
+			// No class definition is bound here; see
+			// design/multitenancy-safety.md section 7.2. LinkClass still
+			// controls the extern self-linkage, which is what callers
+			// passing false are actually opting out of.
 		}
 	}
 
@@ -89,6 +105,65 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 
 	public void setClassDef(astClass classDef) {
 		this.classDef = classDef;
+	}
+
+	/**
+	 * Gets the class definition for this value, resolving it from the
+	 * running engine when the value does not carry one.
+	 *
+	 * <p>Primitives carry no definition: binding one at construction
+	 * would mean reaching for a process-wide global, and that is what
+	 * let one engine's classes leak into another's. They do not need
+	 * one to exist, only to dispatch, and every dispatch site has an
+	 * Environment. This is the accessor those sites use. The no-argument
+	 * getClassDef stays for callers that hold an instantiated object and
+	 * for null checks.
+	 *
+	 * @param env is the Environment to resolve from. May be null.
+	 * @return The astClass for this value, or null when it has none and
+	 *         none can be resolved.
+	 */
+	public astClass getClassDef(Environment env) {
+		astClass def = this.classDef;
+		if (def != null) return def;
+		if (env == null || env.getEngine() == null) return null;
+		return env.getEngine().getPrimitiveClassDef(this.getType());
+	}
+
+	/**
+	 * Gets the Aussom type name of this value.
+	 *
+	 * <p>Prefer this over {@code getClassDef().getName()} anywhere only
+	 * the name is wanted. It is derived from the value's own
+	 * {@link cType} and so answers for primitives, which carry no class
+	 * definition, as well as for instantiated objects. It also avoids a
+	 * pointless class-definition lookup on the hot paths that build
+	 * JSON and debug output.
+	 *
+	 * @return A String with the Aussom type name.
+	 */
+	public String getTypeName() {
+		cType t = this.getType();
+		if (t == null) {
+			if (this.classDef != null) return this.classDef.getName();
+			return "undef";
+		}
+		switch (t) {
+			case cBool:     return "bool";
+			case cInt:      return "int";
+			case cDouble:   return "double";
+			case cString:   return "string";
+			case cList:     return "list";
+			case cMap:      return "map";
+			case cNull:     return "cnull";
+			case cCallback: return "callback";
+			case cException: return "exception";
+			default:
+				// A user-defined or extern object: its name is the
+				// class it was instantiated from.
+				if (this.classDef != null) return this.classDef.getName();
+				return "object";
+		}
 	}
 
 	public Object getExternObject() {
@@ -150,27 +225,34 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 		return this.members.get(name);
 	}
 
+	/*
+	 * Debug dump. This runs with no Environment, so it must not assume
+	 * a class definition exists -- primitives never carry one, and an
+	 * object built with the LinkClass=false constructor does not
+	 * either. It previously dereferenced getClassDef() for the line
+	 * number before the null check below it, which meant any such
+	 * value threw here.
+	 */
 	@Override
 	public String toString(int Level) {
+		astClass def = this.classDef;
 		String rstr = "";
 
 		rstr += getTabs(Level);
 		rstr += "line ";
-		rstr += this.getClassDef().getLineNum();
+		if (def != null) rstr += def.getLineNum();
+		else rstr += "?";
 		rstr += ": ";
 		rstr += "[";
 		rstr += this.getType().name();
 		rstr += "] classDef='";
-		if(this.classDef != null)
-			rstr += this.getClassDef().getName();
-		else
-			rstr += "undef";
+		if (def != null) rstr += def.getName();
+		else rstr += "undef";
 		rstr += "'";
-		if(this.getClassDef().getName() != "")
-			rstr += " name='" + this.getClassDef().getName() + "'";
+		rstr += " name='" + this.getTypeName() + "'";
 		rstr += "\n";
 
-		if (this.getClassDef().getExtern() && this.getClassDef().getExternClass() != AussomObject.class && this.externObject instanceof AussomTypeInt) {
+		if (def != null && def.getExtern() && def.getExternClass() != AussomObject.class && this.externObject instanceof AussomTypeInt) {
 			AussomTypeInt ati = (AussomTypeInt)this.externObject;
 			rstr += getTabs(Level) + "value=" + ati.toString(Level + 1);
 			rstr += "\n";
@@ -220,7 +302,7 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 			if (ret.getType() == cType.cString) {
 				return ((AussomString)ret).getValue();
 			} else if (ret.isEx()) {
-				console.get().err(((AussomException)ret).stackTraceToString());
+				env.getEngine().getLogger().err(((AussomException)ret).stackTraceToString());
 			}
 		  }
 		return "cObject@" + Integer.toHexString(System.identityHashCode(this));
@@ -265,7 +347,7 @@ public class AussomObject extends AussomType implements AussomTypeInt, AussomTyp
 		} else {
 			ArrayList<String> parts = new ArrayList<String>();
 			// Object metadata.
-			parts.add("\"type\":\"" + this.getClassDef().getName() + "\"");
+			parts.add("\"type\":\"" + this.getTypeName() + "\"");
 			ArrayList<String> mparts = new ArrayList<String>();
 			if (this.members != null) {
 				for (String key : this.members.getMap().keySet()) {

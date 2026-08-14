@@ -17,7 +17,6 @@
 package com.aussom.types;
 
 import com.aussom.Environment;
-import com.aussom.Universe;
 import com.aussom.ast.astClass;
 
 import java.util.ArrayList;
@@ -69,8 +68,12 @@ public class AussomException extends AussomObject implements AussomTypeInt {
 
 		// Setup linkage for string object.
 		this.setExternObject(this);
-		astClass def = Universe.get().EXCEPTION_CLASS_DEF;
-		if (def != null) this.setClassDef(def);
+		// No class definition is bound here. A primitive does not need
+		// one to exist, only to dispatch, and dispatch always has an
+		// Environment to resolve it from. Binding one at construction
+		// would mean reaching for a process-wide global, which is what
+		// let one engine's classes leak into another's.
+		// See design/multitenancy-safety.md section 7.2.
 	}
 	
 	public AussomException(exType ExType) {

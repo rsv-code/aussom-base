@@ -137,7 +137,7 @@ public class UnitTestRunner extends Engine {
     public void loadTestClasses(String scriptFile) throws aussomException {
         // Get all classes associated with that file.
         List<astClass> testClasses = this.getClassByFileNameAndPath(scriptFile);
-        console.get().trc("Found " + testClasses.size() + " test classes for script '" + scriptFile + "'.");
+        this.getLogger().trc("Found " + testClasses.size() + " test classes for script '" + scriptFile + "'.");
 
         if (testClasses.size() == 0) {
             throw new aussomException("Engine.runTest(): No classes found for that script file.");
@@ -163,7 +163,7 @@ public class UnitTestRunner extends Engine {
                 this.addTestClass(cls.getTestClass());
             }
         }
-        console.get().trc("Found " + this.testClasses.size() + " test classes.");
+        this.getLogger().trc("Found " + this.testClasses.size() + " test classes.");
 
         if (this.testClasses.size() == 0) {
             throw new aussomException("Engine.runTest(): No classes found for that script file.");
@@ -177,12 +177,12 @@ public class UnitTestRunner extends Engine {
      */
     public int runTests() throws aussomException {
         if (!this.hasParseErrors()) {
-            console.get().trc("Running tests now ...");
+            this.getLogger().trc("Running tests now ...");
 
-            console.get().log("");
-            console.get().info("**************************************************************");
-            console.get().info("RUNNING TESTS");
-            console.get().info("**************************************************************");
+            this.getLogger().log("");
+            this.getLogger().info("**************************************************************");
+            this.getLogger().info("RUNNING TESTS");
+            this.getLogger().info("**************************************************************");
 
             // Finally run the tests
             long start = System.currentTimeMillis();
@@ -190,11 +190,11 @@ public class UnitTestRunner extends Engine {
             long end = System.currentTimeMillis();
             double elapsedSeconds = (end - start)/1000.0;
 
-            console.get().log("");
-            console.get().info("**************************************************************");
-            console.get().info("PASSED: " +  res.passed + " SKIPPED: " + res.skipped + " FAILED: " + res.failed + " TOTAL: " + res.total);
-            console.get().info("Elapsed: " + elapsedSeconds + "s");
-            console.get().info("**************************************************************\n");
+            this.getLogger().log("");
+            this.getLogger().info("**************************************************************");
+            this.getLogger().info("PASSED: " +  res.passed + " SKIPPED: " + res.skipped + " FAILED: " + res.failed + " TOTAL: " + res.total);
+            this.getLogger().info("Elapsed: " + elapsedSeconds + "s");
+            this.getLogger().info("**************************************************************\n");
 
             if (res.failed > 0) {
                 return 1;
@@ -210,13 +210,13 @@ public class UnitTestRunner extends Engine {
         UnitTestResult result = new UnitTestResult();
 
         for (UnitTestClass testClass : testClasses) {
-            console.get().log("");
-            console.get().info(testClass.getTestDisplayString());
+            this.getLogger().log("");
+            this.getLogger().info(testClass.getTestDisplayString());
             try {
                 UnitTestResult tret = this.runClass(testClass);
                 result.merge(tret);
             } catch (aussomException e) {
-                console.get().err(Util.stackTraceToString(e));
+                this.getLogger().err(Util.stackTraceToString(e));
             }
         }
 
@@ -298,7 +298,7 @@ public class UnitTestRunner extends Engine {
                         try {
                             this.runFunction(testClass, tenv, cls, testClass.getOnTestFailFunctionName());
                         } catch (aussomException e) {
-                            console.get().err("@OnTestFail threw: " + e.getMessage());
+                            this.getLogger().err("@OnTestFail threw: " + e.getMessage());
                         }
                     }
 
@@ -307,7 +307,7 @@ public class UnitTestRunner extends Engine {
                         try {
                             this.runFunction(testClass, tenv, cls, testClass.getAfterEachFunctionName());
                         } catch (aussomException e) {
-                            console.get().err("@AfterEach threw: " + e.getMessage());
+                            this.getLogger().err("@AfterEach threw: " + e.getMessage());
                         }
                     }
 
@@ -322,7 +322,7 @@ public class UnitTestRunner extends Engine {
                         }
                     }
                 }
-                console.get().info(testLogStr);
+                this.getLogger().info(testLogStr);
             }
 
             // Run before if it exists
@@ -331,7 +331,7 @@ public class UnitTestRunner extends Engine {
             }
         } else {
             AussomException ex = (AussomException) tci;
-            console.get().err(ex.toString());
+            this.getLogger().err(ex.toString());
         }
 
         return result;

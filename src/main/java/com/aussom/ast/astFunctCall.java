@@ -90,14 +90,14 @@ public class astFunctCall extends astNode implements astNodeInt {
 		}
 
 		if (!cargs.isEx()) {
-			astClass cls = env.getClassInstance().getClassDef();
+			astClass cls = env.getClassInstance().getClassDef(env);
 			if (env.getCurObj() != null && env.getCurObj() instanceof AussomObject) {
-				cls = ((AussomObject) env.getCurObj()).getClassDef();
+				cls = ((AussomObject) env.getCurObj()).getClassDef(env);
 			}
 			if (cls != null) {
 				CallStack cst;
 				synchronized (env.getCallStack()) {
-					cst = new CallStack(this.getFileName(), this.getLineNum(), ((AussomObject) env.getCurObj()).getClassDef().getName(), this.getName(), "Function called.");
+					cst = new CallStack(this.getFileName(), this.getLineNum(), ((AussomObject) env.getCurObj()).getTypeName(), this.getName(), "Function called.");
 					cst.setParent(env.getCallStack());
 				}
 
@@ -107,7 +107,7 @@ public class astFunctCall extends astNode implements astNodeInt {
 				ret = cls.call(tenv, getRef, getName(), (AussomList) cargs);
 			} else {
 				AussomException e = new AussomException(exType.exInternal);
-				e.setException(this.getLineNum(), "CLASS_DEF_NOT_FOUND", "Class '" + env.getClassInstance().getClassDef().getName() + "' has no function definition '" + getName() + "'.", "Class '" + env.getClassInstance().getClassDef().getName() + "' has no function definition '" + this.getName() + "'.", env.getCallStack().getStackTrace());
+				e.setException(this.getLineNum(), "CLASS_DEF_NOT_FOUND", "Class '" + env.getClassInstance().getTypeName() + "' has no function definition '" + getName() + "'.", "Class '" + env.getClassInstance().getTypeName() + "' has no function definition '" + this.getName() + "'.", env.getCallStack().getStackTrace());
 				ret = e;
 			}
 		} else {

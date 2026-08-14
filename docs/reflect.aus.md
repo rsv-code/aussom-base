@@ -15,7 +15,7 @@ the runtime that may not be granted.
 
 - **evalStr** (`string CodeStr, string Name = "evalStr"`)
 
-	> Evaluates the provided Aussom code string. Using this function requires 'reflect.eval.string' security manager permission.
+	> Evaluates the provided Aussom code string. Using this function requires 'reflect.eval.string' security manager permission. Throws if the provided code fails to parse. Call reflect.parseDiagnostics() in the catch block for the line, column, and message.
 
 	- **@p** `CodeStr` is a string with the code to evaluate.
 	- **@p** `Name` is an optional name to be used as the file name of the code.
@@ -50,6 +50,20 @@ the runtime that may not be granted.
 	> Gets a list of the loaded Aussom classes.
 
 	- **@r** `A` list of strings with the class names loaded.
+
+
+- **parseDiagnostics** ()
+
+	> Gets the structured parse diagnostics collected by the engine. Each diagnostic carries its source position as data, so tooling does not have to read it back out of the console output. Each entry is a map with the keys 'file', 'line', 'col', 'severity', and 'message'. A line or col of 0 means the diagnostic applies to the file as a whole and no position is available.
+
+	- **@r** `A` list of maps with one entry per diagnostic.
+
+
+- **clearParseDiagnostics** ()
+
+	> Clears the collected parse diagnostics. Useful before an evalStr call when only that call's diagnostics are of interest. This function requires Security Manager permission reflect.clear.diagnostics.
+
+	- **@r** `This` object.
 
 
 - **isModuleLoaded** (`string ModuleName`)
@@ -98,7 +112,7 @@ the runtime that may not be granted.
 
 ## class: RClass
 
-[117:14] (extern: com.aussom.stdlib.AClass) **extends: object** 
+[143:14] (extern: com.aussom.stdlib.AClass) **extends: object** 
 
 The RClass object is an object that is returned
 when calling reflect.getClassDef(). It provides a way

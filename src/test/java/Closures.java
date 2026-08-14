@@ -30,7 +30,6 @@ import com.aussom.DefaultLoggingImpl;
 import com.aussom.Engine;
 import com.aussom.TestSecurityManagerImpl;
 import com.aussom.ast.aussomException;
-import com.aussom.stdlib.console;
 import com.aussom.types.AussomInt;
 import com.aussom.types.AussomString;
 
@@ -48,7 +47,6 @@ public class Closures {
 	@BeforeEach
 	void setUp() {
 		// Quiet the engine's [trc] chatter during tests.
-		console.get().register(new DefaultLoggingImpl());
 	}
 
 	/**

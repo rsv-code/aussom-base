@@ -25,8 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.aussom.ast.*;
-import com.aussom.stdlib.Lang;
-import com.aussom.stdlib.console;
+import com.aussom.stdlib.LangRegistry;
 import com.aussom.types.*;
 
 /**
@@ -45,6 +44,18 @@ public class Engine implements AussomDebuggingInt {
 	 * The security manager instance for this engine.
 	 */
 	private SecurityManagerInt secman = null;
+
+	/**
+	 * Where this engine writes its output. Owned by the engine rather
+	 * than by the calling thread, so two engines in one JVM never
+	 * cross-route their output and an engine driven from a pool of
+	 * threads logs to the same place from all of them. Volatile
+	 * because an embedder may swap the logger while the engine is
+	 * running (the JSR 223 wrapper does exactly this around eval).
+	 * Never null; setLogger(null) restores the default.
+	 * See design/multitenancy-safety.md section 7.3.
+	 */
+	private volatile LoggingInt logger = new DefaultLoggingImpl();
 
 	/**
 	 * This flag is used to when the Engine parses an
@@ -185,35 +196,191 @@ public class Engine implements AussomDebuggingInt {
 	private volatile boolean cancelled = false;
 
 	/**
-	 * Default constructor. When called this gets an instance of the Universe object 
-	 * and initializes it if not already done. It loads universe classes and instantiates 
-	 * static classes. Finally it sets the initComplete flag to true.
+	 * The standard library modules this engine can include. Owned by
+	 * the engine rather than shared, so two engines can be given
+	 * different standard libraries. See design/multitenancy-safety.md
+	 * section 7.4.
+	 */
+	private final LangRegistry langRegistry;
+
+	/*
+	 * Hot-path cache for the primitive type class defs. Every
+	 * primitive-type dispatch needs its class def, and reading a
+	 * direct field reference is cheaper than the ConcurrentHashMap
+	 * lookup the general path requires. Populated by
+	 * parseLangSource() once lang.aus has been parsed into this
+	 * engine's table. These point at this engine's own definitions,
+	 * never at another engine's.
+	 */
+	public astClass NULL_CLASS_DEF = null;
+	public astClass BOOL_CLASS_DEF = null;
+	public astClass INT_CLASS_DEF = null;
+	public astClass DOUBLE_CLASS_DEF = null;
+	public astClass STRING_CLASS_DEF = null;
+	public astClass LIST_CLASS_DEF = null;
+	public astClass MAP_CLASS_DEF = null;
+	public astClass OBJECT_CLASS_DEF = null;
+	public astClass CALLBACK_CLASS_DEF = null;
+	public astClass EXCEPTION_CLASS_DEF = null;
+
+	/**
+	 * Default constructor. Parses the base language classes into this
+	 * engine's own class table and instantiates its static classes.
 	 * @throws Exception on failure to instantiate SecurityManagerImpl object.
 	 */
 	public Engine () throws Exception {
 		this(new SecurityManagerImpl());
 	}
-	
+
 	/**
-	 * Default constructor. When called this gets an instance of the Universe object 
-	 * and initializes it if not already done. It loads universe classes and instantiates 
-	 * static classes. Finally it sets the initComplete flag to true.
+	 * Builds an engine with the provided security manager and the base
+	 * standard library. Parses lang.aus into this engine's own class
+	 * table, instantiates its static classes, then sets the
+	 * initComplete flag to true.
 	 * @param SecMan is a SecurityManagerImpl object for the engine.
 	 * @throws Exception on init failure or failure to instantiate static classes.
 	 */
 	public Engine(SecurityManagerInt SecMan) throws Exception {
+		this(SecMan, new LangRegistry());
+	}
+
+	/**
+	 * Builds an engine with the provided security manager and standard
+	 * library registry. The engine takes its own copy of the registry,
+	 * so a later change to the caller's copy does not alter what this
+	 * engine can include.
+	 *
+	 * <p>Every engine parses lang.aus for itself. That is what makes
+	 * two engines in one JVM independent: no class definition object is
+	 * ever shared, so nothing one engine does to a definition can be
+	 * seen by another. See design/multitenancy-safety.md section 7.1.
+	 *
+	 * @param SecMan is a SecurityManagerImpl object for the engine.
+	 * @param Registry is the LangRegistry of standard library modules.
+	 * @throws Exception on init failure or failure to instantiate static classes.
+	 */
+	public Engine(SecurityManagerInt SecMan, LangRegistry Registry) throws Exception {
 		this.secman = SecMan;
-		
-		Universe u = Universe.get();
-		u.init(this);
-		
-		// If needed, load base classes.
-		this.loadUniverseClasses();
-		
+		this.langRegistry = new LangRegistry(Registry);
+
+		// Parse the base language classes into this engine's table.
+		this.parseLangSource();
+
 		// Instantiate the static classes.
 		this.instantiateStaticClasses();
-		
+
 		this.initComplete = true;
+	}
+
+	/**
+	 * Parses lang.aus into this engine's class table and caches the
+	 * primitive class definitions for the dispatch hot path.
+	 * @throws Exception on parse failure.
+	 */
+	private void parseLangSource() throws Exception {
+		this.parseString("lang.aus", this.langRegistry.get("lang.aus"));
+
+		this.NULL_CLASS_DEF      = this.classes.get("cnull");
+		this.BOOL_CLASS_DEF      = this.classes.get("bool");
+		this.INT_CLASS_DEF       = this.classes.get("int");
+		this.DOUBLE_CLASS_DEF    = this.classes.get("double");
+		this.STRING_CLASS_DEF    = this.classes.get("string");
+		this.LIST_CLASS_DEF      = this.classes.get("list");
+		this.MAP_CLASS_DEF       = this.classes.get("map");
+		this.OBJECT_CLASS_DEF    = this.classes.get("object");
+		this.CALLBACK_CLASS_DEF  = this.classes.get("callback");
+		this.EXCEPTION_CLASS_DEF = this.classes.get("exception");
+	}
+
+	/**
+	 * The Aussom version, read once from the jar manifest.
+	 */
+	private static final String VERSION = lookupVersion();
+
+	/**
+	 * Reads the project version from the jar manifest's
+	 * Implementation-Version attribute, which the jar and assembly
+	 * plugins populate from the pom version. Returns "dev" when the
+	 * attribute is missing, which is the case when running from a
+	 * build directory rather than a packaged jar.
+	 *
+	 * <p>This replaced a hand-maintained constant that had drifted:
+	 * it still read 1.2.10 while the artifact was on 1.3.6.
+	 *
+	 * @return The pom version when running from a packaged jar, "dev" otherwise.
+	 */
+	private static String lookupVersion() {
+		String v = Engine.class.getPackage().getImplementationVersion();
+		if (v == null) {
+			return "dev";
+		}
+		return v;
+	}
+
+	/**
+	 * Gets the Aussom version.
+	 * @return A String with the Aussom version.
+	 */
+	public static String getAussomVersion() {
+		return VERSION;
+	}
+
+	/**
+	 * Gets this engine's class definition for a primitive type.
+	 *
+	 * <p>Primitives do not carry a class definition, so dispatch
+	 * resolves it here. Each engine answers with its own definition,
+	 * which is what keeps two engines in one JVM from sharing one.
+	 * Returns null for a type that has no primitive definition, which
+	 * lets callers fall through to their existing not-found handling.
+	 *
+	 * @param Type is the cType to resolve.
+	 * @return The astClass for that type, or null when there is none.
+	 */
+	public astClass getPrimitiveClassDef(cType Type) {
+		if (Type == null) return null;
+		switch (Type) {
+			case cBool:      return this.BOOL_CLASS_DEF;
+			case cInt:       return this.INT_CLASS_DEF;
+			case cDouble:    return this.DOUBLE_CLASS_DEF;
+			case cString:    return this.STRING_CLASS_DEF;
+			case cList:      return this.LIST_CLASS_DEF;
+			case cMap:       return this.MAP_CLASS_DEF;
+			case cNull:      return this.NULL_CLASS_DEF;
+			case cCallback:  return this.CALLBACK_CLASS_DEF;
+			case cException: return this.EXCEPTION_CLASS_DEF;
+			case cObject:    return this.OBJECT_CLASS_DEF;
+			default:         return null;
+		}
+	}
+
+	/**
+	 * Gets the standard library registry for this engine.
+	 * @return The LangRegistry this engine includes from.
+	 */
+	public LangRegistry getLangRegistry() {
+		return this.langRegistry;
+	}
+
+	/**
+	 * Registers a standard library module on this engine only.
+	 * @param Name is the include name, for example {@code "http.aus"}.
+	 * @param Source is the Aussom source for the module.
+	 */
+	public void addModule(String Name, String Source) {
+		this.langRegistry.put(Name, Source);
+	}
+
+	/**
+	 * Gets the class definition for the provided lang class name.
+	 * @param Name is a String with the class name to get.
+	 * @return A astClass class definition.
+	 * @throws aussomException if no class is defined with that name.
+	 */
+	public astClass getClassDef(String Name) throws aussomException {
+		astClass def = this.classes.get(Name);
+		if (def != null) return def;
+		throw new aussomException("Aussom Engine: can't find requested class def '" + Name + "'.");
 	}
 
 	/**
@@ -243,6 +410,30 @@ public class Engine implements AussomDebuggingInt {
 	public SecurityManagerInt getSecurityManager() {
 		return this.secman;
 	}
+
+	/**
+	 * Gets the logger this engine writes to. Never returns null, so
+	 * callers do not have to guard. Interpreter internals and the
+	 * standard library {@code c} class both route here.
+	 * @return The LoggingInt for this engine.
+	 */
+	public LoggingInt getLogger() {
+		return this.logger;
+	}
+
+	/**
+	 * Sets the logger this engine writes to. Passing null restores the
+	 * default implementation rather than disabling output, so the
+	 * logger reference is always safe to dereference.
+	 * @param Logger is the LoggingInt to use, or null for the default.
+	 */
+	public void setLogger(LoggingInt Logger) {
+		if (Logger == null) {
+			this.logger = new DefaultLoggingImpl();
+		} else {
+			this.logger = Logger;
+		}
+	}
 	
 	/**
 	 * Adds a Aussom include to the interpreter. The include can be a standard library 
@@ -253,24 +444,24 @@ public class Engine implements AussomDebuggingInt {
 	 */
 	public synchronized void addInclude(String Include) throws Exception {
 		boolean found = false;
-		console.get().trc("Engine.addInclude(): Include: " + Include);
-		if (Lang.get().getLangIncludes().containsKey(Include)) {
+		this.getLogger().trc("Engine.addInclude(): Include: " + Include);
+		if (this.langRegistry.contains(Include)) {
 			found = true;
 			if (!this.includes.contains(Include)) {
-				console.get().trc("Engine.addInclude(): Adding langInclude: " + Include);
+				this.getLogger().trc("Engine.addInclude(): Adding langInclude: " + Include);
 				this.includes.add(Include);
-				this.parseString("/com/aussom/stdlib/aus/" + Include, Lang.get().getLangIncludes().get(Include));
+				this.parseString("/com/aussom/stdlib/aus/" + Include, this.langRegistry.get(Include));
 			}
 		} else {
-			console.get().trc("Engine.addInclude(): Attempting to find in resourceIncludePaths ...");
+			this.getLogger().trc("Engine.addInclude(): Attempting to find in resourceIncludePaths ...");
 			for (String pth : this.resourceIncludePaths) {
-				List<String> resDir = Lang.get().listResourceDirectory(pth);
+				List<String> resDir = this.langRegistry.listResourceDirectory(pth);
 				String tinc = pth + Include;
 				for (String fname : resDir) {
 					if (fname.contains(tinc)) {
 						found = true;
 						if (!this.includes.contains(tinc)) {
-							console.get().trc("Engine.addInclude(): Include " + Include + " found in '" + fname + "'");
+							this.getLogger().trc("Engine.addInclude(): Include " + Include + " found in '" + fname + "'");
 							this.includes.add(tinc);
 							this.parseString(tinc, Util.loadResource(tinc));
 							return;
@@ -280,7 +471,7 @@ public class Engine implements AussomDebuggingInt {
 			}
 
 			if (!found) {
-				console.get().trc("Engine.addInclude(): Attempting to find in includePaths ...");
+				this.getLogger().trc("Engine.addInclude(): Attempting to find in includePaths ...");
 				for (String pth : this.includePaths) {
 					String tinc = pth + Include;
 					// This could be different than tinc because of Windoz ...
@@ -290,7 +481,7 @@ public class Engine implements AussomDebuggingInt {
 						if (f.exists()) {
 							found = true;
 							if (!this.includes.contains(tinc)) {
-								console.get().trc("Engine.addInclude(): Include " + Include + " found in '" + pth + "'");
+								this.getLogger().trc("Engine.addInclude(): Include " + Include + " found in '" + pth + "'");
 								this.includes.add(tinc);
 								this.parseFile(localIncPath);
 								break;
@@ -302,7 +493,7 @@ public class Engine implements AussomDebuggingInt {
 				}
 
 				if (!found) {
-					console.get().trc("Engine.addInclude(): Include '" + Include + "' not found at all.");
+					this.getLogger().trc("Engine.addInclude(): Include '" + Include + "' not found at all.");
 					if (this.engineRunMode != EngineRunMode.DOC) {
 						throw new aussomException("Engine.addInclude(): Couldn't find requested include module '" + Include + "'.");
 					}
@@ -522,21 +713,6 @@ public class Engine implements AussomDebuggingInt {
 	}
 
 	/**
-	 * This function loads the native type class definitions 
-	 * in the Engine class set. This is need if you want to 
-	 * say create a new native type using the new operator.
-	 */
-	public void loadUniverseClasses() {
-		// Add universe classes.
-		Map<String, astClass> clses = Universe.get().getClasses();
-		for (String key : clses.keySet()) {
-			if (!this.classes.containsKey(key)) {
-				this.classes.put(key, clses.get(key));
-			}
-		}
-	}
-	
-	/**
 	 * The interpreter will parse the Aussom code file with the provided file name.
 	 * @param FileName is a String with the Aussom code file to parse.
 	 * @throws Exception on parse failure.
@@ -578,7 +754,7 @@ public class Engine implements AussomDebuggingInt {
 	 */
 	public int run() throws aussomException {
 		if (!this.hasParseErrors) {
-			console.get().trc("Running program now ...");
+			this.getLogger().trc("Running program now ...");
 	
 			this.mainCallStack = new CallStack();
 			
@@ -641,7 +817,7 @@ public class Engine implements AussomDebuggingInt {
 	 */
 	private void instantiateStaticClass(astClass ac) throws aussomException {
 		if (this.loadExternClasses) {
-			console.get().trc("Instantiating static class: " + ac.getName());
+			this.getLogger().trc("Instantiating static class: " + ac.getName());
 			AussomType aci = null;
 			Environment tenv = new Environment(this);
 			Members locals = new Members();
@@ -745,14 +921,14 @@ public class Engine implements AussomDebuggingInt {
 			ret = this.mainClassDef.call(tenv, false, "main", margs);
 			if(ret.isEx()) {
 				AussomException ex = (AussomException) ret;
-				console.get().err(((AussomTypeInt) ex).str());
+				this.getLogger().err(((AussomTypeInt) ex).str());
 				return 1;
 			} else if (ret instanceof AussomInt) {
 				return (int)((AussomInt)ret).getNumericInt();
 			}
 		} else {
 			AussomException ex = (AussomException)tci;
-			console.get().err(ex.toString());
+			this.getLogger().err(ex.toString());
 			return 1;
 		}
 		return 0;
@@ -1681,7 +1857,7 @@ public class Engine implements AussomDebuggingInt {
 			// action raise, lexer fatal, etc.) to the parse-error
 			// flag. The exception carries no position we can rely on,
 			// so the diagnostic is file-level.
-			console.get().err(e.getMessage());
+			this.getLogger().err(e.getMessage());
 			this.addParseDiagnostic(new ParseDiagnostic(fileName,
 				ParseDiagnostic.NO_POSITION, ParseDiagnostic.NO_POSITION,
 				e.getMessage()));
@@ -1710,7 +1886,7 @@ public class Engine implements AussomDebuggingInt {
 				} catch (aussomException e) {
 					// Duplicate closure name/signature on the script
 					// class.
-					console.get().err(e.getMessage());
+					this.getLogger().err(e.getMessage());
 					this.addParseDiagnostic(new ParseDiagnostic(fileName,
 						adding.getLineNum(), adding.getColNum(),
 						e.getMessage()));
@@ -1720,7 +1896,7 @@ public class Engine implements AussomDebuggingInt {
 				astFunctDef orphan = leftovers.get(0);
 				String msg = "PARSE_ERROR: Closure defined outside a class with no "
 					+ "script class to receive it.";
-				console.get().err(fileName + " [" + orphan.getLineNum() + "]: " + msg);
+				this.getLogger().err(fileName + " [" + orphan.getLineNum() + "]: " + msg);
 				this.addParseDiagnostic(new ParseDiagnostic(fileName,
 					orphan.getLineNum(), orphan.getColNum(), msg));
 				this.setParseError();

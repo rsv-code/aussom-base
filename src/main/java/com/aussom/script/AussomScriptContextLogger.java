@@ -25,9 +25,8 @@ import com.aussom.LoggingInt;
 
 /**
  * Routes Aussom console output to the writers on a JSR 223
- * ScriptContext. Registered on the eval thread's per-thread
- * console.get() instance for the lifetime of one eval / Invocable
- * call, then de-registered (or replaced with the prior logger) in a
+ * ScriptContext. Installed on the engine for the lifetime of one
+ * eval / Invocable call, then replaced with the prior logger in a
  * finally block.
  *
  * Output channels map as follows:

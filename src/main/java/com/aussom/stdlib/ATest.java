@@ -56,7 +56,7 @@ public class ATest {
                 UnitTestResult result = testRunner.runClass(cls.getTestClass());
                 return result.toAussomType();
             } catch (Exception e) {
-                console.get().err(Util.stackTraceToString(e));
+                testRunner.getLogger().err(Util.stackTraceToString(e));
                 throw e;
             }
         } else {

@@ -3,7 +3,7 @@
   
   <groupId>io.gitlab.cupofcode</groupId>
   <artifactId>aussom.base</artifactId>
-  <version>1.3.6</version>
+  <version>1.4.0</version>
   <packaging>jar</packaging>
   
   <name>aussom.base</name>
@@ -147,12 +147,27 @@
 	            <include>**/AstNodeRange.java</include>
 	            <include>**/Closures.java</include>
 	            <include>**/ParseDiagnostics.java</include>
+	            <include>**/EngineIsolation.java</include>
 	            <include>**/*Test.java</include>
 	            <include>**/*Tests.java</include>
 	          </includes>
 	        </configuration>
 	      </plugin>
 	      
+	      <!-- Stamp Implementation-Version onto the thin jar's manifest so
+	           Engine.getAussomVersion() returns the pom version at runtime
+	           instead of a hand-maintained constant. -->
+	      <plugin>
+	        <artifactId>maven-jar-plugin</artifactId>
+	        <configuration>
+	          <archive>
+	            <manifest>
+	              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+	            </manifest>
+	          </archive>
+	        </configuration>
+	      </plugin>
+
 	      <plugin>
 	        <artifactId>maven-assembly-plugin</artifactId>
 	        <configuration>
@@ -160,6 +175,10 @@
 	            <manifest>
 	              <addClasspath>true</addClasspath>
 	              <mainClass>com.aussom.Main</mainClass>
+	              <!-- The assembly jar builds its own manifest rather than
+	                   inheriting the thin jar's, so the version entry has
+	                   to be requested here as well. -->
+	              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
 	            </manifest>
 	          </archive>
 	          <descriptorRefs>

@@ -41,7 +41,6 @@ import com.aussom.ast.astClass;
 import com.aussom.ast.astFunctDef;
 import com.aussom.ast.astNode;
 import com.aussom.ast.astStatementList;
-import com.aussom.stdlib.console;
 import com.aussom.types.AussomException;
 import com.aussom.types.AussomType;
 
@@ -58,7 +57,6 @@ public class ScriptMode {
 		// Quiet the engine's [trc] chatter during tests. Default
 		// level on DefaultLoggingImpl is INFO, so trc/dbg are
 		// filtered out.
-		console.get().register(new DefaultLoggingImpl());
 	}
 
 	/**
@@ -80,17 +78,19 @@ public class ScriptMode {
 	}
 
 	/**
-	 * Runs a body with a CapturingLogger registered on the
-	 * per-thread console hook, returning the captured text.
+	 * Runs a body with a CapturingLogger installed on the engine under
+	 * test, returning the captured text. The logger is a property of
+	 * the engine rather than of the calling thread, so a capture here
+	 * cannot pick up output from any other engine.
 	 */
-	private static String capture(Runnable body) {
-		LoggingInt prior = console.get().getLoggingInt();
+	private static String capture(Engine eng, Runnable body) {
+		LoggingInt prior = eng.getLogger();
 		CapturingLogger cap = new CapturingLogger();
-		console.get().register(cap);
+		eng.setLogger(cap);
 		try {
 			body.run();
 		} finally {
-			console.get().register(prior);
+			eng.setLogger(prior);
 		}
 		return cap.captured();
 	}
@@ -151,7 +151,7 @@ public class ScriptMode {
 		void singleStatement() throws Exception {
 			Engine eng = newScriptEngine();
 			eng.setScriptMode(true);
-			String out = capture(() -> {
+			String out = capture(eng, () -> {
 				try {
 					eng.evalLine("c.log(\"hi\");");
 				} catch (Exception e) {
@@ -167,7 +167,7 @@ public class ScriptMode {
 			Engine eng = newScriptEngine();
 			eng.setScriptMode(true);
 			eng.evalLine("x = 5;");
-			String out = capture(() -> {
+			String out = capture(eng, () -> {
 				try {
 					eng.evalLine("c.log(x);");
 				} catch (Exception e) {
@@ -185,7 +185,7 @@ public class ScriptMode {
 			eng.evalLine("class point { public x = 0; public y = 0; "
 				+ "public point(int X, int Y) { this.x = X; this.y = Y; } "
 				+ "public sum() { return this.x + this.y; } }");
-			String out = capture(() -> {
+			String out = capture(eng, () -> {
 				try {
 					eng.evalLine("p = new point(3, 4); c.log(p.sum());");
 				} catch (Exception e) {
@@ -220,7 +220,7 @@ public class ScriptMode {
 			eng.setScriptMode(true);
 			assertThrows(aussomException.class, () -> eng.evalLine("x = ;"));
 			eng.evalLine("x = 5;");
-			String out = capture(() -> {
+			String out = capture(eng, () -> {
 				try {
 					eng.evalLine("c.log(x);");
 				} catch (Exception e) {
@@ -240,7 +240,7 @@ public class ScriptMode {
 			AussomType bad = eng.evalLine("z = 1/0;");
 			assertTrue(bad.isEx(),
 				"div-by-zero should return an AussomException value, got " + bad);
-			String out = capture(() -> {
+			String out = capture(eng, () -> {
 				try {
 					eng.evalLine("c.log(y);");
 				} catch (Exception e) {
@@ -273,7 +273,7 @@ public class ScriptMode {
 			eng.setScriptMode(true);
 			eng.evalLine("xx = 99;");
 
-			String out = capture(() -> {
+			String out = capture(eng, () -> {
 				try {
 					int rc = eng.run();
 					assertEquals(0, rc, "run should return 0");
@@ -295,7 +295,7 @@ public class ScriptMode {
 				"class bar { public main(args) { c.log(\"bar-main\"); } }");
 			assertFalse(eng.hasParseErrors());
 
-			capture(() -> {
+			capture(eng, () -> {
 				try {
 					eng.run();
 				} catch (Exception e) {
@@ -304,7 +304,7 @@ public class ScriptMode {
 			});
 
 			eng.setScriptMode(true);
-			String out = capture(() -> {
+			String out = capture(eng, () -> {
 				try {
 					eng.evalLine("c.log(\"after-run\");");
 				} catch (Exception e) {
@@ -421,7 +421,7 @@ public class ScriptMode {
 		void allowedWithTestManager() throws Exception {
 			Engine eng = newScriptEngine();
 			eng.setScriptMode(true);
-			String out = capture(() -> {
+			String out = capture(eng, () -> {
 				try {
 					eng.evalLine("c.log(\"ok\");");
 				} catch (Exception e) {
@@ -524,7 +524,7 @@ public class ScriptMode {
 			Engine eng = newScriptEngine();
 			eng.setScriptMode(true);
 			eng.setScriptFileName("mixed.aus");
-			String out = capture(() -> {
+			String out = capture(eng, () -> {
 				try {
 					eng.evalLine(src);
 				} catch (Exception e) {
@@ -613,7 +613,7 @@ public class ScriptMode {
 			eng.setScriptMode(true);
 			eng.setScriptFileName("ctrlflow.aus");
 			final AussomType[] retHolder = new AussomType[1];
-			String out = capture(() -> {
+			String out = capture(eng, () -> {
 				try {
 					retHolder[0] = eng.evalLine(src);
 				} catch (Exception e) {
@@ -670,7 +670,7 @@ public class ScriptMode {
 			// Eval should bind x. Capture stdout to confirm by
 			// printing x in a second pair of calls.
 			eng.evalParsedScript(body);
-			String out = capture(() -> {
+			String out = capture(eng, () -> {
 				try {
 					eng.evalLine("c.log(x);");
 				} catch (Exception e) {
@@ -697,7 +697,7 @@ public class ScriptMode {
 			body = eng.parseScriptLine("ctr = ctr + 10;", 2);
 			eng.evalParsedScript(body);
 
-			String out = capture(() -> {
+			String out = capture(eng, () -> {
 				try {
 					eng.evalLine("c.log(ctr);");
 				} catch (Exception e) {

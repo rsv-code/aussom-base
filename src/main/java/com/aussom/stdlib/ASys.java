@@ -21,7 +21,7 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 
 import com.aussom.Environment;
-import com.aussom.Universe;
+import com.aussom.Engine;
 import com.aussom.types.AussomInt;
 import com.aussom.types.AussomNull;
 import com.aussom.types.AussomString;
@@ -75,7 +75,7 @@ public class ASys {
 	public static String _getAssembly() throws Exception {
 		String path = "";
 		try {
-			path = (new File(URLDecoder.decode(Universe.class.getProtectionDomain().getCodeSource().getLocation().getPath())).getAbsolutePath());
+			path = (new File(URLDecoder.decode(Engine.class.getProtectionDomain().getCodeSource().getLocation().getPath())).getAbsolutePath());
 		} catch(Exception e) {
 			/*
 			if(runtime.getInstance().getOsType() == osType.MOBILE) {
@@ -91,7 +91,7 @@ public class ASys {
 	public static String _getAssemblyPath() throws Exception {
 		String path = "";
 		try {
-			path = (new File(URLDecoder.decode(Universe.class.getProtectionDomain().getCodeSource().getLocation().getPath())).getParent()) + System.getProperty("file.separator");
+			path = (new File(URLDecoder.decode(Engine.class.getProtectionDomain().getCodeSource().getLocation().getPath())).getParent()) + System.getProperty("file.separator");
 		} catch(Exception e) {
 			/*
 			if(runtime.getInstance().getOsType() == osType.MOBILE) {
@@ -175,7 +175,7 @@ public class ASys {
 	
 	public static AussomType getAussomVersion(Environment env, ArrayList<AussomType> args) {
 		if ((Boolean)env.getEngine().getSecurityManager().getProperty("aussom.info.view")) {
-			return new AussomString(Universe.getAussomVersion());
+			return new AussomString(Engine.getAussomVersion());
 		}
 		return new AussomNull();
 	}

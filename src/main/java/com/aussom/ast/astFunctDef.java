@@ -234,7 +234,7 @@ public class astFunctDef extends astNode implements astNodeInt {
 		// context. The frame names the function and is parented to
 		// the caller's stack. See design/debugging-callstack-update.md.
 		String className = (env.getClassInstance() != null)
-			? env.getClassInstance().getClassDef().getName() : "";
+			? env.getClassInstance().getTypeName() : "";
 		CallStack defaultsFrame = new CallStack(this.getFileName(), this.getLineNum(),
 			className, this.getName() + " <arg-defaults>",
 			"Default argument values.");
@@ -333,7 +333,7 @@ public class astFunctDef extends astNode implements astNodeInt {
 		
 		AussomType tnode = this.initArgs(env, args);
 		
-		CallStack cst = new CallStack(FileName, this.getLineNum(), env.getClassInstance().getClassDef().getName(), this.getName(), "Defined.");
+		CallStack cst = new CallStack(FileName, this.getLineNum(), env.getClassInstance().getTypeName(), this.getName(), "Defined.");
 		cst.setParent(env.getCallStack());
 		cst.setCalledFunction(this);
 		
@@ -403,10 +403,14 @@ public class astFunctDef extends astNode implements astNodeInt {
 			}
 
 			try {
-				Class<?> aclass = callingObj.getClassDef().getExternClass();
+				astClass callingDef = callingObj.getClassDef(env);
+				Class<?> aclass = null;
+				if (callingDef != null) aclass = callingDef.getExternClass();
 				if (aclass == null) {
 					AussomException ex = new AussomException(exType.exRuntime);
-					ex.setException(this.getLineNum(), "EXTERN_CLASS_NOT_FOUND", "External class '" + callingObj.getClassDef().getExternClassName() + "' not found when calling '" + this.getName() + "'.", env.getCallStack().getStackTrace());
+					String missing = "<unknown>";
+					if (callingDef != null) missing = callingDef.getExternClassName();
+					ex.setException(this.getLineNum(), "EXTERN_CLASS_NOT_FOUND", "External class '" + missing + "' not found when calling '" + this.getName() + "'.", env.getCallStack().getStackTrace());
 					return ex;
 				}
 				Method meth = aclass.getMethod(this.getName(), Environment.class, ArrayList.class);
@@ -492,7 +496,7 @@ public class astFunctDef extends astNode implements astNodeInt {
 		// argument expressions for extern dispatch show this function
 		// as the active context. See design/debugging-callstack-update.md.
 		String className = (env.getClassInstance() != null)
-			? env.getClassInstance().getClassDef().getName() : "";
+			? env.getClassInstance().getTypeName() : "";
 		CallStack defaultsFrame = new CallStack(this.getFileName(), this.getLineNum(),
 			className, this.getName() + " <extern-arg-defaults>",
 			"Default argument values.");

@@ -249,7 +249,7 @@ public class astObj  extends astNode implements astNodeInt {
 			// __opIndexSet__ takes over dereference for its instances.
 			// See design/operator-overloading.md.
 			AussomObject idxObj = (AussomObject) env.getCurObj();
-			astClass idxCls = idxObj.getClassDef();
+			astClass idxCls = idxObj.getClassDef(env);
 			boolean hasIdx = idxCls != null && idxCls.hasAnyFunctionByName(OperOverload.OP_INDEX);
 			boolean hasIdxSet = idxCls != null && idxCls.hasAnyFunctionByName(OperOverload.OP_INDEX_SET);
 			if (hasIdx || hasIdxSet) {
@@ -328,7 +328,7 @@ public class astObj  extends astNode implements astNodeInt {
 	
 	private boolean memberHasAccess (Environment env, String memberName) {
 		if (env.getClassInstance() != env.getCurObj()) {
-			astClass ac = ((AussomObject)env.getCurObj()).getClassDef();
+			astClass ac = ((AussomObject)env.getCurObj()).getClassDef(env);
 			if (ac.containsMember(memberName)) {
 			  if (ac.getMember(memberName).getAccessType() == AccessType.aPrivate) {
 				return false;

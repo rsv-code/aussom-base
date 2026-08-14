@@ -18,7 +18,6 @@ package com.aussom;
 
 import com.aussom.ast.aussomException;
 import com.aussom.stdlib.UnitTestRunner;
-import com.aussom.stdlib.console;
 import org.apache.commons.cli.*;
 
 import java.util.List;
@@ -29,6 +28,15 @@ import java.util.List;
  * @author austin
  */
 public class Main {
+	/*
+	 * The CLI's own logger. Main reports argument errors before any
+	 * Engine exists, so it owns one rather than reaching for a global,
+	 * and hands the same instance to each engine it builds so CLI and
+	 * script output land in the same place.
+	 */
+	private static final DefaultLoggingImpl LOG = new DefaultLoggingImpl();
+	static { LOG.setLevel(DefaultLoggingImpl.INFO); }
+
 	/**
 	 * Command line program entry point.
 	 * @param args is an array of Strings with the command line arguments.
@@ -68,50 +76,50 @@ public class Main {
 			} else if (line.hasOption("doc")) {
 				if (line.getArgList().size() == 1) {
 					String aussomFile = line.getArgList().get(0);
-					console.get().info("Now to generate doc for file '" + aussomFile + "'.");
+					LOG.info("Now to generate doc for file '" + aussomFile + "'.");
 					String outFile = aussomFile + ".md";
 					Util.write(outFile, getAussomdocMarkdown(aussomFile), false);
-					console.get().info("Wrote doc to '" + outFile + "'.");
+					LOG.info("Wrote doc to '" + outFile + "'.");
 				} else if (line.getArgList().size() > 1) {
-					console.get().err("Too many arguments provided, expecting just one script file or none at all.\n");
+					LOG.err("Too many arguments provided, expecting just one script file or none at all.\n");
 					printHelp(options);
 				}
 
 			} else if (line.hasOption("test")) {
 				List<String> pargs = line.getArgList();
 				if (pargs.size() == 0) {
-					console.get().err("Expecting aussom script file, but no arguments found.\n");
+					LOG.err("Expecting aussom script file, but no arguments found.\n");
 					printHelp(options);
 				} else if (pargs.size() > 1) {
-					console.get().err("Too many arguments provided, expecting just one script file.\n");
+					LOG.err("Too many arguments provided, expecting just one script file.\n");
 					printHelp(options);
 				} else {
 					// We nailed it, let's run the file
 					String ScriptFile = pargs.get(0);
-					console.get().info("Running tests for file '" + ScriptFile + "'.");
+					LOG.info("Running tests for file '" + ScriptFile + "'.");
 					runTest(ScriptFile, false);
 				}
 			} else if (line.hasOption("test-all")) {
 				List<String> pargs = line.getArgList();
 				if (pargs.size() == 0) {
-					console.get().err("Expecting aussom script file, but no arguments found.\n");
+					LOG.err("Expecting aussom script file, but no arguments found.\n");
 					printHelp(options);
 				} else if (pargs.size() > 1) {
-					console.get().err("Too many arguments provided, expecting just one script file.\n");
+					LOG.err("Too many arguments provided, expecting just one script file.\n");
 					printHelp(options);
 				} else {
 					// We nailed it, let's run the file
 					String ScriptFile = pargs.get(0);
-					console.get().info("Running all tests for file '" + ScriptFile + "'.");
+					LOG.info("Running all tests for file '" + ScriptFile + "'.");
 					runTest(ScriptFile, true);
 				}
 			} else {
 				List<String> pargs = line.getArgList();
 				if (pargs.size() == 0) {
-					console.get().err("Expecting aussom script file, but no arguments found.\n");
+					LOG.err("Expecting aussom script file, but no arguments found.\n");
 					printHelp(options);
 				} else if (pargs.size() > 1) {
-					console.get().err("Too many arguments provided, expecting just one script file.\n");
+					LOG.err("Too many arguments provided, expecting just one script file.\n");
 					printHelp(options);
 				} else {
 					// We nailed it, let's run the file
@@ -127,15 +135,11 @@ public class Main {
 	}
 
 	public static void runFile(String ScriptFile) throws Exception {
-		// Setup the logger.
-		DefaultLoggingImpl logger = new DefaultLoggingImpl();
-		logger.setLevel(DefaultLoggingImpl.INFO);
-		console.get().register(logger);
-
 		int result = 0;
 		try {
 			// Create a new Aussom engine.
 			Engine eng = new Engine(new DefaultSecurityManagerImpl());
+			eng.setLogger(LOG);
 
 			// Sets debug output to true.
 			// eng.setDebug(true);
@@ -151,10 +155,10 @@ public class Main {
 		} catch (aussomException e) {
 			// P3: route engine-level failures through the console
 			// rather than letting them surface as a Java stack trace.
-			console.get().err(e.getAussomStackTrace());
+			LOG.err(e.getAussomStackTrace());
 			result = 1;
 		} catch (Exception e) {
-			console.get().err(Util.stackTraceToString(e));
+			LOG.err(Util.stackTraceToString(e));
 			result = 1;
 		}
 
@@ -163,14 +167,11 @@ public class Main {
 	}
 
 	public static void runTest(String ScriptFile, boolean RunAll) throws Exception {
-		DefaultLoggingImpl logger = new DefaultLoggingImpl();
-		logger.setLevel(DefaultLoggingImpl.INFO);
-		console.get().register(logger);
-
 		int result = 0;
 		try {
 			// Create a new Aussom engine.
 			UnitTestRunner testRunner = new UnitTestRunner(new TestSecurityManagerImpl(), ScriptFile, "Run unit tests");
+			testRunner.setLogger(LOG);
 
 			// Add resource include path.
 			testRunner.addResourceIncludePath("/com/aussom/stdlib/aus/");
@@ -189,9 +190,9 @@ public class Main {
 			// Attempt to run the code.
 			result = testRunner.runTests();
 		}  catch (aussomException e) {
-			console.get().err(e.getAussomStackTrace());
+			LOG.err(e.getAussomStackTrace());
 		} catch (Exception e) {
-			console.get().err(Util.stackTraceToString(e));
+			LOG.err(Util.stackTraceToString(e));
 		}
 
 		// Exit with the code now.
@@ -229,7 +230,7 @@ public class Main {
 	 */
 	public static void printInfo() {
 		String rstr = "";
-		rstr += "Aussom Version " + Universe.getAussomVersion()  + "\n";
+		rstr += "Aussom Version " + Engine.getAussomVersion()  + "\n";
 		rstr += "Copyright 2023 Austin Lehman\n";
 		rstr += "Apache License Version 2\n";
 		System.out.println(rstr);

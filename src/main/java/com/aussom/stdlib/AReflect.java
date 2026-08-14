@@ -191,7 +191,7 @@ public class AReflect {
 		AussomList alist = (AussomList) args.get(2);
 		
 		try {
-			astClass ac = obj.getClassDef();
+			astClass ac = obj.getClassDef(env);
 			Environment tenv = env.clone(obj);
 			return ac.call(tenv, false, fname, alist);
 		} catch (aussomException e) {

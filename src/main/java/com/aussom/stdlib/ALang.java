@@ -20,7 +20,6 @@ import java.util.ArrayList;
 
 import com.aussom.Engine;
 import com.aussom.Environment;
-import com.aussom.Universe;
 import com.aussom.ast.astClass;
 import com.aussom.types.*;
 
@@ -28,7 +27,7 @@ public class ALang {
 	public static AussomType type(Environment env, ArrayList<AussomType> args) {
 		AussomType ct = args.get(0);
 		if (ct.getType() == cType.cObject) {
-			return new AussomString(((AussomObject)ct).getClassDef().getName());
+			return new AussomString(((AussomObject)ct).getTypeName());
 		} else {
 			return new AussomString(args.get(0).getType().name().toLowerCase().substring(1));
 		}

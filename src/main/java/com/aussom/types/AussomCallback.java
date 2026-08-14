@@ -17,10 +17,8 @@
 package com.aussom.types;
 
 import com.aussom.Environment;
-import com.aussom.Universe;
 import com.aussom.ast.astClass;
 import com.aussom.ast.aussomException;
-import com.aussom.stdlib.console;
 
 import java.util.ArrayList;
 
@@ -41,8 +39,12 @@ public class AussomCallback extends AussomObject implements AussomTypeInt {
 
 		// Setup linkage for string object.
 		this.setExternObject(this);
-		astClass def = Universe.get().CALLBACK_CLASS_DEF;
-		if (def != null) this.setClassDef(def);
+		// No class definition is bound here. A primitive does not need
+		// one to exist, only to dispatch, and dispatch always has an
+		// Environment to resolve it from. Binding one at construction
+		// would mean reaching for a process-wide global, which is what
+		// let one engine's classes leak into another's.
+		// See design/multitenancy-safety.md section 7.2.
 	}
 	
 	public AussomCallback(Environment Env, AussomObject Obj, String FunctName) {
@@ -62,7 +64,7 @@ public class AussomCallback extends AussomObject implements AussomTypeInt {
 		try {
 			ret = this.callWithException(env, args);
 		} catch(aussomException e) {
-			console.get().err("\n" + e.getAussomStackTrace());
+			env.getEngine().getLogger().err("\n" + e.getAussomStackTrace());
 			return new AussomException(e.getMessage());
 		}
 		
@@ -83,7 +85,7 @@ public class AussomCallback extends AussomObject implements AussomTypeInt {
 		env.setCurObj(this.getObj());
 		env.setClassInstance(this.getObj());
 		try {
-			astClass ac = this.obj.getClassDef();
+			astClass ac = this.obj.getClassDef(env);
 			ret = ac.call(env, false, this.getFunctName(), args, this.capturedLocals);
 		} catch(aussomException e) {
 			env.setCurObj(tobj);
@@ -133,7 +135,7 @@ public class AussomCallback extends AussomObject implements AussomTypeInt {
 	// identity, e.g. "dog@1b2c3d", or "null" when unbound.
 	private String objRef() {
 		if (this.obj == null) return "null";
-		return this.obj.getClassDef().getName() + "@" + Integer.toHexString(System.identityHashCode(this.obj));
+		return this.obj.getTypeName() + "@" + Integer.toHexString(System.identityHashCode(this.obj));
 	}
 
 	@Override

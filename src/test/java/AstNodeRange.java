@@ -39,7 +39,6 @@ public class AstNodeRange {
 
 	@BeforeEach
 	void setUp() {
-		com.aussom.stdlib.console.get().register(new DefaultLoggingImpl());
 	}
 
 	private Engine newEngine() throws Exception {

@@ -172,12 +172,12 @@ public final class OperOverload {
 		// ordinary method calls.
 		CallStack cst;
 		synchronized (env.getCallStack()) {
-			cst = new CallStack(Site.getFileName(), Site.getLineNum(), Target.getClassDef().getName(), Name, "Operator '" + Glyph + "' called.");
+			cst = new CallStack(Site.getFileName(), Site.getLineNum(), Target.getTypeName(), Name, "Operator '" + Glyph + "' called.");
 			cst.setParent(env.getCallStack());
 		}
 		Environment tenv = env.clone(Target);
 		tenv.setEnvironment(Target, env.getLocals(), cst);
-		AussomType ret = Target.getClassDef().call(tenv, false, Name, Args);
+		AussomType ret = Target.getClassDef(env).call(tenv, false, Name, Args);
 
 		// A resolution failure on the operator method itself reads
 		// poorly without operator context. Reword it in place; errors
@@ -187,7 +187,7 @@ public final class OperOverload {
 			String id = ex.getId();
 			boolean resolutionFailure = "FUNCT_NOT_FOUND".equals(id) || "AMBIGUOUS_OVERLOAD".equals(id);
 			if (resolutionFailure && ex.getText() != null && ex.getText().contains(Name)) {
-				String ctx = "Operator '" + Glyph + "' on object '" + Target.getClassDef().getName() + "': " + ex.getText();
+				String ctx = "Operator '" + Glyph + "' on object '" + Target.getTypeName() + "': " + ex.getText();
 				ex.setText(ctx);
 				ex.setDetails(ctx);
 				ex.setLineNumber(Site.getLineNum());

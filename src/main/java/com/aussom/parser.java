@@ -14,7 +14,6 @@ import java_cup.runtime.*;
 import com.aussom.Engine;
 import com.aussom.ast.*;
 import com.aussom.types.*;
-import com.aussom.stdlib.console;
 import java_cup.runtime.XMLElement;
 
 /** CUP v0.11b 20160615 (GIT 4ac7450) generated parser.
@@ -1788,7 +1787,7 @@ public class parser extends java_cup.runtime.lr_parser {
    *
    * report_error filters out non-Symbol info objects, so we set
    * the engine's parse-error flag directly and emit the message
-   * via the console (mirroring what report_error does for
+   * via the engine's logger (mirroring what report_error does for
    * Symbol-tagged errors).
    */
   private void scriptOrError(astNode n) {
@@ -1799,7 +1798,7 @@ public class parser extends java_cup.runtime.lr_parser {
               + "parse context. Use Engine.setScriptMode(true) and "
               + "Engine.evalLine for script-mode evaluation.";
           aussomException ce = new aussomException(n, msg, "");
-          console.get().err(ce.getMessage());
+          this.eng.getLogger().err(ce.getMessage());
           this.eng.addParseDiagnostic(new ParseDiagnostic(this.fileName,
               n.getLineNum(), n.getColNum(), msg));
           return;
@@ -1820,7 +1819,7 @@ public class parser extends java_cup.runtime.lr_parser {
 	n.setParserInfo(this.fileName, symbol.left, symbol.right);
 	String msg = "PARSE_ERROR: Unknown symbol found at line " + symbol.left + " column " + symbol.right + ".";
 	aussomException ce = new aussomException(n, msg, "");
-	console.get().err(ce.getMessage());
+	this.eng.getLogger().err(ce.getMessage());
 	this.eng.addParseDiagnostic(new ParseDiagnostic(this.fileName, symbol.left, symbol.right, msg));
 	this.eng.setParseError();
 	this.done_parsing();					// Forces parser to quit

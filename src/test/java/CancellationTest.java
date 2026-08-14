@@ -51,7 +51,6 @@ public class CancellationTest {
 	@BeforeEach
 	void setUp() {
 		// Quiet the engine's [trc] chatter during tests.
-		com.aussom.stdlib.console.get().register(new DefaultLoggingImpl());
 	}
 
 	/**

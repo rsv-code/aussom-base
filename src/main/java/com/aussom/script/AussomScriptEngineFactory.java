@@ -25,7 +25,6 @@ import javax.script.ScriptEngineFactory;
 
 import com.aussom.DefaultSecurityManagerImpl;
 import com.aussom.Engine;
-import com.aussom.Universe;
 
 /**
  * JSR 223 factory for the Aussom scripting language. Discovered via
@@ -49,7 +48,7 @@ public class AussomScriptEngineFactory implements ScriptEngineFactory {
 			"application/x-aussom", "text/x-aussom"));
 
 	/**
-	 * Closes the cold race in Universe.init() / Lang.get(): the very
+	 * Closes the cold race in the very
 	 * first 'new Engine(...)' in the JVM is racy. Holding a class
 	 * lock while the factory builds its first engine guarantees only
 	 * one thread enters the cold path. Subsequent constructions hit
@@ -58,21 +57,21 @@ public class AussomScriptEngineFactory implements ScriptEngineFactory {
 	private static final Object FIRST_INIT_LOCK = new Object();
 
 	@Override public String getEngineName() { return ENGINE_NAME; }
-	@Override public String getEngineVersion() { return Universe.getAussomVersion(); }
+	@Override public String getEngineVersion() { return Engine.getAussomVersion(); }
 	@Override public List<String> getExtensions() { return EXTENSIONS; }
 	@Override public List<String> getMimeTypes() { return MIME_TYPES; }
 	@Override public List<String> getNames() { return NAMES; }
 	@Override public String getLanguageName() { return LANGUAGE_NAME; }
-	@Override public String getLanguageVersion() { return Universe.getAussomVersion(); }
+	@Override public String getLanguageVersion() { return Engine.getAussomVersion(); }
 
 	@Override
 	public Object getParameter(String key) {
 		if (key == null) return null;
 		switch (key) {
 			case ScriptEngine.ENGINE:           return ENGINE_NAME;
-			case ScriptEngine.ENGINE_VERSION:   return Universe.getAussomVersion();
+			case ScriptEngine.ENGINE_VERSION:   return Engine.getAussomVersion();
 			case ScriptEngine.LANGUAGE:         return LANGUAGE_NAME;
-			case ScriptEngine.LANGUAGE_VERSION: return Universe.getAussomVersion();
+			case ScriptEngine.LANGUAGE_VERSION: return Engine.getAussomVersion();
 			case ScriptEngine.NAME:             return "aussom";
 			case "THREADING":                   return "MULTITHREADED";
 			default:                            return null;
