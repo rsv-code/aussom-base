@@ -3003,10 +3003,10 @@ class interpreterTests {
 	public secmanGetMap() { return test.expect(secman.getMap().containsKey('securitymanager.instantiate'), true); }
 
 	@Test(name = "(lang secman) Security manager instantiate.")
-	public secmanInstantiate() { sman = new securitymanager(); return test.expect(sman instanceof 'securitymanager', true); }
+	public secmanInstantiate() { sman = new SecurityManager(); return test.expect(sman instanceof 'SecurityManager', true); }
 
 	@Test(name = "(lang secman) Security manager instance set property.")
-	public secmanInstSetProp() { sman = new securitymanager(); sman.setProp('secman.test', true); return test.expect(sman.getProp('secman.test'), true); }
+	public secmanInstSetProp() { sman = new SecurityManager(); sman.setProp('secman.test', true); return test.expect(sman.getProp('secman.test'), true); }
 
 	@Test(name = "(lang secman) Security manager set map.")
 	public secmanSetMap() {
@@ -3015,7 +3015,7 @@ class interpreterTests {
 			'test.2': false,
 			'test.3': 'some text here ...'
 		};
-		sman = new securitymanager();
+		sman = new SecurityManager();
 		sman.setMap(mp);
 		return test.expect(sman.getProp('test.3') == 'some text here ...', true);
 	}

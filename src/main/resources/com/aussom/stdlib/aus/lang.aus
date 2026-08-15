@@ -2582,10 +2582,27 @@ static extern class secman : com.aussom.stdlib.ASecMan {
 
 	    
 /**
- * The securitymanager class provides an object that you can
+ * The SecurityManager class provides an object that you can
  * instantiate and provide to the Aussom engine to use.
+ *
+ * What you get from new SecurityManager() is a policy value,
+ * not the policy of the engine you are running in. Writing to
+ * it does not change what the running program may do; the
+ * static secman class is the one that reads the engine's own
+ * policy.
  */
-extern class securitymanager : com.aussom.stdlib.ASecurityManager {
+extern class SecurityManager : com.aussom.stdlib.ASecurityManager {
+    /**
+     * Creates a new security manager object. This function
+     * requires Security Manager permission
+     * securitymanager.instantiate.
+     * @r A new SecurityManager object.
+     */
+	public SecurityManager() {
+		return this.newSecurityManager();
+	}
+	private extern newSecurityManager();
+
     /**
      * Gets the security manager property value with
      * the provided property name. This function requires

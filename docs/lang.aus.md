@@ -68,6 +68,854 @@ block this is the object that is provided there.
 
 
 
+## class: charset
+
+[1923:6] `static` **extends: object** 
+
+Defines available character set values.
+
+#### Members
+- **us\_ascii**
+- **iso\_8859\_1**
+- **utf\_8**
+- **utf\_16be**
+- **utf\_16le**
+- **utf\_16**
+
+
+
+## class: bool
+
+[21:14] (extern: com.aussom.types.AussomBool) **extends: object** 
+
+The bool class implements bool datatype methods. These
+functions can be used on any bool value.
+
+#### Methods
+
+- **toInt** ()
+
+	> Converts the bool value to int.
+
+	- **@r** `An` int with 1 if true and 0 if false.
+
+
+- **toDouble** ()
+
+	> Converts the bool value to double.
+
+	- **@r** `A` double with 1.0 if true and 0.0 if false.
+
+
+- **toString** ()
+
+	> Converts the boolean value to string.
+
+	- **@r** `A` string with 'true' or 'false'.
+
+
+- **compare** (`bool Val`)
+
+	> Compares the value to the provided value.
+
+	- **@r** `An` int value with the value 0 if this == Val, a value less than 0 if !this && Val, and a value greater than 0 if this && !Val.
+
+
+- **parse** (`string Val`)
+
+	> Parses the provided string value and sets the bool value.
+
+	- **@p** `Val` is a string with 'true' or 'false'.
+	- **@r** `This` object.
+
+
+- **toJson** ()
+
+	> Converts the value to a JSON encoded string.
+
+	- **@r** `A` JSON encoded string.
+
+
+- **pack** ()
+
+	> Serializes the data into a structure.
+
+	- **@r** `A` packed string.
+
+
+- **mock** (`string FunctionName, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name. When the function is invoked the provided return value is returned instead of calling the original function.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@r** `this` object
+
+
+- **mockWhen** (`string FunctionName, callback Condition, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name with the provided callback to provide the condition. When the function is invoked the provided return value is returned instead of calling the original function. This only occurs when the condition provided in Condition is executed and a 1 or true is returned.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@p** `Condition` is a callback with the condition code.
+	- **@r** `this` object
+
+
+- **setSpy** (`string FunctionName`)
+
+	> Sets the spy flag on the object. This will record the arguements provided and the return value of each function call for the provided function name.
+
+	- **@p** `FunctionName` is a string with the function to spy.
+	- **@r** `this` object
+
+
+- **getSpy** (`string FunctionName`)
+
+	> Retuns a list of maps with each map contining the following: - timestamp: The seconds since epoch that the function was called. - arguments: A list of the arguments provided to the function. - returnValue: The value returned from the function.
+
+	- **@p** `FunctionName` is a string with the spy records to get.
+	- **@r** `A` list of spy records.
+
+
+
+
+## class: string
+
+[505:14] (extern: com.aussom.types.AussomString) **extends: object** 
+
+Implements string datatype methods.
+
+#### Methods
+
+- **charAt** (`int Index`)
+
+	> Gets the character at the provided index. It returns the character at the provided index as a new string and can throw an index out of bounds exception.
+
+	- **@p** `Index` is an int with the index to get the character at.
+	- **@r** `A` string with the character at that index.
+
+
+- **compare** (`string Str`)
+
+	> This compare function returns an int with the comparison value. It returns a 0 if the strings are equal. It returns a negative value if the current value lexicographically precedes the provided Str value and is posititive if it lexicographically follows the provided Str value.
+
+	- **@p** `Str` is the string to compare to.
+	- **@r** `An` int with the return value.
+
+
+- **compareICase** (`string Str`)
+
+	> Compares the provided string to the current one ignoring case. The comparison is the same as string.compare() but just ignoring case.
+
+	- **@p** `Str` is the string to compare to.
+	- **@r** `An` int with the return value.
+
+
+- **concat** (`string Str`)
+
+	> Concatenates the provided string value to the current string value and storing it as the current string value. This function appends the provided string.
+
+	- **@p** `Str` is the string to concatenate.
+	- **@r** `this` string object
+
+
+- **contains** (`string Needle`)
+
+	> Checks to see if the current string value contains the provided string value.
+
+	- **@p** `Needle` is a string with the value to check.
+	- **@r** `A` bool with true if it contains it and false if not.
+
+
+- **endsWith** (`string Suffix`)
+
+	> Checks to see if the string ends with the provided string.
+
+	- **@p** `Suffix` is string to check.
+	- **@r** `A` bool with true if it ends with the provided string and false if not.
+
+
+- **equals** (`string Str`)
+
+	> Checks to see if the provided string equals the current string.
+
+	- **@p** `Str` is a string to check.
+	- **@r** `A` bool with true if it equal and false if not.
+
+
+- **equalsICase** (`string Str`)
+
+	> Similar to string.equals() this compares the current string to the provided one but it ignores case.
+
+	- **@p** `Str` is a string to check.
+	- **@r** `A` bool with true if it equal and false if not.
+
+
+- **indexOf** (`string Needle`)
+
+	> Returns the index within this string of the first occurrence of the specified substring. If not found it returns -1.
+
+	- **@p** `Needle` is a string to look for.
+	- **@r** `An` int with the begining index or -1 if not found.
+
+
+- **indexOfStart** (`string Needle, int StartIndex`)
+
+	> Similar to string.indexOf() this function returns the index within this string of the first occurrence of the specified found it returns -1. It starts checking in the provided start index.
+
+	- **@p** `Needle` is a string to look for.
+	- **@p** `StartIndex` is a string with the starting index to check from.
+	- **@r** `An` int with the begining index or -1 if not found.
+
+
+- **isEmpty** ()
+
+	> Checks to see if the string is empty. It only returns true if the string length is 0.
+
+	- **@r** `A` bool with true if empty and false if not.
+
+
+- **isBlank** ()
+
+	> Checks to see if the blank is empty after performing a string.trim(). So this will return true if the string has no characters, or is only white space.
+
+	- **@r** `A` bool with true if is blank and false if not.
+
+
+- **lastIndexOf** (`string Needle`)
+
+	> Finds the last index of the provided string and returns -1 if not found.
+
+	- **@p** `Needle` is the string to search for.
+	- **@r** `The` last index of the string being searched for or -1 if not found.
+
+
+- **lastIndexOfStart** (`string Needle, int StartIndex`)
+
+	> Finds the last index of the provided string and returns -1 if not found. Note that the function starts search at the last index and searches forward so when you provide a start index it will search backward from that position in the curret string.
+
+	- **@p** `Needle` is the string to search for.
+	- **@p** `StartIndex` is an int with the begining index to start searching backwards from.
+	- **@r** `The` last index of the string being searched for or -1 if not found.
+
+
+- **length** ()
+
+	> Gets the string length.
+
+	- **@r** `An` int with the string length.
+
+
+- **matches** (`string Regex`)
+
+	> Checks to see if the provided Java regex expression matches the current string. It returns true if it matches and false if not. The engine reads this string through its own metering while the match runs, so the host can budget, pause or cancel it. A REGEX_BUDGET_EXCEEDED exception is raised if the host set a step budget and the pattern reads past it, which happens when a pattern backtracks far more than the length of the string justifies.
+
+	- **@p** `Regex` is a string with a Java regular expression to match.
+	- **@r** `A` boolean with true if it matches and false if not.
+
+
+- **replace** (`string Find, string Replace`)
+
+	> Replaces the string to find with the provided replacement and returns the new string.
+
+	- **@p** `Find` is a string to find.
+	- **@p** `Replace` is a string to replace with.
+	- **@r** `A` new string with the replaced string.
+
+
+- **replaceFirstRegex** (`string Regex, string Replace`)
+
+	> Replace the first occurance of the search regular expression with the provided replacement string. The engine reads this string through its own metering while the match runs, so the host can budget, pause or cancel it. A REGEX_BUDGET_EXCEEDED exception is raised if the host set a step budget and the pattern reads past it, which happens when a pattern backtracks far more than the length of the string justifies.
+
+	- **@p** `Regex` is a string with the regular expression to look for.
+	- **@p** `Replace` is the string to replace with.
+	- **@r** `A` new string with the replaced value.
+
+
+- **replaceRegex** (`string Regex, string Replace`)
+
+	> Replaces all instance the provied regular expression matches with the provided replacement string. The engine reads this string through its own metering while the match runs, so the host can budget, pause or cancel it. A REGEX_BUDGET_EXCEEDED exception is raised if the host set a step budget and the pattern reads past it, which happens when a pattern backtracks far more than the length of the string justifies.
+
+	- **@p** `Regex` is a string with the regex pattern.
+	- **@p** `Replace` is a string with the replacement string.
+	- **@r** `A` new string with the replaced parts.
+
+
+- **split** (`string Delim, bool AllowBlanks = false`)
+
+	> Splits the current string by the provided delimiter. If allow blanks is set to true, it will also return blank parts between delimiters, otherwise trimmed sections that are empty won't be included in the results. The delimiter is a regular expression, so the same metering applies as for matches(): a host that set a step budget can have a runaway pattern raise REGEX_BUDGET_EXCEEDED rather than run for minutes.
+
+	- **@p** `Delim` is a string with the delimier to split on.
+	- **@p** `AllowBlanks` is an optional bool with true to return blank sections and false for not. The default is false.
+	- **@r** `A` list with the split values.
+
+
+- **startsWith** (`string Prefix`)
+
+	> Checks if the current string starts with the provided string.
+
+	- **@p** `Prefix` is the string to check if it starts with.
+	- **@r** `A` bool with true if it starts with and false if not.
+
+
+- **substr** (`int Index, int EndIndex = null`)
+
+	> Substring returns a sub string of the current string value with the provided index and optional end index.
+
+	- **@p** `Index` is the start index to get the substring from.
+	- **@p** `EndIndex` is the optional end index to get the substring from. Default is null.
+	- **@r** `A` string with the sub string value.
+
+
+- **toLower** ()
+
+	> Converts the string to lower case.
+
+	- **@r** `A` string with the current string value but all lower case.
+
+
+- **toUpper** ()
+
+	> Converts the string to upper case.
+
+	- **@r** `A` string with the current string value but all upper case.
+
+
+- **trim** ()
+
+	> Removes all of the leading and trainig blank characters from the current string. The blank characters are defined as any character whose codepoint is less than or equal to 'U+0020' (the space character).
+
+	- **@r** `A` string with the leading and training whitespace removed.
+
+
+- **format** (`...`)
+
+	> Builds a new string from this string as a template, replacing placeholders with the provided arguments. This is the general-purpose alternative to building strings with '+'. Placeholders are written with curly braces: {}     the next positional argument, in order. {N}    the positional argument at index N (0 based). An index may be reused, e.g. "{0} {0}". {name} the value at key 'name' in the first map argument. Write '{{' or '}}' to include a literal brace. Scalar arguments are converted to their plain string form (a string is inserted unquoted). Lists and maps are rendered as compact JSON, e.g. [1,2,3] or {"a":1}, rather than the multi-line debug form. Examples: "Hello {}, you are {}.".format("Bob", 42) "{0}-{1}-{0}".format("a", "b") "{greeting}, {name}!".format({ "greeting": "Hi", "name": "Bob" })
+
+	- **@p** `etc` are the arguments referenced by the placeholders.
+	- **@r** `A` new formatted string.
+
+
+- **\_format** (`list Args`)
+
+
+- **toJson** ()
+
+	> Converts the value to a JSON encoded string.
+
+	- **@r** `A` JSON encoded string.
+
+
+- **parseInt** (`int Radix = null`)
+
+	> Parses this string as an int. Convenience method that delegates to Int.parse. Throws on parse failure with the same contract as Int.parse — wrap the call in try/catch when the input may be invalid.
+
+	- **@p** `Radix` is an optional int with the numeric base to parse in (e.g. 16 for hex). When omitted, base 10 is used.
+	- **@r** `An` int with the parsed value.
+
+
+- **parseDouble** ()
+
+	> Parses this string as a double. Convenience method that delegates to Double.parse. Throws on parse failure — wrap the call in try/catch when the input may be invalid.
+
+	- **@r** `A` double with the parsed value.
+
+
+- **parseBool** ()
+
+	> Parses this string as a bool. Convenience method that delegates to Bool.parse. Throws on parse failure — wrap the call in try/catch when the input may be invalid.
+
+	- **@r** `A` bool with the parsed value.
+
+
+- **pack** ()
+
+	> Serializes the data into a structure.
+
+	- **@r** `A` packed string.
+
+
+- **mock** (`string FunctionName, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name. When the function is invoked the provided return value is returned instead of calling the original function.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@r** `this` object
+
+
+- **mockWhen** (`string FunctionName, callback Condition, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name with the provided callback to provide the condition. When the function is invoked the provided return value is returned instead of calling the original function. This only occurs when the condition provided in Condition is executed and a 1 or true is returned.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@p** `Condition` is a callback with the condition code.
+	- **@r** `this` object
+
+
+- **setSpy** (`string FunctionName`)
+
+	> Sets the spy flag on the object. This will record the arguements provided and the return value of each function call for the provided function name.
+
+	- **@p** `FunctionName` is a string with the function to spy.
+	- **@r** `this` object
+
+
+- **getSpy** (`string FunctionName`)
+
+	> Retuns a list of maps with each map contining the following: - timestamp: The seconds since epoch that the function was called. - arguments: A list of the arguments provided to the function. - returnValue: The value returned from the function.
+
+	- **@p** `FunctionName` is a string with the spy records to get.
+	- **@r** `A` list of spy records.
+
+
+
+
+## class: SecurityManager
+
+[2594:14] (extern: com.aussom.stdlib.ASecurityManager) **extends: object** 
+
+The SecurityManager class provides an object that you can
+instantiate and provide to the Aussom engine to use.
+What you get from new SecurityManager() is a policy value,
+not the policy of the engine you are running in. Writing to
+it does not change what the running program may do; the
+static secman class is the one that reads the engine's own
+policy.
+
+#### Methods
+
+- **SecurityManager** ()
+
+	> Creates a new security manager object. This function requires Security Manager permission securitymanager.instantiate.
+
+	- **@r** `A` new SecurityManager object.
+
+
+- **newSecurityManager** ()
+
+
+- **getProp** (`string PropName`)
+
+	> Gets the security manager property value with the provided property name. This function requires Security Manager permission securitymanager.property.get.
+
+	- **@p** `PropName` is a string with the property name to get.
+	- **@r** `A` simple type with the value of the property.
+
+
+- **keySet** ()
+
+	> Gets the key set of the properties as a list of strings. This function requires Security Manager permission securitymanager.property.list.
+
+	- **@r** `A` list of strings of the property keys.
+
+
+- **getMap** ()
+
+	> Gets a map of the security manager properties and their values. This function requires Security Manager permission securitymanager.property.list.
+
+	- **@r** `A` map with the security manager key values.
+
+
+- **setProp** (`string PropName, Value`)
+
+	> This method provides the ability to set the property of a security manager property pair. This function requires Security Manager permission securitymanager.property.set.
+
+	- **@p** `PropName` is a string with the property key to set.
+	- **@p** `Value` is a simple type value to set.
+	- **@r** `this` object
+
+
+- **setMap** (`map PropsToSet`)
+
+	> This method provides the ability to set a whole map of key-val pairs. This function requires Security Manager permission securitymanager.property.set.
+
+	- **@p** `PropsToSet` is a map with the key value pairs to set.
+	- **@r** `this` object
+
+
+
+
+## class: cnull
+
+[1395:14] (extern: com.aussom.types.AussomNull) **extends: object** 
+
+Implements null datatype methods.
+
+#### Methods
+
+- **toJson** ()
+
+	> Converts the value to a JSON encoded string.
+
+	- **@r** `A` JSON encoded string.
+
+
+- **pack** ()
+
+	> Serializes the data into a structure.
+
+	- **@r** `A` packed string.
+
+
+- **isBlank** ()
+
+	> This function is implemented in case a variable that is expected to have a string is actually set to null. In this case this function will return true.
+
+	- **@r** `A` boolean with true.
+
+
+
+
+## class: Int
+
+[289:21] `static` (extern: com.aussom.stdlib.SInt) **extends: object** 
+
+Static class Int implements functions the operate on
+int data types. For instance you can call
+Int.maxVal() to get the maximum integer value.
+
+#### Methods
+
+- **maxVal** ()
+
+	> Returns the max int value available. This translates to Javas Long.MAX_VALUE.
+
+
+
+- **minVal** ()
+
+	> Returns the min int value available. This translates to Javas Long.IN_VALUE.
+
+
+
+- **parse** (`string Str, int Radix = null`)
+
+	> Parses the provided string with the provided radix.
+
+	- **@p** `Str` is a string to parse.
+	- **@p** `Radix` is the optional radix value to use.
+	- **@r** `An` int with the parsed value.
+
+
+
+
+## class: secman
+
+[2534:21] `static` (extern: com.aussom.stdlib.ASecMan) **extends: object** 
+
+The static secman class implements function for working with
+the security manager of the currently executing engine.
+
+#### Methods
+
+- **getProp** (`string PropName`)
+
+	> Gets the security manager property value with the provided property name. This function requires Security Manager permission securitymanager.property.get.
+
+	- **@p** `PropName` is a string with the property name to get.
+	- **@r** `A` simple type with the value of the property.
+
+
+- **keySet** ()
+
+	> Gets the key set of the properties as a list of strings. This function requires Security Manager permission securitymanager.property.list.
+
+	- **@r** `A` list of strings of the property keys.
+
+
+- **getMap** ()
+
+	> Gets a map of the security manager properties and their values. This function requires Security Manager permission securitymanager.property.list.
+
+	- **@r** `A` map with the security manager key values.
+
+
+- **setProp** (`string PropName, Value`)
+
+	> This method provides the ability to set the property of a security manager property pair. This function requires Security Manager permission securitymanager.property.set.
+
+	- **@p** `PropName` is a string with the property key to set.
+	- **@p** `Value` is a simple type value to set.
+	- **@r** `this` object
+
+
+- **setMap** (`map PropsToSet`)
+
+	> This method provides the ability to set a whole map of key-val pairs. This function requires Security Manager permission securitymanager.property.set.
+
+	- **@p** `PropsToSet` is a map with the key value pairs to set.
+	- **@r** `this` object
+
+
+
+
+## class: Bool
+
+[115:21] `static` (extern: com.aussom.stdlib.SBool) **extends: object** 
+
+Static class Bool implements functions that operate on
+bool data types. For example you can use Bool.parse()
+to parse a string value.
+
+#### Methods
+
+- **parse** (`string Val`)
+
+	> Parses the provided string and returns the bool value.
+
+	- **@p** `Val` is a string with the bool value.
+	- **@r** `A` bool value.
+
+
+
+
+## class: dateunit
+
+[1561:6] `static` **extends: object** 
+
+Defines the unit values accepted by Date.between(). Each member
+evaluates to its matching unit string, so between() can be called
+as myDate.between(other, dateunit.days) instead of passing the raw
+string "days". This is less error prone than typing the string.
+
+#### Members
+- **millis**
+- **seconds**
+- **minutes**
+- **hours**
+- **days**
+- **weeks**
+- **months**
+- **years**
+
+
+
+## class: json
+
+[2497:21] `static` (extern: com.aussom.stdlib.AJson) **extends: object** 
+
+The static json class implements some functions for
+working with JSON data.
+
+#### Methods
+
+- **parse** (`string JsonString`)
+
+	> Parses the provided JSON string and returns it as a list or map with the values.
+
+	- **@p** `JsonString` is a string with the JSON content to parse.
+	- **@r** `A` list or map of items that are the parsed JSON.
+
+
+- **unpack** (`string JsonString`)
+
+	> The unpack function unmarshalls objects that are defined in the provided JSON string. This is the reverse process of object.pack(). The structure that is used to pack an object is specific to this unpack function and includes things such as members and type information. It's a way of deserializing data that as been serialized with object.pack().
+
+	- **@p** `JsonString` is a string with the packed data.
+	- **@r** `The` unpacked data.
+
+
+- **escape** (`string JsonString`)
+
+	> Utility function which takes a JSON encoded string and escapes it.
+
+	- **@p** `JsonString` is the JSON string to escape.
+	- **@r** `A` new string with the escaped JSON.
+
+
+
+
+## class: lang
+
+[2467:21] `static` (extern: com.aussom.stdlib.ALang) **extends: object** 
+
+The staic lang object provides some standard
+functionality for the Aussom language.
+
+#### Methods
+
+- **type** (`DataType`)
+
+	> Gets the type of the data provided. If a simple type is provided such as bool, int, double, string, null, or list, then a string with that name is returned. If an object is provided it's class name is returned as the type.
+
+	- **@p** `DataType` is a string with the type to check.
+	- **@r** `A` string with the type.
+
+
+- **getClassAussomdoc** (`string ClassName`)
+
+	> Gets the Aussom doc structure of the object of the class name provided. The class must be already read (included) in the current runtime engine. It then produces a doc structure and returns it. This function requires the Aussom SecurityManager permission aussomdoc.class.getJson.
+
+	- **@p** `ClassName` is a string with the name of the class to get the Aussom doc for.
+	- **@r** `A` structur of maps, lists, and fields that has the Aussom doc.
+
+
+
+
+## class: map
+
+[1111:14] (extern: com.aussom.types.AussomMap) **extends: object** 
+
+Implements map datatype methods.
+
+#### Methods
+
+- **clear** ()
+
+	> Clears the current map contents.
+
+	- **@r** `this` object
+
+
+- **containsKey** (`string Key`)
+
+	> Checks to see if the current map contains the provided key.
+
+	- **@p** `Key` is a strig to check for.
+	- **@r** `A` bool with true if found and false if not.
+
+
+- **containsVal** (`Val`)
+
+	> Checks to see if the map contains the provided value. Primitive values (null, bool, int, double, and string) and callbacks are matched by value. Objects, lists, and maps are matched by reference.
+
+	- **@p** `Val` is the value to check for.
+	- **@r** `A` bool with true if found and false if not.
+
+
+- **get** (`string Key`)
+
+	> Gets the value with the provided key.
+
+	- **@p** `Key` is a string with the key for the value to get.
+	- **@r** `A` value or null if not found.
+
+
+- **getd** (`string Key, defVal`)
+
+	> Gets the value with the provided key and returns it. If not found it returns the provided default value.
+
+	- **@p** `Key` is a string with the key for the value to get.
+	- **@p** `defVal` is the default value to return if the key isn't found.
+	- **@r** `The` value of for the provided key or the default value if not found.
+
+
+- **isEmpty** ()
+
+	> Checks to see if the current map is empty.
+
+	- **@r** `A` bool with true if empty or false if not.
+
+
+- **keySet** ()
+
+	> Gets a list of the available keys.
+
+	- **@r** `A` list of strings with the keys.
+
+
+- **put** (`string Key, Val`)
+
+	> Puts the provided value with the provided key.
+
+	- **@p** `Key` is a string with the key to set.
+	- **@p** `Val` is the value to set.
+	- **@r** `this` object
+
+
+- **putAll** (`map ToAdd`)
+
+	> Puts all the items from the provided map into the current map.
+
+	- **@p** `ToAdd` is a map with the keys and values to add.
+	- **@r** `this` object
+
+
+- **putIfAbsent** (`string Key, Val`)
+
+	> Puts the key and value pair if they key doesn't already exist.
+
+	- **@p** `Key` is the key to set.
+	- **@p** `Val` is the value to set.
+	- **@r** `this` object
+
+
+- **remove** (`string Key`)
+
+	> Removes the key value pair with the provided key.
+
+	- **@p** `Key` is a string with the key to remove.
+	- **@r** `The` value of the item that was removed or null if not found.
+
+
+- **size** ()
+
+	> Gets the size of the map.
+
+	- **@r** `An` int with the map size.
+
+
+- **values** ()
+
+	> Gets a list of the values in the map.
+
+	- **@r** `A` list with the map values.
+
+
+- **toJson** ()
+
+	> Converts the value to a JSON encoded string.
+
+	- **@r** `A` JSON encoded string.
+
+
+- **pack** ()
+
+	> Serializes the data into a structure.
+
+	- **@r** `A` packed string.
+
+
+- **mock** (`string FunctionName, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name. When the function is invoked the provided return value is returned instead of calling the original function.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@r** `this` object
+
+
+- **mockWhen** (`string FunctionName, callback Condition, ReturnVal`)
+
+	> Sets a mock on the object for the specified function name with the provided callback to provide the condition. When the function is invoked the provided return value is returned instead of calling the original function. This only occurs when the condition provided in Condition is executed and a 1 or true is returned.
+
+	- **@p** `FunctionName` is a string with the function to mock.
+	- **@p** `ReturnVal` is the return value to return.
+	- **@p** `Condition` is a callback with the condition code.
+	- **@r** `this` object
+
+
+- **setSpy** (`string FunctionName`)
+
+	> Sets the spy flag on the object. This will record the arguements provided and the return value of each function call for the provided function name.
+
+	- **@p** `FunctionName` is a string with the function to spy.
+	- **@r** `this` object
+
+
+- **getSpy** (`string FunctionName`)
+
+	> Retuns a list of maps with each map contining the following: - timestamp: The seconds since epoch that the function was called. - arguments: A list of the arguments provided to the function. - returnValue: The value returned from the function.
+
+	- **@p** `FunctionName` is a string with the spy records to get.
+	- **@r** `A` list of spy records.
+
+
+
+
 ## class: Buffer
 
 [1948:14] (extern: com.aussom.stdlib.ABuffer) **extends: object** 
@@ -499,22 +1347,6 @@ functionality.
 
 
 
-## class: charset
-
-[1923:6] `static` **extends: object** 
-
-Defines available character set values.
-
-#### Members
-- **us\_ascii**
-- **iso\_8859\_1**
-- **utf\_8**
-- **utf\_16be**
-- **utf\_16le**
-- **utf\_16**
-
-
-
 ## class: c
 
 [1492:21] `static` (extern: com.aussom.stdlib.console) **extends: object** 
@@ -590,395 +1422,6 @@ then write to standard out at the info logging level.
 
 	- **@p** `Content` is any content to write.
 	- **@r** `this` object.
-
-
-
-
-## class: bool
-
-[21:14] (extern: com.aussom.types.AussomBool) **extends: object** 
-
-The bool class implements bool datatype methods. These
-functions can be used on any bool value.
-
-#### Methods
-
-- **toInt** ()
-
-	> Converts the bool value to int.
-
-	- **@r** `An` int with 1 if true and 0 if false.
-
-
-- **toDouble** ()
-
-	> Converts the bool value to double.
-
-	- **@r** `A` double with 1.0 if true and 0.0 if false.
-
-
-- **toString** ()
-
-	> Converts the boolean value to string.
-
-	- **@r** `A` string with 'true' or 'false'.
-
-
-- **compare** (`bool Val`)
-
-	> Compares the value to the provided value.
-
-	- **@r** `An` int value with the value 0 if this == Val, a value less than 0 if !this && Val, and a value greater than 0 if this && !Val.
-
-
-- **parse** (`string Val`)
-
-	> Parses the provided string value and sets the bool value.
-
-	- **@p** `Val` is a string with 'true' or 'false'.
-	- **@r** `This` object.
-
-
-- **toJson** ()
-
-	> Converts the value to a JSON encoded string.
-
-	- **@r** `A` JSON encoded string.
-
-
-- **pack** ()
-
-	> Serializes the data into a structure.
-
-	- **@r** `A` packed string.
-
-
-- **mock** (`string FunctionName, ReturnVal`)
-
-	> Sets a mock on the object for the specified function name. When the function is invoked the provided return value is returned instead of calling the original function.
-
-	- **@p** `FunctionName` is a string with the function to mock.
-	- **@p** `ReturnVal` is the return value to return.
-	- **@r** `this` object
-
-
-- **mockWhen** (`string FunctionName, callback Condition, ReturnVal`)
-
-	> Sets a mock on the object for the specified function name with the provided callback to provide the condition. When the function is invoked the provided return value is returned instead of calling the original function. This only occurs when the condition provided in Condition is executed and a 1 or true is returned.
-
-	- **@p** `FunctionName` is a string with the function to mock.
-	- **@p** `ReturnVal` is the return value to return.
-	- **@p** `Condition` is a callback with the condition code.
-	- **@r** `this` object
-
-
-- **setSpy** (`string FunctionName`)
-
-	> Sets the spy flag on the object. This will record the arguements provided and the return value of each function call for the provided function name.
-
-	- **@p** `FunctionName` is a string with the function to spy.
-	- **@r** `this` object
-
-
-- **getSpy** (`string FunctionName`)
-
-	> Retuns a list of maps with each map contining the following: - timestamp: The seconds since epoch that the function was called. - arguments: A list of the arguments provided to the function. - returnValue: The value returned from the function.
-
-	- **@p** `FunctionName` is a string with the spy records to get.
-	- **@r** `A` list of spy records.
-
-
-
-
-## class: string
-
-[505:14] (extern: com.aussom.types.AussomString) **extends: object** 
-
-Implements string datatype methods.
-
-#### Methods
-
-- **charAt** (`int Index`)
-
-	> Gets the character at the provided index. It returns the character at the provided index as a new string and can throw an index out of bounds exception.
-
-	- **@p** `Index` is an int with the index to get the character at.
-	- **@r** `A` string with the character at that index.
-
-
-- **compare** (`string Str`)
-
-	> This compare function returns an int with the comparison value. It returns a 0 if the strings are equal. It returns a negative value if the current value lexicographically precedes the provided Str value and is posititive if it lexicographically follows the provided Str value.
-
-	- **@p** `Str` is the string to compare to.
-	- **@r** `An` int with the return value.
-
-
-- **compareICase** (`string Str`)
-
-	> Compares the provided string to the current one ignoring case. The comparison is the same as string.compare() but just ignoring case.
-
-	- **@p** `Str` is the string to compare to.
-	- **@r** `An` int with the return value.
-
-
-- **concat** (`string Str`)
-
-	> Concatenates the provided string value to the current string value and storing it as the current string value. This function appends the provided string.
-
-	- **@p** `Str` is the string to concatenate.
-	- **@r** `this` string object
-
-
-- **contains** (`string Needle`)
-
-	> Checks to see if the current string value contains the provided string value.
-
-	- **@p** `Needle` is a string with the value to check.
-	- **@r** `A` bool with true if it contains it and false if not.
-
-
-- **endsWith** (`string Suffix`)
-
-	> Checks to see if the string ends with the provided string.
-
-	- **@p** `Suffix` is string to check.
-	- **@r** `A` bool with true if it ends with the provided string and false if not.
-
-
-- **equals** (`string Str`)
-
-	> Checks to see if the provided string equals the current string.
-
-	- **@p** `Str` is a string to check.
-	- **@r** `A` bool with true if it equal and false if not.
-
-
-- **equalsICase** (`string Str`)
-
-	> Similar to string.equals() this compares the current string to the provided one but it ignores case.
-
-	- **@p** `Str` is a string to check.
-	- **@r** `A` bool with true if it equal and false if not.
-
-
-- **indexOf** (`string Needle`)
-
-	> Returns the index within this string of the first occurrence of the specified substring. If not found it returns -1.
-
-	- **@p** `Needle` is a string to look for.
-	- **@r** `An` int with the begining index or -1 if not found.
-
-
-- **indexOfStart** (`string Needle, int StartIndex`)
-
-	> Similar to string.indexOf() this function returns the index within this string of the first occurrence of the specified found it returns -1. It starts checking in the provided start index.
-
-	- **@p** `Needle` is a string to look for.
-	- **@p** `StartIndex` is a string with the starting index to check from.
-	- **@r** `An` int with the begining index or -1 if not found.
-
-
-- **isEmpty** ()
-
-	> Checks to see if the string is empty. It only returns true if the string length is 0.
-
-	- **@r** `A` bool with true if empty and false if not.
-
-
-- **isBlank** ()
-
-	> Checks to see if the blank is empty after performing a string.trim(). So this will return true if the string has no characters, or is only white space.
-
-	- **@r** `A` bool with true if is blank and false if not.
-
-
-- **lastIndexOf** (`string Needle`)
-
-	> Finds the last index of the provided string and returns -1 if not found.
-
-	- **@p** `Needle` is the string to search for.
-	- **@r** `The` last index of the string being searched for or -1 if not found.
-
-
-- **lastIndexOfStart** (`string Needle, int StartIndex`)
-
-	> Finds the last index of the provided string and returns -1 if not found. Note that the function starts search at the last index and searches forward so when you provide a start index it will search backward from that position in the curret string.
-
-	- **@p** `Needle` is the string to search for.
-	- **@p** `StartIndex` is an int with the begining index to start searching backwards from.
-	- **@r** `The` last index of the string being searched for or -1 if not found.
-
-
-- **length** ()
-
-	> Gets the string length.
-
-	- **@r** `An` int with the string length.
-
-
-- **matches** (`string Regex`)
-
-	> Checks to see if the provided Java regex expression matches the current string. It returns true if it matches and false if not. The engine reads this string through its own metering while the match runs, so the host can budget, pause or cancel it. A REGEX_BUDGET_EXCEEDED exception is raised if the host set a step budget and the pattern reads past it, which happens when a pattern backtracks far more than the length of the string justifies.
-
-	- **@p** `Regex` is a string with a Java regular expression to match.
-	- **@r** `A` boolean with true if it matches and false if not.
-
-
-- **replace** (`string Find, string Replace`)
-
-	> Replaces the string to find with the provided replacement and returns the new string.
-
-	- **@p** `Find` is a string to find.
-	- **@p** `Replace` is a string to replace with.
-	- **@r** `A` new string with the replaced string.
-
-
-- **replaceFirstRegex** (`string Regex, string Replace`)
-
-	> Replace the first occurance of the search regular expression with the provided replacement string. The engine reads this string through its own metering while the match runs, so the host can budget, pause or cancel it. A REGEX_BUDGET_EXCEEDED exception is raised if the host set a step budget and the pattern reads past it, which happens when a pattern backtracks far more than the length of the string justifies.
-
-	- **@p** `Regex` is a string with the regular expression to look for.
-	- **@p** `Replace` is the string to replace with.
-	- **@r** `A` new string with the replaced value.
-
-
-- **replaceRegex** (`string Regex, string Replace`)
-
-	> Replaces all instance the provied regular expression matches with the provided replacement string. The engine reads this string through its own metering while the match runs, so the host can budget, pause or cancel it. A REGEX_BUDGET_EXCEEDED exception is raised if the host set a step budget and the pattern reads past it, which happens when a pattern backtracks far more than the length of the string justifies.
-
-	- **@p** `Regex` is a string with the regex pattern.
-	- **@p** `Replace` is a string with the replacement string.
-	- **@r** `A` new string with the replaced parts.
-
-
-- **split** (`string Delim, bool AllowBlanks = false`)
-
-	> Splits the current string by the provided delimiter. If allow blanks is set to true, it will also return blank parts between delimiters, otherwise trimmed sections that are empty won't be included in the results. The delimiter is a regular expression, so the same metering applies as for matches(): a host that set a step budget can have a runaway pattern raise REGEX_BUDGET_EXCEEDED rather than run for minutes.
-
-	- **@p** `Delim` is a string with the delimier to split on.
-	- **@p** `AllowBlanks` is an optional bool with true to return blank sections and false for not. The default is false.
-	- **@r** `A` list with the split values.
-
-
-- **startsWith** (`string Prefix`)
-
-	> Checks if the current string starts with the provided string.
-
-	- **@p** `Prefix` is the string to check if it starts with.
-	- **@r** `A` bool with true if it starts with and false if not.
-
-
-- **substr** (`int Index, int EndIndex = null`)
-
-	> Substring returns a sub string of the current string value with the provided index and optional end index.
-
-	- **@p** `Index` is the start index to get the substring from.
-	- **@p** `EndIndex` is the optional end index to get the substring from. Default is null.
-	- **@r** `A` string with the sub string value.
-
-
-- **toLower** ()
-
-	> Converts the string to lower case.
-
-	- **@r** `A` string with the current string value but all lower case.
-
-
-- **toUpper** ()
-
-	> Converts the string to upper case.
-
-	- **@r** `A` string with the current string value but all upper case.
-
-
-- **trim** ()
-
-	> Removes all of the leading and trainig blank characters from the current string. The blank characters are defined as any character whose codepoint is less than or equal to 'U+0020' (the space character).
-
-	- **@r** `A` string with the leading and training whitespace removed.
-
-
-- **format** (`...`)
-
-	> Builds a new string from this string as a template, replacing placeholders with the provided arguments. This is the general-purpose alternative to building strings with '+'. Placeholders are written with curly braces: {}     the next positional argument, in order. {N}    the positional argument at index N (0 based). An index may be reused, e.g. "{0} {0}". {name} the value at key 'name' in the first map argument. Write '{{' or '}}' to include a literal brace. Scalar arguments are converted to their plain string form (a string is inserted unquoted). Lists and maps are rendered as compact JSON, e.g. [1,2,3] or {"a":1}, rather than the multi-line debug form. Examples: "Hello {}, you are {}.".format("Bob", 42) "{0}-{1}-{0}".format("a", "b") "{greeting}, {name}!".format({ "greeting": "Hi", "name": "Bob" })
-
-	- **@p** `etc` are the arguments referenced by the placeholders.
-	- **@r** `A` new formatted string.
-
-
-- **\_format** (`list Args`)
-
-
-- **toJson** ()
-
-	> Converts the value to a JSON encoded string.
-
-	- **@r** `A` JSON encoded string.
-
-
-- **parseInt** (`int Radix = null`)
-
-	> Parses this string as an int. Convenience method that delegates to Int.parse. Throws on parse failure with the same contract as Int.parse — wrap the call in try/catch when the input may be invalid.
-
-	- **@p** `Radix` is an optional int with the numeric base to parse in (e.g. 16 for hex). When omitted, base 10 is used.
-	- **@r** `An` int with the parsed value.
-
-
-- **parseDouble** ()
-
-	> Parses this string as a double. Convenience method that delegates to Double.parse. Throws on parse failure — wrap the call in try/catch when the input may be invalid.
-
-	- **@r** `A` double with the parsed value.
-
-
-- **parseBool** ()
-
-	> Parses this string as a bool. Convenience method that delegates to Bool.parse. Throws on parse failure — wrap the call in try/catch when the input may be invalid.
-
-	- **@r** `A` bool with the parsed value.
-
-
-- **pack** ()
-
-	> Serializes the data into a structure.
-
-	- **@r** `A` packed string.
-
-
-- **mock** (`string FunctionName, ReturnVal`)
-
-	> Sets a mock on the object for the specified function name. When the function is invoked the provided return value is returned instead of calling the original function.
-
-	- **@p** `FunctionName` is a string with the function to mock.
-	- **@p** `ReturnVal` is the return value to return.
-	- **@r** `this` object
-
-
-- **mockWhen** (`string FunctionName, callback Condition, ReturnVal`)
-
-	> Sets a mock on the object for the specified function name with the provided callback to provide the condition. When the function is invoked the provided return value is returned instead of calling the original function. This only occurs when the condition provided in Condition is executed and a 1 or true is returned.
-
-	- **@p** `FunctionName` is a string with the function to mock.
-	- **@p** `ReturnVal` is the return value to return.
-	- **@p** `Condition` is a callback with the condition code.
-	- **@r** `this` object
-
-
-- **setSpy** (`string FunctionName`)
-
-	> Sets the spy flag on the object. This will record the arguements provided and the return value of each function call for the provided function name.
-
-	- **@p** `FunctionName` is a string with the function to spy.
-	- **@r** `this` object
-
-
-- **getSpy** (`string FunctionName`)
-
-	> Retuns a list of maps with each map contining the following: - timestamp: The seconds since epoch that the function was called. - arguments: A list of the arguments provided to the function. - returnValue: The value returned from the function.
-
-	- **@p** `FunctionName` is a string with the spy records to get.
-	- **@r** `A` list of spy records.
 
 
 
@@ -1330,37 +1773,6 @@ Implements list datatype methods.
 
 
 
-## class: cnull
-
-[1395:14] (extern: com.aussom.types.AussomNull) **extends: object** 
-
-Implements null datatype methods.
-
-#### Methods
-
-- **toJson** ()
-
-	> Converts the value to a JSON encoded string.
-
-	- **@r** `A` JSON encoded string.
-
-
-- **pack** ()
-
-	> Serializes the data into a structure.
-
-	- **@r** `A` packed string.
-
-
-- **isBlank** ()
-
-	> This function is implemented in case a variable that is expected to have a string is actually set to null. In this case this function will return true.
-
-	- **@r** `A` boolean with true.
-
-
-
-
 ## class: Double
 
 [439:21] `static` (extern: com.aussom.stdlib.SDouble) **extends: object** 
@@ -1606,39 +2018,6 @@ functions can be used on any int value.
 
 	- **@p** `FunctionName` is a string with the spy records to get.
 	- **@r** `A` list of spy records.
-
-
-
-
-## class: Int
-
-[289:21] `static` (extern: com.aussom.stdlib.SInt) **extends: object** 
-
-Static class Int implements functions the operate on
-int data types. For instance you can call
-Int.maxVal() to get the maximum integer value.
-
-#### Methods
-
-- **maxVal** ()
-
-	> Returns the max int value available. This translates to Javas Long.MAX_VALUE.
-
-
-
-- **minVal** ()
-
-	> Returns the min int value available. This translates to Javas Long.IN_VALUE.
-
-
-
-- **parse** (`string Str, int Radix = null`)
-
-	> Parses the provided string with the provided radix.
-
-	- **@p** `Str` is a string to parse.
-	- **@p** `Radix` is the optional radix value to use.
-	- **@r** `An` int with the parsed value.
 
 
 
@@ -1979,147 +2358,6 @@ accessors are evaluated at UTC.
 
 
 
-## class: securitymanager
-
-[2588:14] (extern: com.aussom.stdlib.ASecurityManager) **extends: object** 
-
-The securitymanager class provides an object that you can
-instantiate and provide to the Aussom engine to use.
-
-#### Methods
-
-- **getProp** (`string PropName`)
-
-	> Gets the security manager property value with the provided property name. This function requires Security Manager permission securitymanager.property.get.
-
-	- **@p** `PropName` is a string with the property name to get.
-	- **@r** `A` simple type with the value of the property.
-
-
-- **keySet** ()
-
-	> Gets the key set of the properties as a list of strings. This function requires Security Manager permission securitymanager.property.list.
-
-	- **@r** `A` list of strings of the property keys.
-
-
-- **getMap** ()
-
-	> Gets a map of the security manager properties and their values. This function requires Security Manager permission securitymanager.property.list.
-
-	- **@r** `A` map with the security manager key values.
-
-
-- **setProp** (`string PropName, Value`)
-
-	> This method provides the ability to set the property of a security manager property pair. This function requires Security Manager permission securitymanager.property.set.
-
-	- **@p** `PropName` is a string with the property key to set.
-	- **@p** `Value` is a simple type value to set.
-	- **@r** `this` object
-
-
-- **setMap** (`map PropsToSet`)
-
-	> This method provides the ability to set a whole map of key-val pairs. This function requires Security Manager permission securitymanager.property.set.
-
-	- **@p** `PropsToSet` is a map with the key value pairs to set.
-	- **@r** `this` object
-
-
-
-
-## class: secman
-
-[2534:21] `static` (extern: com.aussom.stdlib.ASecMan) **extends: object** 
-
-The static secman class implements function for working with
-the security manager of the currently executing engine.
-
-#### Methods
-
-- **getProp** (`string PropName`)
-
-	> Gets the security manager property value with the provided property name. This function requires Security Manager permission securitymanager.property.get.
-
-	- **@p** `PropName` is a string with the property name to get.
-	- **@r** `A` simple type with the value of the property.
-
-
-- **keySet** ()
-
-	> Gets the key set of the properties as a list of strings. This function requires Security Manager permission securitymanager.property.list.
-
-	- **@r** `A` list of strings of the property keys.
-
-
-- **getMap** ()
-
-	> Gets a map of the security manager properties and their values. This function requires Security Manager permission securitymanager.property.list.
-
-	- **@r** `A` map with the security manager key values.
-
-
-- **setProp** (`string PropName, Value`)
-
-	> This method provides the ability to set the property of a security manager property pair. This function requires Security Manager permission securitymanager.property.set.
-
-	- **@p** `PropName` is a string with the property key to set.
-	- **@p** `Value` is a simple type value to set.
-	- **@r** `this` object
-
-
-- **setMap** (`map PropsToSet`)
-
-	> This method provides the ability to set a whole map of key-val pairs. This function requires Security Manager permission securitymanager.property.set.
-
-	- **@p** `PropsToSet` is a map with the key value pairs to set.
-	- **@r** `this` object
-
-
-
-
-## class: Bool
-
-[115:21] `static` (extern: com.aussom.stdlib.SBool) **extends: object** 
-
-Static class Bool implements functions that operate on
-bool data types. For example you can use Bool.parse()
-to parse a string value.
-
-#### Methods
-
-- **parse** (`string Val`)
-
-	> Parses the provided string and returns the bool value.
-
-	- **@p** `Val` is a string with the bool value.
-	- **@r** `A` bool value.
-
-
-
-
-## class: dateunit
-
-[1561:6] `static` **extends: object** 
-
-Defines the unit values accepted by Date.between(). Each member
-evaluates to its matching unit string, so between() can be called
-as myDate.between(other, dateunit.days) instead of passing the raw
-string "days". This is less error prone than typing the string.
-
-#### Members
-- **millis**
-- **seconds**
-- **minutes**
-- **hours**
-- **days**
-- **weeks**
-- **months**
-- **years**
-
-
-
 ## class: callback
 
 [1338:14] (extern: com.aussom.types.AussomCallback) **extends: object** 
@@ -2144,229 +2382,6 @@ this rule.
 
 
 - **\_call** (`list args`)
-
-
-- **mock** (`string FunctionName, ReturnVal`)
-
-	> Sets a mock on the object for the specified function name. When the function is invoked the provided return value is returned instead of calling the original function.
-
-	- **@p** `FunctionName` is a string with the function to mock.
-	- **@p** `ReturnVal` is the return value to return.
-	- **@r** `this` object
-
-
-- **mockWhen** (`string FunctionName, callback Condition, ReturnVal`)
-
-	> Sets a mock on the object for the specified function name with the provided callback to provide the condition. When the function is invoked the provided return value is returned instead of calling the original function. This only occurs when the condition provided in Condition is executed and a 1 or true is returned.
-
-	- **@p** `FunctionName` is a string with the function to mock.
-	- **@p** `ReturnVal` is the return value to return.
-	- **@p** `Condition` is a callback with the condition code.
-	- **@r** `this` object
-
-
-- **setSpy** (`string FunctionName`)
-
-	> Sets the spy flag on the object. This will record the arguements provided and the return value of each function call for the provided function name.
-
-	- **@p** `FunctionName` is a string with the function to spy.
-	- **@r** `this` object
-
-
-- **getSpy** (`string FunctionName`)
-
-	> Retuns a list of maps with each map contining the following: - timestamp: The seconds since epoch that the function was called. - arguments: A list of the arguments provided to the function. - returnValue: The value returned from the function.
-
-	- **@p** `FunctionName` is a string with the spy records to get.
-	- **@r** `A` list of spy records.
-
-
-
-
-## class: json
-
-[2497:21] `static` (extern: com.aussom.stdlib.AJson) **extends: object** 
-
-The static json class implements some functions for
-working with JSON data.
-
-#### Methods
-
-- **parse** (`string JsonString`)
-
-	> Parses the provided JSON string and returns it as a list or map with the values.
-
-	- **@p** `JsonString` is a string with the JSON content to parse.
-	- **@r** `A` list or map of items that are the parsed JSON.
-
-
-- **unpack** (`string JsonString`)
-
-	> The unpack function unmarshalls objects that are defined in the provided JSON string. This is the reverse process of object.pack(). The structure that is used to pack an object is specific to this unpack function and includes things such as members and type information. It's a way of deserializing data that as been serialized with object.pack().
-
-	- **@p** `JsonString` is a string with the packed data.
-	- **@r** `The` unpacked data.
-
-
-- **escape** (`string JsonString`)
-
-	> Utility function which takes a JSON encoded string and escapes it.
-
-	- **@p** `JsonString` is the JSON string to escape.
-	- **@r** `A` new string with the escaped JSON.
-
-
-
-
-## class: lang
-
-[2467:21] `static` (extern: com.aussom.stdlib.ALang) **extends: object** 
-
-The staic lang object provides some standard
-functionality for the Aussom language.
-
-#### Methods
-
-- **type** (`DataType`)
-
-	> Gets the type of the data provided. If a simple type is provided such as bool, int, double, string, null, or list, then a string with that name is returned. If an object is provided it's class name is returned as the type.
-
-	- **@p** `DataType` is a string with the type to check.
-	- **@r** `A` string with the type.
-
-
-- **getClassAussomdoc** (`string ClassName`)
-
-	> Gets the Aussom doc structure of the object of the class name provided. The class must be already read (included) in the current runtime engine. It then produces a doc structure and returns it. This function requires the Aussom SecurityManager permission aussomdoc.class.getJson.
-
-	- **@p** `ClassName` is a string with the name of the class to get the Aussom doc for.
-	- **@r** `A` structur of maps, lists, and fields that has the Aussom doc.
-
-
-
-
-## class: map
-
-[1111:14] (extern: com.aussom.types.AussomMap) **extends: object** 
-
-Implements map datatype methods.
-
-#### Methods
-
-- **clear** ()
-
-	> Clears the current map contents.
-
-	- **@r** `this` object
-
-
-- **containsKey** (`string Key`)
-
-	> Checks to see if the current map contains the provided key.
-
-	- **@p** `Key` is a strig to check for.
-	- **@r** `A` bool with true if found and false if not.
-
-
-- **containsVal** (`Val`)
-
-	> Checks to see if the map contains the provided value. Primitive values (null, bool, int, double, and string) and callbacks are matched by value. Objects, lists, and maps are matched by reference.
-
-	- **@p** `Val` is the value to check for.
-	- **@r** `A` bool with true if found and false if not.
-
-
-- **get** (`string Key`)
-
-	> Gets the value with the provided key.
-
-	- **@p** `Key` is a string with the key for the value to get.
-	- **@r** `A` value or null if not found.
-
-
-- **getd** (`string Key, defVal`)
-
-	> Gets the value with the provided key and returns it. If not found it returns the provided default value.
-
-	- **@p** `Key` is a string with the key for the value to get.
-	- **@p** `defVal` is the default value to return if the key isn't found.
-	- **@r** `The` value of for the provided key or the default value if not found.
-
-
-- **isEmpty** ()
-
-	> Checks to see if the current map is empty.
-
-	- **@r** `A` bool with true if empty or false if not.
-
-
-- **keySet** ()
-
-	> Gets a list of the available keys.
-
-	- **@r** `A` list of strings with the keys.
-
-
-- **put** (`string Key, Val`)
-
-	> Puts the provided value with the provided key.
-
-	- **@p** `Key` is a string with the key to set.
-	- **@p** `Val` is the value to set.
-	- **@r** `this` object
-
-
-- **putAll** (`map ToAdd`)
-
-	> Puts all the items from the provided map into the current map.
-
-	- **@p** `ToAdd` is a map with the keys and values to add.
-	- **@r** `this` object
-
-
-- **putIfAbsent** (`string Key, Val`)
-
-	> Puts the key and value pair if they key doesn't already exist.
-
-	- **@p** `Key` is the key to set.
-	- **@p** `Val` is the value to set.
-	- **@r** `this` object
-
-
-- **remove** (`string Key`)
-
-	> Removes the key value pair with the provided key.
-
-	- **@p** `Key` is a string with the key to remove.
-	- **@r** `The` value of the item that was removed or null if not found.
-
-
-- **size** ()
-
-	> Gets the size of the map.
-
-	- **@r** `An` int with the map size.
-
-
-- **values** ()
-
-	> Gets a list of the values in the map.
-
-	- **@r** `A` list with the map values.
-
-
-- **toJson** ()
-
-	> Converts the value to a JSON encoded string.
-
-	- **@r** `A` JSON encoded string.
-
-
-- **pack** ()
-
-	> Serializes the data into a structure.
-
-	- **@r** `A` packed string.
 
 
 - **mock** (`string FunctionName, ReturnVal`)

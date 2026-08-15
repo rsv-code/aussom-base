@@ -153,6 +153,7 @@
 	            <include>**/RegexBudget.java</include>
 	            <include>**/ResourceLimits.java</include>
 	            <include>**/EngineControl.java</include>
+	            <include>**/SecurityManagerGate.java</include>
 	            <include>**/*Test.java</include>
 	            <include>**/*Tests.java</include>
 	          </includes>
