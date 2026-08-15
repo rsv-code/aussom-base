@@ -158,15 +158,26 @@ public class LangRegistry {
 			URL url = Engine.class.getResource(Path);
 			if (url != null) {
 				File entries = new File(url.toURI());
-				File[] listing = entries.listFiles();
-				if (listing != null) {
-					for (File entry : listing) {
-						ret.add(entry.getPath());
-					}
-				}
+				ret = this.getFileResources(entries);
 			}
 		}
 
+		return ret;
+	}
+
+	private List<String> getFileResources(File path) {
+		List<String> ret = new ArrayList<String>();
+		File[] listing = path.listFiles();
+		if (listing != null) {
+			for (File entry : listing) {
+				if (entry.isDirectory()) {
+					List<String> tret = this.getFileResources(entry);
+					ret.addAll(tret);
+				} else if (entry.getPath().endsWith(".aus")) {
+					ret.add(entry.getPath());
+				}
+			}
+		}
 		return ret;
 	}
 

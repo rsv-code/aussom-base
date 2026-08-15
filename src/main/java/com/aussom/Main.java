@@ -169,8 +169,13 @@ public class Main {
 	public static void runTest(String ScriptFile, boolean RunAll) throws Exception {
 		int result = 0;
 		try {
-			// Create a new Aussom engine.
-			UnitTestRunner testRunner = new UnitTestRunner(new TestSecurityManagerImpl(), ScriptFile, "Run unit tests");
+			// Create a new Aussom engine. The -t flag is the operator
+			// explicitly asking to run tests, so grant the permission that
+			// testRunner objects created within the script require.
+			TestSecurityManagerImpl secman = new TestSecurityManagerImpl();
+			secman.setAllowAussomTestRunner(true);
+
+			UnitTestRunner testRunner = new UnitTestRunner(secman, ScriptFile, "Run unit tests");
 			testRunner.setLogger(LOG);
 
 			// Add resource include path.

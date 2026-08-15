@@ -16,6 +16,7 @@
 
 package com.aussom.stdlib;
 
+import com.aussom.Engine;
 import com.aussom.Environment;
 import com.aussom.TestSecurityManagerImpl;
 import com.aussom.ast.astAnnotation;
@@ -40,18 +41,27 @@ public class ATestRunner {
     // Once a class instance is created it's stored here for next use.
     protected Map<String, AussomType> classObjects = new HashMap<String, AussomType>();
 
-    public ATestRunner() throws Exception {
-        // Create the new runner
-        this.runner = new UnitTestRunner(new TestSecurityManagerImpl());
+    // Exists to defeat regular instantiation from a script.
+    public ATestRunner() { }
 
-        // Allow running tests from Aussom
-        ((TestSecurityManagerImpl)this.runner.getSecurityManager()).setAllowAussomTestRunner(true);
-
-        // Add resource include path.
-        this.runner.addResourceIncludePath("/com/aussom/stdlib/aus/");
-
-        // Initialize the environment for the first time.
-        this.resetEnvironment();
+    /**
+     * Builds the child engine. Gated on test.aussom.runner, the same
+     * property ATest.runTestsForClass checks, so a script cannot obtain a
+     * test engine its own engine's policy would refuse.
+     */
+    public AussomType newTestRunner(Environment env, ArrayList<AussomType> args)
+            throws Exception {
+        Engine eng = env.getEngine();
+        if ((Boolean)env.getEngine().getSecurityManager().getProperty("test.aussom.runner")) {
+            // The child runs under the parent's policy. It must not be able to
+            // do anything the engine that created it could not.
+            this.runner = new UnitTestRunner(eng.getSecurityManager());
+            this.runner.addResourceIncludePath("/com/aussom/stdlib/aus/");
+            this.resetEnvironment();
+            return env.getClassInstance();
+        } else {
+            return new AussomException("testRunner(): Security exception, action 'test.aussom.runner' not permitted.");
+        }
     }
 
     public void resetEnvironment() {

@@ -19,6 +19,7 @@ package com.aussom;
 import java.io.File;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -409,6 +410,57 @@ public class Engine implements AussomDebuggingInt {
 	 */
 	public SecurityManagerInt getSecurityManager() {
 		return this.secman;
+	}
+
+	/**
+	 * Decides whether a script may bind the named Java class with an
+	 * 'extern class' declaration. Consulted by the parser as each
+	 * declaration is reduced, which is the single point where a class
+	 * name enters the engine: a class that cannot be declared cannot be
+	 * constructed or called either.
+	 *
+	 * <p>Returns true when aussom.extern.allowlist.enforce is false,
+	 * which is the default and the historical behavior. When it is true
+	 * the name must match an entry of aussom.extern.allowed, either
+	 * exactly or through a 'pkg.*' prefix that admits that package and
+	 * everything under it. An absent or unusable list denies, so
+	 * switching enforcement on never permits more than intended.
+	 *
+	 * @param ClassName is the fully qualified name from the declaration.
+	 * @return A boolean with true for permitted and false for denied.
+	 */
+	public boolean isExternClassAllowed(String ClassName) {
+		if (!(Boolean)this.secman.getProperty("aussom.extern.allowlist.enforce")) {
+			return true;
+		}
+		if (ClassName == null) {
+			return false;
+		}
+
+		Object allowed = this.secman.getProperty("aussom.extern.allowed");
+		if (!(allowed instanceof Collection)) {
+			return false;
+		}
+
+		for (Object entry : (Collection<?>)allowed) {
+			if (entry == null) {
+				continue;
+			}
+			String ent = entry.toString().trim();
+			if (ent.isEmpty()) {
+				continue;
+			}
+			if (ent.endsWith(".*")) {
+				// Drop only the star and keep the trailing dot, so an
+				// entry of 'com.a.std.*' does not admit 'com.a.stdlib.Foo'.
+				if (ClassName.startsWith(ent.substring(0, ent.length() - 1))) {
+					return true;
+				}
+			} else if (ent.equals(ClassName)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

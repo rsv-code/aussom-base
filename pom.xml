@@ -3,7 +3,7 @@
   
   <groupId>io.gitlab.cupofcode</groupId>
   <artifactId>aussom.base</artifactId>
-  <version>1.4.0</version>
+  <version>1.4.1</version>
   <packaging>jar</packaging>
   
   <name>aussom.base</name>
@@ -148,6 +148,7 @@
 	            <include>**/Closures.java</include>
 	            <include>**/ParseDiagnostics.java</include>
 	            <include>**/EngineIsolation.java</include>
+	            <include>**/ExternAllowlist.java</include>
 	            <include>**/*Test.java</include>
 	            <include>**/*Tests.java</include>
 	          </includes>

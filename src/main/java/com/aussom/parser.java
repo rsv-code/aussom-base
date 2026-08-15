@@ -1780,6 +1780,25 @@ public class parser extends java_cup.runtime.lr_parser {
   }
 
   /**
+   * Binds an extern class after checking that this engine's security
+   * manager permits the named class. The check is here rather than in
+   * astClass because the parser is what holds the engine, and this is
+   * the single point where a class name enters the engine: a class
+   * that cannot be declared cannot be constructed or called.
+   *
+   * A denial is reported the same way a missing extern class is, so
+   * the two failures look alike to a caller.
+   */
+  private void bindExternClass(astClass Ac, String ExternName) throws aussomException {
+      if (this.loadExternClasses && !this.eng.isExternClassAllowed(ExternName)) {
+          throw new aussomException("Extern class '" + ExternName
+              + "' is not permitted. Add it, or a matching '<package>.*' prefix, "
+              + "to the security manager property 'aussom.extern.allowed'.");
+      }
+      Ac.setExternClassName(ExternName, this.loadExternClasses);
+  }
+
+  /**
    * Semantic-action helper for top-level instructions. If a
    * script-statement target is set, append the parsed node to
    * it. Otherwise raise a parse error pointing at the offending
@@ -2405,7 +2424,7 @@ class CUP$parser$actions {
 		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astClass)ac).setStatic((boolean)is);
 		((astClass)ac).setExtern(true);
-		((astClass)ac).setExternClassName(((astInclude)i).getExternClass(), this.parser.loadExternClasses);
+		this.parser.bindExternClass((astClass)ac, ((astInclude)i).getExternClass());
 		RESULT = ac;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("classDefExpr",4, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-6)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -2436,7 +2455,7 @@ class CUP$parser$actions {
 		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astClass)ac).setStatic((boolean)is);
 		((astClass)ac).setExtern(true);
-		((astClass)ac).setExternClassName(((astInclude)i).getExternClass(), this.parser.loadExternClasses);
+		this.parser.bindExternClass((astClass)ac, ((astInclude)i).getExternClass());
 		((astClass)ac).setExtendedClasses(cl);
 		RESULT = ac;
 	

@@ -17,6 +17,11 @@
 package com.aussom;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.aussom.types.AussomBool;
@@ -113,6 +118,23 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 		 * DebuggerInt and turn on the engine's debug mode.
 		 */
 		this.props.put("aussom.debugger.enable", false);
+
+		/*
+		 * Extern class binding. See com.aussom.Engine.isExternClassAllowed.
+		 * With enforce false the list is ignored and a script may name any
+		 * class the system class loader can see, which is the historical
+		 * behavior. With it true every 'extern class' declaration is
+		 * checked, including the ones in the standard library, so the list
+		 * is a complete statement of what this engine may bind.
+		 *
+		 * The default list is what the shipped modules need: every extern
+		 * class in the base modules lives in one of these two packages.
+		 * An entry is either an exact class name or a 'pkg.*' prefix that
+		 * admits that package and everything under it.
+		 */
+		this.props.put("aussom.extern.allowlist.enforce", false);
+		this.props.put("aussom.extern.allowed",
+			Arrays.asList("com.aussom.stdlib.*", "com.aussom.types.*"));
 	}
 	
 	/**
@@ -133,20 +155,7 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 	public AussomType getProp(Environment env, ArrayList<AussomType> args) {
 		if ((Boolean)this.getProperty("securitymanager.property.get")) {
 			String PropName = ((AussomString)args.get(0)).getValueString();
-			Object obj = this.props.get(PropName);
-			if (obj == null) {
-				return new AussomNull();
-			} else if (obj instanceof Boolean) {
-				return new AussomBool((Boolean)obj);
-			} else if (obj instanceof Long) {
-				return new AussomInt((Long)obj);
-			} else if (obj instanceof Double) {
-				return new AussomDouble((Double)obj);
-			} else if (obj instanceof String) {
-				return new AussomString((String)obj);
-			} else {
-				return new AussomString(obj.toString());
-			}
+			return this.toAussom(this.props.get(PropName));
 		} else {
 			return new AussomException("securitymanager.getProp(): Security exception, action 'securitymanager.property.get' not permitted.");
 		}
@@ -176,20 +185,7 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 		if ((Boolean)this.getProperty("securitymanager.property.list")) {
 			AussomMap cm = new AussomMap();
 			for (String key : this.props.keySet()) {
-				Object tobj = this.props.get(key);
-				if (tobj == null) {
-					cm.put(key, new AussomNull());
-				} else if (tobj instanceof Boolean) {
-					cm.put(key, new AussomBool((Boolean)tobj));
-				} else if (tobj instanceof Long) {
-					cm.put(key, new AussomInt((Long)tobj));
-				} else if (tobj instanceof Double) {
-					cm.put(key, new AussomDouble((Double)tobj));
-				} else if (tobj instanceof String) {
-					cm.put(key, new AussomString((String)tobj));
-				} else {
-					return new AussomException("securitymanager.getMap(): Expecting simple type (bool, int, double, string, null) but found '" + tobj.getClass().getName() + "' instead for key '" + key + "'.");
-				}
+				cm.put(key, this.toAussom(this.props.get(key)));
 			}
 			return cm;
 		} else {
@@ -208,23 +204,10 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 		if ((Boolean)this.getProperty("securitymanager.property.set")) {
 			String key = ((AussomString)args.get(0)).getValueString();
 			AussomType ct = args.get(1);
-			Object val = null;
-			
-			if (ct instanceof AussomBool) {
-				val = ((AussomBool)ct).getValue();
-			} else if (ct instanceof AussomString) {
-				val = ((AussomString)ct).getValueString();
-			} else if (ct instanceof AussomInt) {
-				val = ((AussomInt)ct).getValue();
-			} else if (ct instanceof AussomDouble) {
-				val = ((AussomDouble)ct).getValue();
-			} else if (ct instanceof AussomNull) {
-				val = null;
-			} else {
-				return new AussomException("securitymanager.setProp(): Expecting simple type (bool, int, double, string, null) but found '" + ct.getClass().getName() + "' instead.");
+			if (!this.storable(ct)) {
+				return new AussomException("securitymanager.setProp(): Expecting simple type, list or map but found '" + ct.getClass().getName() + "' instead.");
 			}
-			
-			this.props.put(key, val);
+			this.putOrRemove(key, this.toJava(ct));
 			return env.getClassInstance();
 		} else {
 			return new AussomException("securitymanager.getProp(): Security exception, action 'securitymanager.property.set' not permitted.");
@@ -243,27 +226,140 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 			AussomMap mp = (AussomMap)args.get(0);
 			for (String key : mp.getValue().keySet()) {
 				AussomType ct = mp.getValue().get(key);
-				Object val = null;
-				
-				if (ct instanceof AussomBool) {
-					val = ((AussomBool)ct).getValue();
-				} else if (ct instanceof AussomString) {
-					val = ((AussomString)ct).getValueString();
-				} else if (ct instanceof AussomInt) {
-					val = ((AussomInt)ct).getValue();
-				} else if (ct instanceof AussomDouble) {
-					val = ((AussomDouble)ct).getValue();
-				} else if (ct instanceof AussomNull) {
-					val = null;
-				} else {
-					return new AussomException("securitymanager.setMap(): Expecting simple type (bool, int, double, string, null) but found '" + ct.getClass().getName() + "' instead.");
+				if (!this.storable(ct)) {
+					return new AussomException("securitymanager.setMap(): Expecting simple type, list or map but found '" + ct.getClass().getName() + "' instead.");
 				}
-				
-				this.props.put(key, val);
+			}
+			for (String key : mp.getValue().keySet()) {
+				this.putOrRemove(key, this.toJava(mp.getValue().get(key)));
 			}
 			return env.getClassInstance();
 		} else {
 			return new AussomException("securitymanager.getProp(): Security exception, action 'securitymanager.property.set' not permitted.");
 		}
 	}
+
+	/**
+	 * Converts a stored property value into its Aussom form. Shared by
+	 * getProp and getMap, which previously carried this chain twice and
+	 * disagreed on values that are not simple types.
+	 *
+	 * <p>Builds new collections rather than wrapping the stored ones, so
+	 * a script cannot reach back into policy through a value it was
+	 * handed.
+	 *
+	 * @param Value is the stored value to convert.
+	 * @return A AussomType with the converted value.
+	 */
+	protected AussomType toAussom(Object Value) {
+		if (Value == null) {
+			return new AussomNull();
+		} else if (Value instanceof Boolean) {
+			return new AussomBool((Boolean)Value);
+		} else if (Value instanceof String) {
+			return new AussomString((String)Value);
+		} else if (Value instanceof Float || Value instanceof Double) {
+			return new AussomDouble(((Number)Value).doubleValue());
+		} else if (Value instanceof Number) {
+			// Covers Integer and Short as well as Long. An embedder
+			// writing props.put("k", 5) stores an Integer, which used
+			// to read back as the string "5".
+			return new AussomInt(((Number)Value).longValue());
+		} else if (Value instanceof Collection) {
+			AussomList cl = new AussomList();
+			for (Object o : (Collection<?>)Value) {
+				cl.add(this.toAussom(o));
+			}
+			return cl;
+		} else if (Value instanceof Map) {
+			AussomMap cm = new AussomMap();
+			for (Map.Entry<?, ?> ent : ((Map<?, ?>)Value).entrySet()) {
+				cm.put(String.valueOf(ent.getKey()), this.toAussom(ent.getValue()));
+			}
+			return cm;
+		}
+		return new AussomString(Value.toString());
+	}
+
+	/**
+	 * Checks whether an Aussom value can be stored as a property.
+	 * Anything outside the supported set is refused rather than stored,
+	 * so an object or callback cannot be smuggled into the policy map.
+	 * @param Value is the Aussom value to check.
+	 * @return A boolean with true for storable and false for not.
+	 */
+	protected boolean storable(AussomType Value) {
+		if (Value == null || Value instanceof AussomNull) {
+			return true;
+		} else if (Value instanceof AussomBool || Value instanceof AussomInt
+				|| Value instanceof AussomDouble || Value instanceof AussomString) {
+			return true;
+		} else if (Value instanceof AussomList) {
+			for (AussomType t : ((AussomList)Value).getValue()) {
+				if (!this.storable(t)) {
+					return false;
+				}
+			}
+			return true;
+		} else if (Value instanceof AussomMap) {
+			for (AussomType t : ((AussomMap)Value).getValue().values()) {
+				if (!this.storable(t)) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Converts an Aussom value into its stored form. Copies into fresh
+	 * Java collections so a script cannot hold a reference and edit
+	 * policy after the write was permitted. Call storable first; this
+	 * returns null for anything it does not recognize.
+	 * @param Value is the Aussom value to convert.
+	 * @return An Object with the value to store.
+	 */
+	protected Object toJava(AussomType Value) {
+		if (Value == null || Value instanceof AussomNull) {
+			return null;
+		} else if (Value instanceof AussomBool) {
+			return ((AussomBool)Value).getValue();
+		} else if (Value instanceof AussomInt) {
+			return ((AussomInt)Value).getValue();
+		} else if (Value instanceof AussomDouble) {
+			return ((AussomDouble)Value).getValue();
+		} else if (Value instanceof AussomString) {
+			return ((AussomString)Value).getValueString();
+		} else if (Value instanceof AussomList) {
+			List<Object> out = new ArrayList<Object>();
+			for (AussomType t : ((AussomList)Value).getValue()) {
+				out.add(this.toJava(t));
+			}
+			return out;
+		} else if (Value instanceof AussomMap) {
+			Map<String, Object> out = new LinkedHashMap<String, Object>();
+			for (Map.Entry<String, AussomType> ent : ((AussomMap)Value).getValue().entrySet()) {
+				out.put(ent.getKey(), this.toJava(ent.getValue()));
+			}
+			return out;
+		}
+		return null;
+	}
+
+	/**
+	 * Stores a converted value. The backing map is a ConcurrentHashMap,
+	 * which rejects null values, so a null is recorded by removing the
+	 * key. getProperty then returns null either way.
+	 * @param Key is the property name.
+	 * @param Value is the converted value, possibly null.
+	 */
+	private void putOrRemove(String Key, Object Value) {
+		if (Value == null) {
+			this.props.remove(Key);
+		} else {
+			this.props.put(Key, Value);
+		}
+	}
+
 }

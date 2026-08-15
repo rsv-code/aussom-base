@@ -22,7 +22,6 @@ import java.io.Reader;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -64,8 +63,16 @@ import com.aussom.types.Members;
  * Threading: advertises THREADING = "MULTITHREADED". The parse path
  * is serialized on a per-engine lock; the run path builds a fresh
  * Environment + CallStack + Members per call so concurrent evals do
- * not share mutable state. Console output is routed through the
- * engine-owned logger (Engine.setLogger).
+ * not share mutable state.
+ *
+ * Console output: script output goes to the writers on this engine's
+ * current context, so getContext().setWriter(...) and setContext(...)
+ * both take effect, including between evaluations. Output destination
+ * is a property of the script engine, not of a single call, so
+ * eval(script, context) uses that context for bindings but not for
+ * output. A host that needs separate output per caller uses one
+ * ScriptEngine per caller, which is also what isolates class
+ * definitions. See design/security-evaluation-f1-f3.md section 5.
  */
 public class AussomScriptEngine extends AbstractScriptEngine
 		implements Compilable, Invocable {
@@ -103,6 +110,13 @@ public class AussomScriptEngine extends AbstractScriptEngine
 	AussomScriptEngine(ScriptEngineFactory factory, Engine engine) {
 		this.factory = factory;
 		this.engine = engine;
+
+		// Route script output to this script engine's context writers,
+		// once and for the life of the engine. The logger resolves the
+		// context on every write, so setWriter and setContext still take
+		// effect. Nothing swaps this field afterwards, which is what
+		// keeps concurrent evaluation honest.
+		this.engine.setLogger(new AussomScriptContextLogger(this));
 	}
 
 	/* ------------------------------------------------------------ */
@@ -261,11 +275,8 @@ public class AussomScriptEngine extends AbstractScriptEngine
 
 		AussomMap inBindings = collectBindingsAsMap(context);
 
-		LoggingInt prior = this.engine.getLogger();
-		this.engine.setLogger(new AussomScriptContextLogger(context));
-		try {
-			Environment env = new Environment(this.engine);
-			env.setEnvironment(null, new Members(), new CallStack());
+		Environment env = new Environment(this.engine);
+		env.setEnvironment(null, new Members(), new CallStack());
 
 			AussomType instTy;
 			try {
@@ -305,10 +316,7 @@ public class AussomScriptEngine extends AbstractScriptEngine
 				writeBindingsBack(inst, context);
 			}
 
-			return AussomBindingsMarshaller.fromAussom(ret);
-		} finally {
-			this.engine.setLogger(prior);
-		}
+		return AussomBindingsMarshaller.fromAussom(ret);
 	}
 
 	private AussomMap collectBindingsAsMap(ScriptContext context) {
@@ -487,11 +495,8 @@ public class AussomScriptEngine extends AbstractScriptEngine
 			throw new ScriptException(
 				"Aussom engine: class '" + className + "' not found.");
 		}
-		LoggingInt prior = this.engine.getLogger();
-		this.engine.setLogger(new AussomScriptContextLogger(getContext()));
-		try {
-			Environment env = new Environment(this.engine);
-			env.setEnvironment(null, new Members(), new CallStack());
+		Environment env = new Environment(this.engine);
+		env.setEnvironment(null, new Members(), new CallStack());
 			AussomType instTy;
 			try {
 				instTy = cls.instantiate(env, false, new AussomList());
@@ -502,24 +507,14 @@ public class AussomScriptEngine extends AbstractScriptEngine
 				throw new AussomScriptException((AussomException) instTy,
 					className + ".aus");
 			}
-			AussomObject inst = (AussomObject) instTy;
-			return invokeOnInstance(cls, inst, name, args);
-		} finally {
-			this.engine.setLogger(prior);
-		}
+		AussomObject inst = (AussomObject) instTy;
+		return invokeOnInstance(cls, inst, name, args);
 	}
 
 	private Object invokeOnInstance(astClass cls, AussomObject inst,
 			String name, Object[] args) throws ScriptException {
-		LoggingInt prior = this.engine.getLogger();
-		boolean weRegistered = false;
-		if (prior == null) {
-			this.engine.setLogger(new AussomScriptContextLogger(getContext()));
-			weRegistered = true;
-		}
-		try {
-			Environment env = new Environment(this.engine);
-			env.setEnvironment(inst, new Members(), new CallStack());
+		Environment env = new Environment(this.engine);
+		env.setEnvironment(inst, new Members(), new CallStack());
 			env.setCurObj(inst);
 
 			AussomList aArgs = new AussomList();
@@ -540,12 +535,7 @@ public class AussomScriptEngine extends AbstractScriptEngine
 				throw new AussomScriptException((AussomException) ret,
 					cls.getName() + ".aus");
 			}
-			return AussomBindingsMarshaller.fromAussom(ret);
-		} finally {
-			if (weRegistered) {
-				this.engine.setLogger(prior);
-			}
-		}
+		return AussomBindingsMarshaller.fromAussom(ret);
 	}
 
 	/* ------------------------------------------------------------ */
