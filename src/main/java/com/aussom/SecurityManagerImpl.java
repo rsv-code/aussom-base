@@ -135,6 +135,49 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 		this.props.put("aussom.extern.allowlist.enforce", false);
 		this.props.put("aussom.extern.allowed",
 			Arrays.asList("com.aussom.stdlib.*", "com.aussom.types.*"));
+
+		/*
+		 * Runtime settings read by com.aussom.Limits. Three numbers, each
+		 * bounding something the JVM will not bound on its own. See
+		 * design/security-evaluation-f4-f5.md section 5.
+		 *
+		 * There are deliberately no per-value size caps here. A cap on the
+		 * length of one string, the elements of one list, or the bytes of
+		 * one buffer bounds neither memory nor anything else a host can
+		 * reason about: element count is not memory, one value's cap says
+		 * nothing about many values, and a single allocation larger than
+		 * the heap is refused cleanly by the JVM anyway. Sustained
+		 * retention is the real risk, and that is what
+		 * Engine.getAllocatedBytes, Engine.measureRetainedFootprint and a
+		 * host deadline are for.
+		 *
+		 * The call depth default of 1000 is set above what a program can
+		 * reach on a default 1 MB thread stack, which measures out at
+		 * roughly 550 Aussom frames, so switching it on cannot refuse a
+		 * program that ran before. It becomes the operative limit as soon
+		 * as the host gives the interpreter a bigger stack or runs it on a
+		 * virtual thread.
+		 */
+		this.props.put(Limits.CALL_DEPTH_PROP, Limits.DEFAULT_CALL_DEPTH);
+
+		// 0 means no budget, so regex behaviour is unchanged unless a host
+		// asks for one. See com.aussom.stdlib.RegexSubject.
+		this.props.put(Limits.REGEX_STEPS_PROP, 0L);
+
+		/*
+		 * How long a sleeping program may run before the interpreter looks
+		 * at the engine's control state again. This is a control setting
+		 * rather than a size cap, and it lives here for that reason: a
+		 * host should be able to read and change its whole control policy
+		 * in one place instead of finding part of it compiled into
+		 * sys.sleep().
+		 *
+		 * The default reclaims a sleeping tenant within a twentieth of a
+		 * second. 0 turns slicing off, which restores the older behavior
+		 * of one uninterruptible wait, so a pause or cancel cannot reach
+		 * the program until the sleep finishes on its own.
+		 */
+		this.props.put(Limits.SLEEP_SLICE_PROP, Limits.DEFAULT_SLEEP_SLICE_MS);
 	}
 	
 	/**

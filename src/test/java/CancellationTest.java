@@ -242,6 +242,64 @@ public class CancellationTest {
 	/* ============================================================ */
 
 	@Nested
+	@DisplayName("reaches past loops")
+	class BeyondLoops {
+
+		@Test
+		@DisplayName("1. A program with no loop in it is still cancellable, "
+			+ "because every call is a checkpoint")
+		void programWithNoLoopStops() throws Exception {
+			// Cancellation used to be checked only at loop back edges, so a
+			// program built out of calls and recursion could not be stopped
+			// at all: it ran until the Java stack gave out. The flag is
+			// pre-set here for the same reason the loop cases do it, namely
+			// that it makes the assertion deterministic rather than a race
+			// against how fast recursion eats a stack.
+			Engine eng = scriptEngine();
+			eng.evalLine("class rec { public rec() { } "
+				+ "public go(int n) { if (n <= 0) { return 0; } return this.go(n - 1); } }");
+			eng.cancel();
+			assertCancelled(eng.evalLine("x = new rec().go(50);"));
+		}
+
+		@Test
+		@DisplayName("1b. Paired: the same program runs normally when not cancelled")
+		void sameProgramRunsWhenNotCancelled() throws Exception {
+			Engine eng = scriptEngine();
+			eng.evalLine("class rec { public rec() { } "
+				+ "public go(int n) { if (n <= 0) { return 0; } return this.go(n - 1); } }");
+			AussomType val = eng.evalLine("x = new rec().go(50);");
+			assertFalse(val.isEx(), "The recursion should run when nothing cancelled it.");
+		}
+
+		@Test
+		@DisplayName("2. A sleeping program stops on cancel, within a slice")
+		void sleepingProgramStops() throws Exception {
+			final Engine eng = scriptEngine();
+			eng.evalLine("include sys;");
+
+			final AtomicReference<AussomType> result = new AtomicReference<AussomType>();
+			Thread worker = new Thread(() -> {
+				try {
+					result.set(eng.evalLine("sys.sleep(60000);"));
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			}, "sleeper");
+			worker.start();
+
+			Thread.sleep(100);
+			long t0 = System.currentTimeMillis();
+			eng.cancel();
+			worker.join(10000);
+			long ms = System.currentTimeMillis() - t0;
+			assertFalse(worker.isAlive(), "cancel() did not reclaim a sleeping program.");
+			assertTrue(ms < 5000L, "Should have stopped within a slice, took " + ms + " ms.");
+			assertCancelled(result.get());
+		}
+	}
+
+	@Nested
 	@DisplayName("cross-thread")
 	class CrossThread {
 

@@ -667,6 +667,17 @@ public class astClass extends astNode implements astNodeInt {
 	 * See design/closures.md.
 	 */
 	public AussomType call (Environment env, boolean getRef, String functName, AussomList args, Members closureParentLocals) throws aussomException {
+		// Control and call depth, checked once here because every
+		// Aussom call reaches the body through this method: direct
+		// calls, constructors, callbacks, closures, operator
+		// overloads, reflect.invoke and extern dispatch. A pause
+		// blocks, a cancel returns, and a call that would nest deeper
+		// than the engine's limit is refused with a catchable
+		// exception rather than a StackOverflowError.
+		// See design/security-evaluation-f4-f5.md sections 3.1 and 5.6.
+		AussomException gate = this.checkCallGate(env, functName);
+		if (gate != null) return gate;
+
 		AussomType ret = null;
 		AussomObject cobj = null;
 		if (env.getCurObj() != null && env.getCurObj() instanceof AussomObject) {

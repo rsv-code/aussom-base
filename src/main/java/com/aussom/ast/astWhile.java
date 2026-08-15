@@ -69,7 +69,7 @@ public class astWhile extends astNode implements astNodeInt
 		while(tmp.getValue()) {
 			// Cancellation check on the back edge. See the
 			// "Cancellation" section of Engine.
-			AussomType cancelled = this.checkCancellation(env);
+			AussomType cancelled = this.checkControl(env);
 			if (cancelled != null) return cancelled;
 
 			for(astNode inst : this.instructions.getStatements()) {

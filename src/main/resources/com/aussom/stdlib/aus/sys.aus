@@ -130,8 +130,38 @@ static extern class sys : com.aussom.stdlib.ASys {
 	public extern getMills();
 
 	/**
-     * Causes the current thread to sleep the number of
-     * seconds provided.
+     * Pauses the running program for the number of
+     * milliseconds provided.
+     *
+     * The wait is broken into short slices rather than one
+     * long wait, which is what lets the host stay in control
+     * of a sleeping program. Three things follow from that:
+     *
+     * If the host cancels the program while it is sleeping,
+     * the sleep ends and an execution cancelled exception is
+     * raised. It is not catchable, because stopping is the
+     * host's decision.
+     *
+     * If the host pauses the program while it is sleeping,
+     * the sleep is suspended: the time remaining stops
+     * counting down until the program is resumed. So the
+     * program still gets the full sleep it asked for, and
+     * simply finishes later than the clock on the wall would
+     * suggest. A blocking call with its own timeout, such as
+     * Latch.await(), behaves the other way: its timeout keeps
+     * running while the program is paused.
+     *
+     * How long a slice is comes from the security manager,
+     * under aussom.limit.sleep.slice, because it is a
+     * control setting and those live with the rest of the
+     * policy. The default is 50 milliseconds, which is the
+     * longest a cancel or pause waits to take effect.
+     * Setting it to 0 turns slicing off and restores a
+     * single wait that nothing can interrupt.
+     *
+     * A negative number of milliseconds raises an exception
+     * rather than failing inside the runtime.
+     *
      * @p mills is an int with the number of milliseconds to wait.
      * @r this object
      */

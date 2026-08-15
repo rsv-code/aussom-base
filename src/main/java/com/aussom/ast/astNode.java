@@ -16,9 +16,12 @@
 
 package com.aussom.ast;
 
+import com.aussom.CallStack;
+import com.aussom.ControlState;
 import com.aussom.DebuggerInt;
 import com.aussom.Engine;
 import com.aussom.Environment;
+import com.aussom.Limits;
 import com.aussom.PauseReason;
 import com.aussom.types.AussomException;
 import com.aussom.types.AussomType;
@@ -417,33 +420,84 @@ public class astNode {
 	}
 
 	/**
-	 * Loop back-edge cancellation check. Returns the cancellation
-	 * exception when the engine has been cancelled, and null
-	 * otherwise. Callers treat a non-null result the way they treat
-	 * any other exception value: stop looping and hand it back to the
-	 * caller.
+	 * Interpreter checkpoint. Reads the engine's control state and
+	 * decides whether the program may keep going:
+	 *
+	 *   RUNNING   -- returns null, which is the fast path and costs one
+	 *                volatile read and a compare.
+	 *   PAUSED    -- blocks here until the engine is resumed or
+	 *                cancelled, then answers for the new state.
+	 *   CANCELLED -- returns the cancellation exception to propagate.
+	 *
+	 * Callers treat a non-null result the way they treat any other
+	 * exception value: stop what they are doing and hand it back.
 	 *
 	 * The returned exception carries Engine.CANCELLED_EXCEPTION_ID and
 	 * has its cancellation flag set, so a host can tell a stopped
-	 * program apart from a broken one, and astTryCatch can keep a
-	 * catch block from swallowing it.
+	 * program apart from a broken one, and astTryCatch can keep a catch
+	 * block from swallowing it.
 	 *
-	 * Engine.cancel() is the only thing consulted here. Thread
-	 * interrupt status is deliberately not read; see the
-	 * "Cancellation" section of Engine for why.
+	 * Thread interrupt status is deliberately not read; see the
+	 * "Control: cancel, pause and resume" section of Engine for why.
 	 *
 	 * @param env is the current Environment.
 	 * @return An AussomException to propagate, or null to keep going.
 	 */
-	protected AussomException checkCancellation(Environment env) {
-		if (!env.getEngine().isCancelled()) return null;
+	protected AussomException checkControl(Environment env) {
+		Engine eng = env.getEngine();
+		if (eng.getControlState() == ControlState.RUNNING) return null;
+		if (!eng.awaitResumeOrCancel()) return null;
+		return Engine.cancelledException(env, this.getLineNum());
+	}
 
+	/**
+	 * Call-path gate, checked once per Aussom call from astClass.call,
+	 * which every call reaches. Two guards, in the order a host cares
+	 * about them: the engine's control state, then the call depth.
+	 *
+	 * The depth limit is what turns runaway recursion from a
+	 * StackOverflowError that kills the thread into an ordinary,
+	 * catchable Aussom exception reported at the call that went too
+	 * deep. It reads the depth off the caller's frame, which recorded
+	 * it when the frame was parented, so the check is a field read
+	 * rather than a walk.
+	 *
+	 * Cost on the running path: one volatile read, one field read and
+	 * two integer compares.
+	 *
+	 * @param env is the current Environment.
+	 * @param functName is the function being called, for the message.
+	 * @return An AussomException to propagate, or null to keep going.
+	 */
+	protected AussomException checkCallGate(Environment env, String functName) {
+		// One engine read for both guards. The control state and the depth
+		// limit are each a single volatile read, and the depth itself is a
+		// plain field on the caller's frame, so the running case is three
+		// loads and two compares.
+		Engine eng = env.getEngine();
+		if (eng.getControlState() != ControlState.RUNNING) {
+			if (eng.awaitResumeOrCancel()) {
+				return Engine.cancelledException(env, this.getLineNum());
+			}
+		}
+
+		int max = eng.getMaxCallDepth();
+		if (max <= 0) return null;
+
+		int depth = 0;
+		CallStack cs = env.getCallStack();
+		if (cs != null) depth = cs.getDepth();
+		if (depth + 1 <= max) return null;
+
+		String text = "Maximum call depth of " + max + " exceeded calling '"
+			+ functName + "'. Infinite recursion perhaps?";
+		String trace = "";
+		if (cs != null) trace = cs.getStackTrace();
 		AussomException ex = new AussomException(AussomException.exType.exRuntime);
-		ex.setException(this.getLineNum(), Engine.CANCELLED_EXCEPTION_ID,
-			"Execution cancelled.",
-			"Execution was cancelled by the host via Engine.cancel().",
-			env.getCallStack().getStackTrace());
-		ex.setCancellation(true);
+		ex.setException(this.getLineNum(), Engine.CALL_DEPTH_EXCEEDED_ID, text,
+			text + " Raise the security property '" + Limits.CALL_DEPTH_PROP
+				+ "' if the recursion is intended.",
+			trace);
 		return ex;
 	}
 

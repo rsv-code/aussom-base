@@ -33,6 +33,31 @@ public class CallStack {
 	private String text = "";
 	private astFunctDef calledFunction = null;
 
+	/*
+	 * How many Aussom function calls are active on this chain, with the
+	 * root frame at 0. Recorded when the frame is parented so reading it
+	 * is a field read rather than a walk up the chain. The interpreter
+	 * checks it once per call against the engine's call depth limit; see
+	 * astNode.checkCallGate and design/security-evaluation-f4-f5.md
+	 * section 3.1.
+	 *
+	 * Counted in calls, not frames. One Aussom call produces more than
+	 * one frame: the call site pushes "Function called." and the body
+	 * pushes "Defined.", and there are synthetic frames for argument
+	 * defaults, static initializers and reflection. Only the body frame
+	 * calls enterCall(), so a limit of 50 means 50 nested Aussom calls
+	 * rather than some multiple of it that would depend on how the
+	 * frames happen to be laid out.
+	 *
+	 * Read and written without synchronizing, unlike the rest of this
+	 * class. A frame belongs to the one thread that created it, and that
+	 * thread is the only one that writes this field or reads it for the
+	 * depth check. Since JDK 15 removed biased locking every monitor is a
+	 * real atomic operation, and taking two of them per Aussom call to
+	 * guard a thread-confined int was measurable on the call path.
+	 */
+	private int depth = 0;
+
 	/**
 	 * Default constructor.
 	 */
@@ -71,7 +96,34 @@ public class CallStack {
 	public void setParent(CallStack parent) {
 		synchronized(this) {
 			this.parent = parent;
+			if (parent == null) {
+				this.depth = 0;
+			} else {
+				// Inherit rather than increment: a frame is not by itself
+				// a function call. See the depth field's comment.
+				this.depth = parent.depth;
+			}
 		}
+	}
+
+	/**
+	 * Records that this frame is the body of an Aussom function call, one
+	 * level deeper than its parent. Called by astFunctDef.call after it
+	 * parents the frame, and by nothing else: it is what makes the depth
+	 * count calls rather than frames.
+	 */
+	public void enterCall() {
+		this.depth = this.depth + 1;
+	}
+
+	/**
+	 * Gets how many Aussom function calls are active on this chain, with
+	 * the root frame at 0. Recorded as frames are pushed rather than
+	 * counted on demand, so the call depth check stays a field read.
+	 * @return An int with the call depth of this frame.
+	 */
+	public int getDepth() {
+		return this.depth;
 	}
 
 	/**

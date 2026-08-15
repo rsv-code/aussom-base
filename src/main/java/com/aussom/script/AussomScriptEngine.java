@@ -44,6 +44,7 @@ import com.aussom.CallStack;
 import com.aussom.Engine;
 import com.aussom.Environment;
 import com.aussom.LoggingInt;
+import com.aussom.ThreadScope;
 import com.aussom.ast.astClass;
 import com.aussom.ast.astFunctDef;
 import com.aussom.ast.aussomException;
@@ -278,6 +279,13 @@ public class AussomScriptEngine extends AbstractScriptEngine
 		Environment env = new Environment(this.engine);
 		env.setEnvironment(null, new Members(), new CallStack());
 
+		// Register the thread for the length of the evaluation so the
+		// engine's accounting and pause tracking cover it, and convert a
+		// stack overflow here rather than letting an Error escape eval()
+		// to a caller that is catching ScriptException.
+		// See design/security-evaluation-f4-f5.md section 3.2.
+		this.engine.refreshLimits();
+		try (ThreadScope scope = this.engine.enterInterpreterThread()) {
 			AussomType instTy;
 			try {
 				instTy = cls.instantiate(env, false, new AussomList());
@@ -316,7 +324,11 @@ public class AussomScriptEngine extends AbstractScriptEngine
 				writeBindingsBack(inst, context);
 			}
 
-		return AussomBindingsMarshaller.fromAussom(ret);
+			return AussomBindingsMarshaller.fromAussom(ret);
+		} catch (StackOverflowError soe) {
+			throw new AussomScriptException(
+				this.engine.stackOverflowToException(soe, null), className + ".aus");
+		}
 	}
 
 	private AussomMap collectBindingsAsMap(ScriptContext context) {
@@ -525,10 +537,14 @@ public class AussomScriptEngine extends AbstractScriptEngine
 			}
 
 			AussomType ret;
-			try {
+			this.engine.refreshLimits();
+			try (ThreadScope scope = this.engine.enterInterpreterThread()) {
 				ret = cls.call(env, false, name, aArgs);
 			} catch (aussomException ae) {
 				throw new AussomScriptException(ae, cls.getName() + ".aus");
+			} catch (StackOverflowError soe) {
+				throw new AussomScriptException(
+					this.engine.stackOverflowToException(soe, null), cls.getName() + ".aus");
 			}
 			if (ret == null) ret = new AussomNull();
 			if (ret.isEx()) {

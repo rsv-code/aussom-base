@@ -1936,6 +1936,26 @@ class interpreterTests {
 	@Test(name = "(lang string) String split.")
 	public stringSplit() { return test.expect("one,two,three".split(",")[1], "two"); }
 
+	// The regex-backed string methods now read their subject through the
+	// engine's metering so a host can budget, pause or cancel a match.
+	// These pin the no-op direction of that change: with no budget set
+	// (the default) every result must be exactly what it was before.
+	// See design/security-evaluation-f4-f5.md section 4.2.
+	@Test(name = "(lang string) String split keeps blank sections when asked.")
+	public stringSplitBlanks() { return test.expect(#("a,b,,c".split(",", true)), 4); }
+
+	@Test(name = "(lang string) String split drops blank sections by default.")
+	public stringSplitNoBlanks() { return test.expect(#("a,b,,c".split(",")), 3); }
+
+	@Test(name = "(lang string) String split on a regex delimiter.")
+	public stringSplitRegex() { return test.expect("a1b22c".split("[0-9]+")[2], "c"); }
+
+	@Test(name = "(lang string) String matches with no match.")
+	public stringMatchesFalse() { return test.expect("Tyler".matches("^Zz.*"), false); }
+
+	@Test(name = "(lang string) String replace regex with no match is unchanged.")
+	public stringReplaceRegexNoMatch() { return test.expect("Tyler".replaceRegex("[0-9]", "#"), "Tyler"); }
+
 	@Test(name = "(lang string) String starts with.")
 	public stringStartsWith() { return test.expect("Tyler Durden".startsWith("Tyler "), true); }
 
@@ -2507,6 +2527,32 @@ class interpreterTests {
 	 *********************************************************************/
 	@Test(name = "(lang Buffer) Buffer instantiate.")
 	public bufferInstantiate() { this.buff = new Buffer(); return test.expectObject(this.buff, 'Buffer'); }
+
+	// Buffer sizes are checked as 64-bit values before anything is
+	// allocated. A size too large to address used to be narrowed to an int,
+	// so new Buffer(4294967296) quietly produced an empty Buffer and
+	// reported nothing. See design/security-evaluation-f4-f5.md 4.4.
+	@Test(name = "(lang Buffer) Buffer size that cannot be addressed is refused.")
+	public bufferSizeTooLarge() {
+		ex = false;
+		try { b = new Buffer(4294967296); } catch (e) { ex = true; }
+		return test.expect(ex, true);
+	}
+
+	@Test(name = "(lang Buffer) Negative Buffer size is refused.")
+	public bufferSizeNegative() {
+		ex = false;
+		try { b = new Buffer(-1); } catch (e) { ex = true; }
+		return test.expect(ex, true);
+	}
+
+	@Test(name = "(lang Buffer) Reading a string past the end is refused.")
+	public bufferStringPastEnd() {
+		b = new Buffer(16);
+		ex = false;
+		try { s = b.getStringAt(64, 0); } catch (e) { ex = true; }
+		return test.expect(ex, true);
+	}
 
 	@Test(name = "(lang Buffer) Buffer size.")
 	public bufferSize() { return test.expect(this.buff.size(), 1024); }

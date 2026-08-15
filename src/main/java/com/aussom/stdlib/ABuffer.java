@@ -75,11 +75,52 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	public byte[] getBuffer() { return this.buff; }
 	public void setBuffer(byte[] Buff) { this.buff = Buff; }
 	
+	/**
+	 * Aussom Buffer.newBuffer(). The size is validated as the 64-bit
+	 * value the script actually passed, before anything is allocated.
+	 * Narrowing it to an int first is how new Buffer(4294967296) used to
+	 * quietly produce an empty buffer instead of an error.
+	 * See design/security-evaluation-f4-f5.md section 4.4.
+	 */
 	public AussomType newBuffer(Environment env, ArrayList<AussomType> args) {
+		long size = ((AussomInt)args.get(0)).getValue();
+		AussomType bad = checkSize(env, "newBuffer", size);
+		if (bad != null) return bad;
 		synchronized(this) {
-			this.buff = new byte[(int)((AussomInt)args.get(0)).getValue()];
+			this.buff = new byte[(int) size];
 			return new AussomNull();
 		}
+	}
+
+	/**
+	 * Validates a requested buffer size as the 64-bit value the script
+	 * actually passed: not negative, and addressable as a Java array.
+	 *
+	 * This is argument validation, not policy. There is no configurable
+	 * ceiling on buffer size, because a cap on one value bounds neither
+	 * memory nor anything else a host can reason about, and a single
+	 * allocation larger than the heap is refused cleanly by the JVM
+	 * anyway. What is worth refusing is a size that would quietly
+	 * allocate something other than what was asked for: narrowing
+	 * 4294967296 into an int used to produce an empty buffer and report
+	 * nothing at all. See com.aussom.Limits.
+	 *
+	 * @param env is the current Environment.
+	 * @param Method is the method name for the message.
+	 * @param Size is the 64-bit size the script asked for.
+	 * @return An AussomException to return, or null when the size is fine.
+	 */
+	private static AussomType checkSize(Environment env, String Method, long Size) {
+		if (Size < 0L) {
+			return new AussomException("Buffer." + Method
+				+ "(): Size must not be negative, found " + Size + ".");
+		}
+		if (Size > Integer.MAX_VALUE) {
+			return new AussomException("Buffer." + Method + "(): Size of " + Size
+				+ " is larger than a Java array can address ("
+				+ Integer.MAX_VALUE + ").");
+		}
+		return null;
 	}
 	
 	public AussomType size(Environment env, ArrayList<AussomType> args) {
@@ -230,12 +271,33 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 		return new AussomString(this._getString(((AussomString)args.get(0)).getValueString()));
 	}
 	
+	/**
+	 * Aussom Buffer.getStringAt(). Index and length are checked against
+	 * the buffer as 64-bit values before any array is allocated, so a
+	 * bad length reports a range error instead of allocating whatever a
+	 * narrowed int happened to become.
+	 */
 	public AussomType getStringAt(Environment env, ArrayList<AussomType> args) throws aussomException {
-		int index = (int) ((AussomInt)args.get(1)).getValue();
-		int length = (int) ((AussomInt)args.get(0)).getValue();
+		long rawIndex = ((AussomInt)args.get(1)).getValue();
+		long rawLength = ((AussomInt)args.get(0)).getValue();
 		String cset = ((AussomString)args.get(2)).getValueString();
 		boolean increment = false;
-		if(index < 0) { index = this.readCursor; increment = true; }
+		if (rawIndex < 0L) { rawIndex = this.readCursor; increment = true; }
+
+		AussomType bad = checkSize(env, "getStringAt", rawLength);
+		if (bad != null) return bad;
+		if (rawIndex > Integer.MAX_VALUE) {
+			return new AussomException("Buffer.getStringAt(): Index of " + rawIndex
+				+ " is out of range for a buffer of " + this.buff.length + " bytes.");
+		}
+		int index = (int) rawIndex;
+		int length = (int) rawLength;
+		if (index + (long) length > this.buff.length) {
+			return new AussomException("Buffer.getStringAt(): Reading " + length
+				+ " bytes at index " + index + " runs past the end of a buffer of "
+				+ this.buff.length + " bytes.");
+		}
+
 		String val = this._getStringAt(index, length, cset);
 		if(increment) this.readCursor += length;
 		return new AussomString(val);

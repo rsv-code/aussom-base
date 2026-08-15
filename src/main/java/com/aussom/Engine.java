@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.aussom.ast.*;
 import com.aussom.stdlib.LangRegistry;
@@ -189,12 +191,70 @@ public class Engine implements AussomDebuggingInt {
 	private final ThreadLocal<Throwable> lastSeenThrowable = new ThreadLocal<Throwable>();
 
 	/*
-	 * Cancellation state. Set by cancel() from any thread and read at
-	 * every loop back edge by astWhile and astFor. Volatile because
-	 * the canceling thread is never the interpreter thread. See the
-	 * "Cancellation" section further down for the full contract.
+	 * Control state. Set by cancel(), pause() and resume() from any
+	 * thread and read at every checkpoint: loop back edges, every
+	 * Aussom call, every batch of regex subject reads, and every sleep
+	 * slice. Volatile because the thread asking for the change is never
+	 * the interpreter thread. See the "Control: cancel, pause and
+	 * resume" section further down for the full contract.
 	 */
-	private volatile boolean cancelled = false;
+	private volatile ControlState controlState = ControlState.RUNNING;
+
+	/*
+	 * Monitor for pausing. Interpreter threads park on it while the
+	 * state is PAUSED, and pause/resume/cancel and awaitPaused all
+	 * synchronize on it. Separate from the engine itself so an
+	 * embedder that synchronizes on the Engine cannot deadlock the
+	 * interpreter.
+	 */
+	private final Object controlLock = new Object();
+
+	/*
+	 * How many registered interpreter threads are currently parked at a
+	 * checkpoint. Guarded by controlLock. isFullyPaused compares it
+	 * against the number of registered threads.
+	 */
+	private int stoppedThreads = 0;
+
+	/*
+	 * Resource limits for this engine, read from the security manager.
+	 * Volatile and replaced wholesale rather than mutated, so a reader
+	 * always sees a consistent set. Refreshed in the constructor and at
+	 * the start of every program. See Limits.
+	 */
+	private volatile Limits limits = new Limits();
+
+	/*
+	 * The call depth limit, kept as a plain int beside the Limits
+	 * snapshot. The depth check runs once per Aussom call, and reading
+	 * the limit off the snapshot means a second volatile read plus a
+	 * long compare and a narrowing on the hottest path in the
+	 * interpreter. Maintained by refreshLimits, which is the only place
+	 * that changes it.
+	 */
+	private volatile int maxCallDepth = (int) Limits.DEFAULT_CALL_DEPTH;
+
+
+	/*
+	 * Accounting. Threads currently running this engine's code, keyed
+	 * by thread id, each holding the CPU and allocation counters read
+	 * when it entered. bankedCpuNanos and bankedAllocBytes hold the
+	 * totals from threads that have already left. See ThreadMeter and
+	 * design/security-evaluation-f4-f5.md section 5.5.
+	 */
+	private final Map<Long, ThreadScope> interpreterThreads = new ConcurrentHashMap<Long, ThreadScope>();
+	private final AtomicLong bankedCpuNanos = new AtomicLong(0L);
+	private final AtomicLong bankedAllocBytes = new AtomicLong(0L);
+
+	/*
+	 * Set when an OutOfMemoryError was seen inside this engine. The
+	 * heap state that caused it is process-wide and the engine's own
+	 * data is of unknown size, so the engine refuses further work
+	 * rather than pretending it is sound. The host is expected to drop
+	 * it and build another, which after the isolation rework is a parse
+	 * of lang.aus and a class table.
+	 */
+	private volatile boolean unusable = false;
 
 	/**
 	 * The standard library modules this engine can include. Owned by
@@ -263,6 +323,11 @@ public class Engine implements AussomDebuggingInt {
 	public Engine(SecurityManagerInt SecMan, LangRegistry Registry) throws Exception {
 		this.secman = SecMan;
 		this.langRegistry = new LangRegistry(Registry);
+
+		// Resource limits come from policy. Read once here and again at
+		// the start of each program, so the interpreter never pays for a
+		// property lookup on the hot path. See Limits.
+		this.refreshLimits();
 
 		// Parse the base language classes into this engine's table.
 		this.parseLangSource();
@@ -786,7 +851,18 @@ public class Engine implements AussomDebuggingInt {
 		// separate parseString calls but one logical load.
 		scanner.setDiagnosticSink(this);
 		parser p = new parser(scanner, this, FileName, this.loadExternClasses);
-		p.parse();
+		try {
+			p.parse();
+		} catch (StackOverflowError soe) {
+			// Defensive: no input is known to overflow the parser, since
+			// CUP uses an explicit stack rather than recursive descent.
+			// The catch is here so a future grammar change cannot reopen
+			// that quietly. See design/security-evaluation-f4-f5.md 3.2.
+			this.getLogger().err("Parse of '" + FileName + "' ran out of stack space. "
+				+ "Source is nested too deeply.");
+			this.setParseError();
+			return;
+		}
 		// P2: lexer errors (e.g. illegal characters) are reported via
 		// console.err but historically did not halt parsing. Promote
 		// them to parse errors so the engine refuses to run code that
@@ -805,14 +881,38 @@ public class Engine implements AussomDebuggingInt {
 	 * @return An integer with 0 for success and any other value for failure.
 	 */
 	public int run() throws aussomException {
+		if (this.unusable) {
+			throw new aussomException("Engine.run(): This engine ran out of memory "
+				+ "and is no longer usable. Build a new one.");
+		}
 		if (!this.hasParseErrors) {
 			this.getLogger().trc("Running program now ...");
-	
+
 			this.mainCallStack = new CallStack();
-			
+
+			// Pick up any limit the host changed since the last run.
+			this.refreshLimits();
+
 			// Set the main class and function.
 			if (this.setMainClassAndFunct()) {
-				return this.callMain();
+				// Register the thread for the length of the program, so
+				// accounting and pause tracking cover it. An overflow
+				// is converted here rather than escaping as an Error to
+				// a caller that is catching Exception.
+				try (ThreadScope scope = this.enterInterpreterThread()) {
+					return this.callMain();
+				} catch (StackOverflowError soe) {
+					AussomException ex = this.stackOverflowToException(soe, this.mainCallStack);
+					this.getLogger().err(((AussomTypeInt) ex).str());
+					return 1;
+				} catch (OutOfMemoryError oome) {
+					// Not converted into a script-visible exception: the
+					// heap is a process-wide condition and this engine's
+					// state is now of unknown size. Mark it and let the
+					// error travel, so the host sees what happened.
+					this.markUnusable();
+					throw oome;
+				}
 			} else {
 				throw new aussomException("Engine.run(): Failed to find main class.");
 			}
@@ -1096,37 +1196,64 @@ public class Engine implements AussomDebuggingInt {
 	}
 
 	/* ============================================================
-	 * Cancellation
+	 * Control: cancel, pause and resume
 	 *
-	 * A running Aussom program is stopped by asking it to stop, not
-	 * by killing the thread it runs on. cancel() raises a flag that
-	 * the interpreter reads at every loop back edge (astWhile and
-	 * astFor). When the flag is set, the loop stops and hands back an
-	 * AussomException whose id is CANCELLED_EXCEPTION_ID.
+	 * A running Aussom program is stopped or held by asking it to
+	 * stop or hold, not by killing or suspending the thread it runs
+	 * on. The engine keeps one ControlState, and the interpreter
+	 * reads it at every checkpoint:
 	 *
-	 * Three properties matter to callers:
+	 *   - loop back edges                (astWhile, astFor)
+	 *   - every Aussom function call     (astClass.call)
+	 *   - every batch of regex reads     (RegexSubject.charAt)
+	 *   - every sleep slice              (ASys.sleep)
 	 *
-	 * 1. The result is a value, not a thrown Java exception. Runtime
-	 *    errors already travel back to the caller as AussomException
-	 *    values, so cancellation needs no special unwinding path.
+	 * CANCELLED makes the checkpoint hand back an AussomException
+	 * whose id is CANCELLED_EXCEPTION_ID. PAUSED makes it block
+	 * there until the state changes.
+	 *
+	 * Properties that matter to callers:
+	 *
+	 * 1. A cancellation is a value, not a thrown Java exception.
+	 *    Runtime errors already travel back to the caller as
+	 *    AussomException values, so it needs no special unwinding.
 	 *
 	 * 2. The id is distinct. A host that runs untrusted code on a
 	 *    timeout must be able to tell "this program ran too long"
-	 *    apart from "this program has a bug", because the two call
-	 *    for completely different handling. Match on
+	 *    apart from "this program has a bug". Match on
 	 *    Engine.CANCELLED_EXCEPTION_ID, or on
 	 *    AussomException.isCancellation().
 	 *
-	 * 3. Aussom code cannot catch it. A cancellation is a decision
+	 * 3. Aussom code cannot catch a cancellation. It is a decision
 	 *    made by the host, so a try/catch in the script re-raises it
 	 *    instead of swallowing it. See astTryCatch.
 	 *
-	 * cancel() is the only way to stop a program. Thread interrupt
-	 * status is deliberately not consulted, and that omission is a
-	 * decision rather than an oversight. Interruption is per-thread
-	 * state that any code on the stack can set or clear, while
-	 * cancellation is a property of the whole engine: a host may run
-	 * many threads against one Engine (see
+	 * 4. pause() asks the engine to stop and returns immediately.
+	 *    The engine is fully paused only once every thread running
+	 *    its code has reached a checkpoint and parked. Use
+	 *    isFullyPaused() to read that, or awaitPaused() to wait for
+	 *    it. A thread inside an extern call that is waiting on a
+	 *    socket or a latch has not reached a checkpoint, so it does
+	 *    not count as stopped.
+	 *
+	 * 5. A paused program keeps its stack, locals and data, so
+	 *    resume() continues where it stopped. Pause is a CPU
+	 *    control, never a memory control: a paused engine still
+	 *    holds everything it held.
+	 *
+	 * 6. Cancel outranks pause. cancel() on a paused engine ends the
+	 *    program without the host having to resume it first.
+	 *
+	 * 7. Pause is invisible to a program except through the clock. A
+	 *    sliced sys.sleep() is suspended by a pause, but an unsliced
+	 *    blocking call such as Latch.await(5000) keeps counting wall
+	 *    time, so a long pause can expire it.
+	 *
+	 * Thread interrupt status is deliberately not consulted, and
+	 * that omission is a decision rather than an oversight.
+	 * Interruption is per-thread state that any code on the stack
+	 * can set or clear, while control is a property of the whole
+	 * engine: a host may run many threads against one Engine (see
 	 * design/aussom-concurrency.md), so treating one thread's
 	 * interrupt as a reason to stop the entire program invites
 	 * failures nobody asked for. A host that wants an interrupt to
@@ -1134,10 +1261,7 @@ public class Engine implements AussomDebuggingInt {
 	 * ExecutorService should therefore pair future.cancel(true) with
 	 * an explicit cancel(); the interrupt alone does nothing here.
 	 *
-	 * Only loop back edges are checked. That is enough to stop any
-	 * nonterminating program: running forever takes either a loop or
-	 * unbounded recursion, and unbounded recursion ends itself when
-	 * the Java stack runs out.
+	 * See design/security-evaluation-f4-f5.md sections 4.1 and 5.6.
 	 * ============================================================ */
 
 	/**
@@ -1147,12 +1271,15 @@ public class Engine implements AussomDebuggingInt {
 
 	/**
 	 * Requests that the running program stop. Safe to call from any
-	 * thread, including before run() starts. The flag is sticky: it
-	 * stays set until clearCancel() is called, so an engine that is
-	 * reused must be cleared first.
+	 * thread, including before run() starts, and on a paused engine.
+	 * The state is sticky: it stays CANCELLED until clearCancel() is
+	 * called, so an engine that is reused must be cleared first.
 	 */
 	public void cancel() {
-		this.cancelled = true;
+		synchronized (this.controlLock) {
+			this.controlState = ControlState.CANCELLED;
+			this.controlLock.notifyAll();
+		}
 	}
 
 	/**
@@ -1160,17 +1287,461 @@ public class Engine implements AussomDebuggingInt {
 	 * @return A boolean with true for cancelled and false for not.
 	 */
 	public boolean isCancelled() {
-		return this.cancelled;
+		return this.controlState == ControlState.CANCELLED;
 	}
 
 	/**
-	 * Clears the cancellation flag so the engine can run again.
-	 * @return A boolean with the flag value before it was cleared.
+	 * Clears a cancellation so the engine can run again. A paused
+	 * engine is left paused.
+	 * @return A boolean with true if the engine had been cancelled.
 	 */
 	public boolean clearCancel() {
-		boolean prev = this.cancelled;
-		this.cancelled = false;
-		return prev;
+		synchronized (this.controlLock) {
+			boolean prev = (this.controlState == ControlState.CANCELLED);
+			if (prev) {
+				this.controlState = ControlState.RUNNING;
+				this.controlLock.notifyAll();
+			}
+			return prev;
+		}
+	}
+
+	/**
+	 * The engine's current control state. One volatile read, which is
+	 * what every checkpoint does on the fast path.
+	 * @return The current ControlState, never null.
+	 */
+	public ControlState getControlState() {
+		return this.controlState;
+	}
+
+	/**
+	 * Asks the running program to stop at its next checkpoint and wait
+	 * there. Returns immediately: use isFullyPaused() or awaitPaused()
+	 * to find out when the program has actually stopped.
+	 *
+	 * Safe to call from any thread and more than once. A cancelled
+	 * engine is left cancelled, since cancel outranks pause.
+	 */
+	public void pause() {
+		synchronized (this.controlLock) {
+			if (this.controlState == ControlState.CANCELLED) return;
+			this.controlState = ControlState.PAUSED;
+		}
+	}
+
+	/**
+	 * Lets a paused program continue. Safe to call from any thread and
+	 * more than once; calling it on an engine that is not paused does
+	 * nothing. A cancelled engine is left cancelled.
+	 */
+	public void resume() {
+		synchronized (this.controlLock) {
+			if (this.controlState != ControlState.PAUSED) return;
+			this.controlState = ControlState.RUNNING;
+			this.controlLock.notifyAll();
+		}
+	}
+
+	/**
+	 * True when pause() has been asked for and every thread running
+	 * this engine's code has reached a checkpoint and parked. An engine
+	 * that is paused with no program running counts as fully paused,
+	 * since there is nothing left to stop.
+	 * @return A boolean with true for fully paused.
+	 */
+	public boolean isFullyPaused() {
+		synchronized (this.controlLock) {
+			if (this.controlState != ControlState.PAUSED) return false;
+			return this.stoppedThreads >= this.interpreterThreads.size();
+		}
+	}
+
+	/**
+	 * Waits until the engine is fully paused, or the timeout runs out.
+	 * Call pause() first; this does not ask for the pause itself.
+	 *
+	 * A false return is information rather than a failure: it means at
+	 * least one thread is still busy somewhere the engine does not
+	 * control, such as a socket read or a latch wait inside an extern
+	 * call. The host decides whether to keep waiting or to cancel.
+	 *
+	 * @param Timeout is how long to wait.
+	 * @param Unit is the unit of Timeout.
+	 * @return A boolean with true if the engine is fully paused.
+	 * @throws InterruptedException if the calling thread is interrupted.
+	 */
+	public boolean awaitPaused(long Timeout, TimeUnit Unit) throws InterruptedException {
+		long deadline = System.nanoTime() + Unit.toNanos(Timeout);
+		synchronized (this.controlLock) {
+			while (true) {
+				if (this.controlState != ControlState.PAUSED) return false;
+				if (this.stoppedThreads >= this.interpreterThreads.size()) return true;
+				long remaining = deadline - System.nanoTime();
+				if (remaining <= 0L) return false;
+				this.controlLock.wait(remaining / 1000000L, (int) (remaining % 1000000L));
+			}
+		}
+	}
+
+	/**
+	 * The interpreter's parking spot. Called from a checkpoint that has
+	 * already seen a state other than RUNNING; blocks while the engine
+	 * is paused and reports whether the program must now unwind.
+	 *
+	 * Not for embedders. Hosts use pause(), resume() and cancel(); this
+	 * is public only because the stdlib checkpoints (RegexSubject and
+	 * ASys.sleep) live in another package.
+	 *
+	 * @return A boolean with true if the engine is cancelled and the
+	 * caller must stop, false if it may keep going.
+	 */
+	public boolean awaitResumeOrCancel() {
+		synchronized (this.controlLock) {
+			if (this.controlState == ControlState.CANCELLED) return true;
+			if (this.controlState != ControlState.PAUSED) return false;
+
+			this.stoppedThreads++;
+			// Tell any awaitPaused caller that one more thread stopped.
+			this.controlLock.notifyAll();
+			try {
+				while (this.controlState == ControlState.PAUSED) {
+					try {
+						this.controlLock.wait();
+					} catch (InterruptedException ie) {
+						// Interrupt status is not a reason to stop
+						// (see the contract above), but it must not be
+						// swallowed either. Keep waiting for a real
+						// decision and leave the flag for host code.
+						Thread.currentThread().interrupt();
+					}
+				}
+			} finally {
+				this.stoppedThreads--;
+			}
+			return this.controlState == ControlState.CANCELLED;
+		}
+	}
+
+	/**
+	 * Builds the interpreter's cancellation exception. One place, so a
+	 * loop back edge, the call path, and stdlib code that discovers a
+	 * cancellation part-way through an operation all produce the same
+	 * value: CANCELLED_EXCEPTION_ID with the cancellation flag set, so
+	 * astTryCatch will not let a script swallow it.
+	 *
+	 * The line number is left at -1 when it is not known here. Callers
+	 * inside the AST set it; for stdlib callers the extern-return
+	 * enrichment in astFunctDef.callExtern fills in the call site.
+	 *
+	 * @param env is the current Environment, may be null.
+	 * @return A new AussomException marked as a cancellation.
+	 */
+	public static AussomException cancelledException(Environment env) {
+		return cancelledException(env, -1);
+	}
+
+	/**
+	 * Cancellation exception with a known source line.
+	 * @param env is the current Environment, may be null.
+	 * @param LineNum is the source line to report.
+	 * @return A new AussomException marked as a cancellation.
+	 */
+	public static AussomException cancelledException(Environment env, int LineNum) {
+		String trace = "";
+		if (env != null && env.getCallStack() != null) {
+			trace = env.getCallStack().getStackTrace();
+		}
+		AussomException ex = new AussomException(AussomException.exType.exRuntime);
+		ex.setException(LineNum, CANCELLED_EXCEPTION_ID,
+			"Execution cancelled.",
+			"Execution was cancelled by the host via Engine.cancel().",
+			trace);
+		ex.setCancellation(true);
+		return ex;
+	}
+
+	/* ============================================================
+	 * Resource limits, accounting and measurement
+	 *
+	 * The engine supplies mechanism here, never policy. It can say
+	 * how much CPU and allocation its programs have used and how much
+	 * memory its data holds, and it reads its limits from the security
+	 * manager the host built. Deciding what to do about any of it belongs
+	 * to the host, which owns the deadline, the tenant list and the
+	 * thread pool.
+	 *
+	 * Note what is not here: no setter for any limit, and no per-value
+	 * size caps. Limits are policy and come from the security manager,
+	 * and a cap on the size of one value bounds neither memory nor
+	 * anything else a host can reason about. See Limits.
+	 *
+	 * See design/security-evaluation-f4-f5.md section 5.
+	 * ============================================================ */
+
+	/**
+	 * Exception id reported when a call would nest deeper than the
+	 * engine's maximum call depth.
+	 */
+	public static final String CALL_DEPTH_EXCEEDED_ID = "CALL_DEPTH_EXCEEDED";
+
+	/**
+	 * Exception id reported when the interpreter ran out of Java stack
+	 * and the overflow was converted at a public boundary.
+	 */
+	public static final String STACK_OVERFLOW_ID = "STACK_OVERFLOW";
+
+	/**
+	 * This engine's resource limits.
+	 * @return The current Limits snapshot, never null.
+	 */
+	public Limits getLimits() {
+		return this.limits;
+	}
+
+	/**
+	 * Re-reads every limit from the security manager. Called in the
+	 * constructor and at the start of each program, so a host that
+	 * rewrites its own policy between programs is honored without the
+	 * interpreter paying for a property lookup on every operation.
+	 *
+	 * There is no setter for any of these on Engine, and that is
+	 * deliberate. Limits are policy, policy lives in the security
+	 * manager, and the security manager is built by the host and handed
+	 * to the constructor. A second way to set a limit would mean two
+	 * places to look when one disagrees with the other.
+	 */
+	public void refreshLimits() {
+		Limits fresh = new Limits(this.secman);
+		this.limits = fresh;
+		long depth = fresh.getCallDepth();
+		if (depth > Integer.MAX_VALUE) depth = Integer.MAX_VALUE;
+		this.maxCallDepth = (int) depth;
+	}
+
+	/**
+	 * Maximum Aussom call depth, 0 for no limit. Set through the security
+	 * manager as aussom.limit.call.depth.
+	 *
+	 * At roughly 1.9 KB of Java stack per Aussom call, a limit of N wants
+	 * about N * 2 KB of thread stack plus headroom, so a host raising it
+	 * should give its interpreter threads a stack size to match, or run
+	 * them as virtual threads where the stack grows on the heap and this
+	 * limit is the only bound.
+	 *
+	 * @return An int with the maximum call depth.
+	 */
+	public int getMaxCallDepth() {
+		return this.maxCallDepth;
+	}
+
+	/**
+	 * Registers the calling thread as running this engine's code, and
+	 * returns a handle that unregisters it. run(), the script-mode
+	 * evaluator and the JSR 223 wrapper each wrap a program body in
+	 * one, so accounting and pause tracking work without the host
+	 * having to track threads itself.
+	 *
+	 * On entry the engine records this thread's CPU and allocation
+	 * counters as a baseline. On close it banks the difference. That
+	 * two-step is required rather than tidy: both counters are
+	 * cumulative per thread, so a pooled thread carries whatever ran on
+	 * it before, and both read -1 once the thread has terminated.
+	 *
+	 * @return A ThreadScope to close when the program body ends.
+	 */
+	public ThreadScope enterInterpreterThread() {
+		Long id = Long.valueOf(Thread.currentThread().getId());
+		if (this.interpreterThreads.containsKey(id)) {
+			// Already registered: this is a nested entry, such as a script
+			// that reaches back into the engine (reflect.evalStr) or a host
+			// that invokes a method from inside a program. The outer scope
+			// owns the accounting and the registration, so the inner one
+			// must not unregister the thread when it closes.
+			return ThreadScope.nested();
+		}
+		ThreadScope scope = new ThreadScope(this);
+		this.interpreterThreads.put(id, scope);
+		return scope;
+	}
+
+	/**
+	 * Thread ids currently running this engine's code. A snapshot, for
+	 * a host that wants to read the JVM's own counters directly.
+	 * @return An array of thread ids, empty when nothing is running.
+	 */
+	public long[] getInterpreterThreadIds() {
+		Long[] keys = this.interpreterThreads.keySet().toArray(new Long[0]);
+		long[] out = new long[keys.length];
+		for (int i = 0; i < keys.length; i++) {
+			out[i] = keys[i].longValue();
+		}
+		return out;
+	}
+
+	/**
+	 * CPU nanoseconds this engine's programs have consumed, across
+	 * every thread that has run them, including the ones running now.
+	 * @return A long with CPU nanoseconds, or -1 when this JVM does not
+	 * report per-thread CPU time. -1 means "no accounting available"
+	 * rather than "no CPU used".
+	 */
+	public long getCpuNanos() {
+		if (!ThreadMeter.isCpuAvailable()) return -1L;
+		long total = this.bankedCpuNanos.get();
+		for (ThreadScope scope : this.interpreterThreads.values()) {
+			total += scope.liveCpuNanos();
+		}
+		return total;
+	}
+
+	/**
+	 * Bytes this engine's programs have allocated, across every thread
+	 * that has run them, including the ones running now. Cumulative
+	 * allocation rather than live size: see measureRetainedFootprint
+	 * for what the engine is holding.
+	 * @return A long with bytes allocated, or -1 when this JVM does not
+	 * report per-thread allocation.
+	 */
+	public long getAllocatedBytes() {
+		if (!ThreadMeter.isAllocAvailable()) return -1L;
+		long total = this.bankedAllocBytes.get();
+		for (ThreadScope scope : this.interpreterThreads.values()) {
+			total += scope.liveAllocBytes();
+		}
+		return total;
+	}
+
+	/**
+	 * Zeroes the CPU and allocation totals. A host that meters per
+	 * request calls this at the start of one. Threads running now are
+	 * re-baselined, so work already done is discarded rather than
+	 * arriving later when they finish.
+	 */
+	public void resetAccounting() {
+		this.bankedCpuNanos.set(0L);
+		this.bankedAllocBytes.set(0L);
+		for (ThreadScope scope : this.interpreterThreads.values()) {
+			scope.rebaseline();
+		}
+	}
+
+	/**
+	 * Banks a finished thread's usage. Called by ThreadScope.close().
+	 * @param CpuNanos is the CPU time to add.
+	 * @param AllocBytes is the allocation to add.
+	 */
+	void bankThreadUsage(long CpuNanos, long AllocBytes) {
+		if (CpuNanos > 0L) this.bankedCpuNanos.addAndGet(CpuNanos);
+		if (AllocBytes > 0L) this.bankedAllocBytes.addAndGet(AllocBytes);
+	}
+
+	/**
+	 * Unregisters a thread. Called by ThreadScope.close().
+	 * @param ThreadId is the thread id to drop.
+	 */
+	void leaveInterpreterThread(long ThreadId) {
+		this.interpreterThreads.remove(Long.valueOf(ThreadId));
+		synchronized (this.controlLock) {
+			// A thread leaving can complete a pause that awaitPaused is
+			// waiting on, so wake the waiters.
+			this.controlLock.notifyAll();
+		}
+	}
+
+	/**
+	 * Walks this engine's reachable Aussom values and returns an
+	 * estimate of the bytes they hold.
+	 *
+	 * Call it on an engine that is not running: pause() then
+	 * awaitPaused(), or between programs. The walk reads the value
+	 * graph without locking it, so a running interpreter thread would
+	 * make the result meaningless rather than merely stale.
+	 *
+	 * Roots are this engine's own: its static class instances, the main
+	 * class instance, and the script-mode environment. A value held in
+	 * two places is counted once, and a structure that contains itself
+	 * is counted once.
+	 *
+	 * The number is an estimate from a documented model, not a promise
+	 * of exact bytes. See AussomFootprint for the model.
+	 *
+	 * @return A long with the estimated bytes retained.
+	 */
+	public long measureRetainedFootprint() {
+		AussomFootprint fp = new AussomFootprint();
+		for (AussomType t : this.staticClasses.values()) {
+			fp.add(t);
+		}
+		fp.add(this.mainClassInstance);
+		fp.add(this.mainFunctArgs);
+		if (this.scriptInstance != null) fp.add(this.scriptInstance);
+		if (this.scriptEnv != null && this.scriptEnv.getLocals() != null) {
+			for (AussomType t : this.scriptEnv.getLocals().getMap().values()) {
+				fp.add(t);
+			}
+		}
+		return fp.getBytes();
+	}
+
+	/**
+	 * True when this engine saw an OutOfMemoryError and refuses further
+	 * work. Drop it and build another.
+	 * @return A boolean with true for unusable.
+	 */
+	public boolean isUnusable() {
+		return this.unusable;
+	}
+
+	/**
+	 * Records that this engine is no longer sound. Package-visible so
+	 * the boundary handlers can set it.
+	 */
+	void markUnusable() {
+		this.unusable = true;
+	}
+
+	/**
+	 * Converts a StackOverflowError into an Aussom exception, so an
+	 * Error never escapes the interpreter to a caller that is catching
+	 * Exception. The Java stack trace is not copied into the
+	 * script-visible message: it is thousands of frames of interpreter
+	 * internals. It goes to this engine's logger instead.
+	 *
+	 * @param e is the error that was caught.
+	 * @param cs is the call stack to report, may be null.
+	 * @return An AussomException with id STACK_OVERFLOW.
+	 */
+	public AussomException stackOverflowToException(StackOverflowError e, CallStack cs) {
+		this.getLogger().err("Interpreter ran out of Java stack. "
+			+ "Deepest interpreter frames: " + topFrames(e, 6));
+		String trace = "";
+		if (cs != null) trace = cs.getStackTrace();
+		AussomException ex = new AussomException(AussomException.exType.exRuntime);
+		ex.setException(-1, STACK_OVERFLOW_ID,
+			"The interpreter ran out of stack space while evaluating this program. "
+				+ "Deeply nested expressions or data, or recursion the call depth "
+				+ "limit could not see.",
+			"Raise the thread stack size, simplify the expression or data being "
+				+ "evaluated, or lower '" + Limits.CALL_DEPTH_PROP + "'.",
+			trace);
+		return ex;
+	}
+
+	/**
+	 * First few frames of a throwable, for the logger. Kept short: an
+	 * overflow trace is thousands of frames of the same cycle.
+	 */
+	private static String topFrames(Throwable t, int count) {
+		StackTraceElement[] els = t.getStackTrace();
+		StringBuilder sb = new StringBuilder();
+		int n = count;
+		if (els.length < n) n = els.length;
+		for (int i = 0; i < n; i++) {
+			if (i > 0) sb.append(" <- ");
+			sb.append(els[i].toString());
+		}
+		return sb.toString();
 	}
 
 	/* ============================================================
@@ -1834,6 +2405,11 @@ public class Engine implements AussomDebuggingInt {
 				+ "'aussom.script.mode.enable' not permitted.");
 		}
 
+		if (this.unusable) {
+			throw new aussomException("Engine.evalParsedScript: This engine ran out "
+				+ "of memory and is no longer usable. Build a new one.");
+		}
+
 		List<astNode> stmts = body.getStatements();
 		int sliceStart = this.scriptCursor;
 		int sliceEnd = stmts.size();
@@ -1843,25 +2419,38 @@ public class Engine implements AussomDebuggingInt {
 		// statements for the next call to pick up.
 		this.scriptCursor = sliceEnd;
 
+		// Pick up any limit the host changed since the last submission.
+		this.refreshLimits();
+
 		AussomType last = new AussomNull();
-		for (int i = sliceStart; i < sliceEnd; i++) {
-			try {
-				last = stmts.get(i).eval(this.scriptEnv, false);
-			} catch (aussomException e) {
-				// Convert any thrown evaluation exception into a
-				// returnable AussomException so the caller always
-				// gets an AussomType back.
-				last = new AussomException(
-					"Engine.evalParsedScript: uncaught exception during "
-					+ "evaluation: " + e.getMessage());
-				break;
+		try (ThreadScope scope = this.enterInterpreterThread()) {
+			for (int i = sliceStart; i < sliceEnd; i++) {
+				try {
+					last = stmts.get(i).eval(this.scriptEnv, false);
+				} catch (aussomException e) {
+					// Convert any thrown evaluation exception into a
+					// returnable AussomException so the caller always
+					// gets an AussomType back.
+					last = new AussomException(
+						"Engine.evalParsedScript: uncaught exception during "
+						+ "evaluation: " + e.getMessage());
+					break;
+				} catch (StackOverflowError soe) {
+					// Same contract as a runtime error here: the caller
+					// gets a value back, never an Error.
+					last = this.stackOverflowToException(soe, this.mainCallStack);
+					break;
+				} catch (OutOfMemoryError oome) {
+					this.markUnusable();
+					throw oome;
+				}
+				if (last.isEx()) break;
+				if (last.isReturn()) {
+					last = ((AussomReturn) last).getValue();
+					break;
+				}
+				if (last.isBreak()) break;
 			}
-			if (last.isEx()) break;
-			if (last.isReturn()) {
-				last = ((AussomReturn) last).getValue();
-				break;
-			}
-			if (last.isBreak()) break;
 		}
 		return last;
 	}

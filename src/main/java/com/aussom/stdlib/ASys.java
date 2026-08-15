@@ -20,8 +20,10 @@ import java.io.File;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 
+import com.aussom.ControlState;
 import com.aussom.Environment;
 import com.aussom.Engine;
+import com.aussom.types.AussomException;
 import com.aussom.types.AussomInt;
 import com.aussom.types.AussomNull;
 import com.aussom.types.AussomString;
@@ -231,8 +233,60 @@ public class ASys {
 		return new AussomInt(System.currentTimeMillis());
 	}
 	
+	/**
+	 * Aussom sys.sleep(). Sleeps in slices rather than in one call, so
+	 * a host can pause or cancel a sleeping program instead of waiting
+	 * it out. Three consequences worth knowing:
+	 *
+	 *   - cancel() reclaims a sleeping worker within one slice, and
+	 *     returns the standard cancellation exception.
+	 *   - pause() suspends the sleep: the remaining milliseconds do not
+	 *     tick down while the engine is paused, so the program still
+	 *     gets the full sleep it asked for and simply finishes later in
+	 *     wall-clock terms.
+	 *   - a negative argument is reported as an Aussom exception rather
+	 *     than surfacing as an uncaught Java exception.
+	 *
+	 * How long a slice is comes from the security manager
+	 * (aussom.limit.sleep.slice), because it is a control setting and
+	 * those belong in policy where a host can see them. Setting it to 0
+	 * turns slicing off and restores one uninterruptible wait.
+	 *
+	 * See design/security-evaluation-f4-f5.md section 4.3.
+	 */
 	public static AussomType sleep(Environment env, ArrayList<AussomType> args) throws InterruptedException {
-		Thread.sleep(((AussomInt)args.get(0)).getValue());
+		long remaining = ((AussomInt)args.get(0)).getValue();
+		if (remaining < 0L) {
+			return new AussomException("sys.sleep(): Milliseconds must not be negative.");
+		}
+		Engine eng = env.getEngine();
+		long sliceMs = eng.getLimits().getSleepSliceMs();
+
+		// The control state is read before waiting either way, so a
+		// program cancelled before it got here does not sleep at all.
+		if (eng.getControlState() != ControlState.RUNNING) {
+			if (eng.awaitResumeOrCancel()) {
+				return Engine.cancelledException(env);
+			}
+		}
+
+		if (sliceMs <= 0L) {
+			// Slicing off: one wait, nothing to interrupt it.
+			Thread.sleep(remaining);
+			return env.getClassInstance();
+		}
+
+		while (remaining > 0L) {
+			long slice = sliceMs;
+			if (remaining < slice) slice = remaining;
+			Thread.sleep(slice);
+			remaining -= slice;
+			if (remaining > 0L && eng.getControlState() != ControlState.RUNNING) {
+				if (eng.awaitResumeOrCancel()) {
+					return Engine.cancelledException(env);
+				}
+			}
+		}
 		return env.getClassInstance();
 	}
 }

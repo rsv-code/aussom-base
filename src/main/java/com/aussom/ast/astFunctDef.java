@@ -335,6 +335,9 @@ public class astFunctDef extends astNode implements astNodeInt {
 		
 		CallStack cst = new CallStack(FileName, this.getLineNum(), env.getClassInstance().getTypeName(), this.getName(), "Defined.");
 		cst.setParent(env.getCallStack());
+		// This is the frame that means "we are now one Aussom call
+		// deeper", which is what the call depth limit counts.
+		cst.enterCall();
 		cst.setCalledFunction(this);
 		
 		// Itterate statement list of function

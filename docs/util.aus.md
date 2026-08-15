@@ -113,17 +113,41 @@ encoding and decoding.
 
 ## class: regex
 
-[118:21] `static` (extern: com.aussom.stdlib.ARegex) **extends: object** 
+[146:21] `static` (extern: com.aussom.stdlib.ARegex) **extends: object** 
 
 The static regex class provides various regular
 expression functionality. Aussom uses Java
 regular expressions.
+Every method here reads the string being searched
+through the engine rather than handing it straight to
+the regular expression runtime. That is what lets the
+host stay in control of a match, and it has three
+effects worth knowing about.
+A host may set a step budget for regular expressions.
+The engine counts how many characters of the subject a
+match reads, and raises a REGEX_BUDGET_EXCEEDED
+exception once that count passes the budget. The budget
+is off unless the host turns it on, and it is generous
+when it is on: it always covers reading the whole
+subject once, plus whatever slack the host allows for
+backtracking. A pattern that trips it is one whose cost
+has run away, usually a nested quantifier or a
+backreference that makes the runtime try an enormous
+number of combinations. Such a pattern can otherwise run
+for minutes on a subject of thirty characters.
+A host may cancel the program while a match is running.
+The match is abandoned and an execution cancelled
+exception is raised, which a script cannot catch.
+A host may pause the program while a match is running.
+The match stops where it is and continues from the same
+place when the program is resumed. The result is the same
+as if it had never been paused.
 
 #### Methods
 
 - **match** (`string RegexStr, string Haystack`)
 
-	> Returns a list of string matches.
+	> Returns a list of string matches. Raises REGEX_BUDGET_EXCEEDED if the host set a step budget and this pattern reads past it. See the notes on this class.
 
 	- **@p** `RegexStr` is a string with the regular expression.
 	- **@p** `Haystack` is a string to search.
@@ -150,7 +174,7 @@ regular expressions.
 
 - **replace** (`string RegexStr, string ReplaceStr, string Haystack`)
 
-	> Replaces all occurrences with replacement string.
+	> Replaces all occurrences with replacement string. Raises REGEX_BUDGET_EXCEEDED if the host set a step budget and this pattern reads past it. See the notes on this class.
 
 	- **@p** `RegexStr` is a string with the regular expression.
 	- **@p** `ReplaceStr` is a string with the value to replace.
@@ -160,7 +184,7 @@ regular expressions.
 
 - **replaceFirst** (`string RegexStr, string ReplaceStr, string Haystack`)
 
-	> Replaces first occurrence with replacement string.
+	> Replaces first occurrence with replacement string. Raises REGEX_BUDGET_EXCEEDED if the host set a step budget and this pattern reads past it. See the notes on this class.
 
 	- **@p** `RegexStr` is a string with the regular expression.
 	- **@p** `ReplaceStr` is a string with the value to replace.

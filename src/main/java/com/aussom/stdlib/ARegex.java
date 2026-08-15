@@ -16,6 +16,7 @@
 
 package com.aussom.stdlib;
 
+import com.aussom.Engine;
 import com.aussom.Environment;
 import com.aussom.types.AussomException;
 import com.aussom.types.AussomList;
@@ -37,7 +38,7 @@ public class ARegex {
 
 	public ARegex() { }
 
-	public static ArrayList<matchResult> match(String RegexStr, String Haystack) throws Exception
+	public static ArrayList<matchResult> match(String RegexStr, CharSequence Haystack) throws Exception
 	{
 		ArrayList<matchResult> res = new ArrayList<matchResult>();
 
@@ -62,7 +63,7 @@ public class ARegex {
 		return res;
 	}
 
-	public static String replace(String RegexStr, String ReplaceStr, String Haystack) throws Exception
+	public static String replace(String RegexStr, String ReplaceStr, CharSequence Haystack) throws Exception
 	{
 		try
 		{
@@ -76,7 +77,7 @@ public class ARegex {
 		}
 	}
 
-	public static String replaceFirst(String RegexStr, String ReplaceStr, String Haystack) throws Exception
+	public static String replaceFirst(String RegexStr, String ReplaceStr, CharSequence Haystack) throws Exception
 	{
 		try
 		{
@@ -93,6 +94,13 @@ public class ARegex {
 	/*
 	 * Cali functions
 	 */
+	/**
+	 * Aussom regex.match(). The subject is wrapped in a RegexSubject so
+	 * the work the matcher does is metered against the engine's step
+	 * budget and so a pause or a cancel can reach inside a running
+	 * match. Without that wrapper there is no way to interrupt
+	 * java.util.regex at all. See RegexSubject.
+	 */
 	public static AussomType match(Environment env, ArrayList<AussomType> args)
 	{
 		AussomList al = new AussomList();
@@ -102,9 +110,18 @@ public class ARegex {
 
 		try
 		{
-			ArrayList<matchResult> mchs = ARegex.match(regexStr, haystack);
-			for(matchResult mr : mchs)
+			ArrayList<matchResult> mchs = ARegex.match(regexStr, RegexSubject.of(env, haystack));
+			for(matchResult mr : mchs) {
 				al.add(new AussomString(mr.group));
+			}
+		}
+		catch (RegexBudgetError rbe)
+		{
+			return RegexSubject.toException(env, rbe, regexStr);
+		}
+		catch (RegexCancelledError rce)
+		{
+			return Engine.cancelledException(env);
 		}
 		catch (Exception e)
 		{
@@ -122,7 +139,16 @@ public class ARegex {
 
 		try
 		{
-			return new AussomString(ARegex.replace(regexStr, replaceStr, haystack));
+			return new AussomString(
+				ARegex.replace(regexStr, replaceStr, RegexSubject.of(env, haystack)));
+		}
+		catch (RegexBudgetError rbe)
+		{
+			return RegexSubject.toException(env, rbe, regexStr);
+		}
+		catch (RegexCancelledError rce)
+		{
+			return Engine.cancelledException(env);
 		}
 		catch (Exception e)
 		{
@@ -138,7 +164,16 @@ public class ARegex {
 
 		try
 		{
-			return new AussomString(ARegex.replaceFirst(regexStr, replaceStr, haystack));
+			return new AussomString(
+				ARegex.replaceFirst(regexStr, replaceStr, RegexSubject.of(env, haystack)));
+		}
+		catch (RegexBudgetError rbe)
+		{
+			return RegexSubject.toException(env, rbe, regexStr);
+		}
+		catch (RegexCancelledError rce)
+		{
+			return Engine.cancelledException(env);
 		}
 		catch (Exception e)
 		{

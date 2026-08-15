@@ -16,13 +16,19 @@
 
 package com.aussom.types;
 
+import com.aussom.Engine;
 import com.aussom.Environment;
 import com.aussom.Util;
 import com.aussom.ast.astClass;
 import com.aussom.ast.aussomException;
+import com.aussom.stdlib.RegexBudgetError;
+import com.aussom.stdlib.RegexCancelledError;
+import com.aussom.stdlib.RegexSubject;
 import org.json.simple.JSONValue;
 
 import java.util.ArrayList;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 public class AussomString extends AussomObject implements AussomTypeInt, AussomTypeObjectInt {
 	private String value = "";
@@ -157,8 +163,25 @@ public class AussomString extends AussomObject implements AussomTypeInt, AussomT
 		return new AussomInt(this.value.length());
 	}
 	
+	/**
+	 * Regex full match. Routed through Pattern with a metered subject
+	 * rather than String.matches, so the match can be budgeted, paused
+	 * and cancelled. String.matches is itself a thin wrapper over this
+	 * same Pattern code, so the semantics are unchanged. See
+	 * com.aussom.stdlib.RegexSubject.
+	 */
 	public AussomType matches(Environment env, ArrayList<AussomType> args) {
-		return new AussomBool(this.value.matches(((AussomString)args.get(0)).getValue()));
+		String re = ((AussomString)args.get(0)).getValue();
+		try {
+			RegexSubject subject = RegexSubject.of(env, this.value);
+			return new AussomBool(Pattern.compile(re).matcher(subject).matches());
+		} catch (RegexBudgetError rbe) {
+			return RegexSubject.toException(env, rbe, re);
+		} catch (RegexCancelledError rce) {
+			return Engine.cancelledException(env);
+		} catch (PatternSyntaxException pse) {
+			return new AussomException("string.matches(): " + pse.getMessage());
+		}
 	}
 	
 	public AussomType replace(Environment env, ArrayList<AussomType> args) {
@@ -166,17 +189,53 @@ public class AussomString extends AussomObject implements AussomTypeInt, AussomT
 	}
 	
 	public AussomType replaceFirstRegex(Environment env, ArrayList<AussomType> args) {
-		return new AussomString(this.value.replaceFirst(((AussomString)args.get(0)).getValue(), ((AussomString)args.get(1)).getValue()));
+		String re = ((AussomString)args.get(0)).getValue();
+		String with = ((AussomString)args.get(1)).getValue();
+		try {
+			RegexSubject subject = RegexSubject.of(env, this.value);
+			return new AussomString(Pattern.compile(re).matcher(subject).replaceFirst(with));
+		} catch (RegexBudgetError rbe) {
+			return RegexSubject.toException(env, rbe, re);
+		} catch (RegexCancelledError rce) {
+			return Engine.cancelledException(env);
+		} catch (PatternSyntaxException pse) {
+			return new AussomException("string.replaceFirstRegex(): " + pse.getMessage());
+		}
 	}
 	
 	public AussomType replaceRegex(Environment env, ArrayList<AussomType> args) {
-		return new AussomString(this.value.replaceAll(((AussomString)args.get(0)).getValue(), ((AussomString)args.get(1)).getValue()));
+		String re = ((AussomString)args.get(0)).getValue();
+		String with = ((AussomString)args.get(1)).getValue();
+		try {
+			RegexSubject subject = RegexSubject.of(env, this.value);
+			return new AussomString(Pattern.compile(re).matcher(subject).replaceAll(with));
+		} catch (RegexBudgetError rbe) {
+			return RegexSubject.toException(env, rbe, re);
+		} catch (RegexCancelledError rce) {
+			return Engine.cancelledException(env);
+		} catch (PatternSyntaxException pse) {
+			return new AussomException("string.replaceRegex(): " + pse.getMessage());
+		}
 	}
 	
 	public AussomType split(Environment env, ArrayList<AussomType> args) {
-		AussomList ret = new AussomList();
+		String re = ((AussomString)args.get(0)).getValue();
 		boolean allowBlanks = ((AussomBool)args.get(1)).getValue();
-		String parts[] = this.value.split(((AussomString)args.get(0)).getValue());
+		String parts[];
+		try {
+			// Pattern.split is where String.split's behaviour is actually
+			// specified, including the trailing-empty-string rule, so the
+			// results match while the match itself becomes meterable.
+			RegexSubject subject = RegexSubject.of(env, this.value);
+			parts = Pattern.compile(re).split(subject);
+		} catch (RegexBudgetError rbe) {
+			return RegexSubject.toException(env, rbe, re);
+		} catch (RegexCancelledError rce) {
+			return Engine.cancelledException(env);
+		} catch (PatternSyntaxException pse) {
+			return new AussomException("string.split(): " + pse.getMessage());
+		}
+		AussomList ret = new AussomList();
 		for (String part : parts) {
 			if (allowBlanks || !part.trim().equals("")) {
 				ret.add(new AussomString(part));

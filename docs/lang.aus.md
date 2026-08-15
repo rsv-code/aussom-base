@@ -2,7 +2,7 @@
 
 ## class: exception
 
-[1397:14] (extern: com.aussom.types.AussomException) **extends: object** 
+[1423:14] (extern: com.aussom.types.AussomException) **extends: object** 
 
 The exception class is the object that is created or
 thrown when an exception occurs. In your catch (e) {}
@@ -70,7 +70,7 @@ block this is the object that is provided there.
 
 ## class: Buffer
 
-[1922:14] (extern: com.aussom.stdlib.ABuffer) **extends: object** 
+[1948:14] (extern: com.aussom.stdlib.ABuffer) **extends: object** 
 
 The Buffer object provides an object for handling binary
 data. Aussom doesn't natively support something like a
@@ -81,7 +81,7 @@ functionality.
 
 - **Buffer** (`int Size = 1024`)
 
-	> Creates a new Buffer object with the optional provided number of bytes.
+	> Creates a new Buffer object with the optional provided number of bytes. The size is checked before anything is allocated. A negative size, or one too large for the runtime to address, raises an exception rather than quietly producing a Buffer of some other size.
 
 	- **@p** `Size` is an int with the number of bytes to allocate in the Buffer.
 	- **@r** `A` new Buffer object.
@@ -232,7 +232,7 @@ functionality.
 
 - **getStringAt** (`int Length, int Index = -1, string Charset = "utf_8"`)
 
-	> Gets a string with the supplied length at the provided optional index with the optional provided character set. If not specified the index will be the read cursor position.
+	> Gets a string with the supplied length at the provided optional index with the optional provided character set. If not specified the index will be the read cursor position. The index and length are checked against the size of the Buffer before anything is allocated, so reading past the end raises an exception that says so rather than allocating first and failing later.
 
 	- **@p** `Length` is an int with the number of bytes to get.
 	- **@p** `Index` is an int with the start index.
@@ -501,7 +501,7 @@ functionality.
 
 ## class: charset
 
-[1897:6] `static` **extends: object** 
+[1923:6] `static` **extends: object** 
 
 Defines available character set values.
 
@@ -517,7 +517,7 @@ Defines available character set values.
 
 ## class: c
 
-[1466:21] `static` (extern: com.aussom.stdlib.console) **extends: object** 
+[1492:21] `static` (extern: com.aussom.stdlib.console) **extends: object** 
 
 The static 'c' class also known as console is
 the standard object for writing to standard output.
@@ -819,7 +819,7 @@ Implements string datatype methods.
 
 - **matches** (`string Regex`)
 
-	> Checks to see if the provided Java regex expression matches the current string. It returns true if it matches and false if not.
+	> Checks to see if the provided Java regex expression matches the current string. It returns true if it matches and false if not. The engine reads this string through its own metering while the match runs, so the host can budget, pause or cancel it. A REGEX_BUDGET_EXCEEDED exception is raised if the host set a step budget and the pattern reads past it, which happens when a pattern backtracks far more than the length of the string justifies.
 
 	- **@p** `Regex` is a string with a Java regular expression to match.
 	- **@r** `A` boolean with true if it matches and false if not.
@@ -836,7 +836,7 @@ Implements string datatype methods.
 
 - **replaceFirstRegex** (`string Regex, string Replace`)
 
-	> Replace the first occurance of the search regular expression with the provided replacement string.
+	> Replace the first occurance of the search regular expression with the provided replacement string. The engine reads this string through its own metering while the match runs, so the host can budget, pause or cancel it. A REGEX_BUDGET_EXCEEDED exception is raised if the host set a step budget and the pattern reads past it, which happens when a pattern backtracks far more than the length of the string justifies.
 
 	- **@p** `Regex` is a string with the regular expression to look for.
 	- **@p** `Replace` is the string to replace with.
@@ -845,7 +845,7 @@ Implements string datatype methods.
 
 - **replaceRegex** (`string Regex, string Replace`)
 
-	> Replaces all instance the provied regular expression matches with the provided replacement string.
+	> Replaces all instance the provied regular expression matches with the provided replacement string. The engine reads this string through its own metering while the match runs, so the host can budget, pause or cancel it. A REGEX_BUDGET_EXCEEDED exception is raised if the host set a step budget and the pattern reads past it, which happens when a pattern backtracks far more than the length of the string justifies.
 
 	- **@p** `Regex` is a string with the regex pattern.
 	- **@p** `Replace` is a string with the replacement string.
@@ -854,7 +854,7 @@ Implements string datatype methods.
 
 - **split** (`string Delim, bool AllowBlanks = false`)
 
-	> Splits the current string by the provided delimiter. If allow blanks is set to true, it will also return blank parts between delimiters, otherwise trimmed sections that are empty won't be included in the results.
+	> Splits the current string by the provided delimiter. If allow blanks is set to true, it will also return blank parts between delimiters, otherwise trimmed sections that are empty won't be included in the results. The delimiter is a regular expression, so the same metering applies as for matches(): a host that set a step budget can have a runaway pattern raise REGEX_BUDGET_EXCEEDED rather than run for minutes.
 
 	- **@p** `Delim` is a string with the delimier to split on.
 	- **@p** `AllowBlanks` is an optional bool with true to return blank sections and false for not. The default is false.
@@ -1102,7 +1102,7 @@ functions can be used on any int value.
 
 ## class: list
 
-[842:14] (extern: com.aussom.types.AussomList) **extends: object** 
+[868:14] (extern: com.aussom.types.AussomList) **extends: object** 
 
 Implements list datatype methods.
 
@@ -1332,7 +1332,7 @@ Implements list datatype methods.
 
 ## class: cnull
 
-[1369:14] (extern: com.aussom.types.AussomNull) **extends: object** 
+[1395:14] (extern: com.aussom.types.AussomNull) **extends: object** 
 
 Implements null datatype methods.
 
@@ -1645,7 +1645,7 @@ Int.maxVal() to get the maximum integer value.
 
 ## class: Date
 
-[1552:14] (extern: com.aussom.stdlib.ADate) **extends: object** 
+[1578:14] (extern: com.aussom.stdlib.ADate) **extends: object** 
 
 The Date class holds date and time information. Internally
 it stores a java.time.Instant. Hour, minute, and second
@@ -1981,7 +1981,7 @@ accessors are evaluated at UTC.
 
 ## class: securitymanager
 
-[2550:14] (extern: com.aussom.stdlib.ASecurityManager) **extends: object** 
+[2588:14] (extern: com.aussom.stdlib.ASecurityManager) **extends: object** 
 
 The securitymanager class provides an object that you can
 instantiate and provide to the Aussom engine to use.
@@ -2031,7 +2031,7 @@ instantiate and provide to the Aussom engine to use.
 
 ## class: secman
 
-[2496:21] `static` (extern: com.aussom.stdlib.ASecMan) **extends: object** 
+[2534:21] `static` (extern: com.aussom.stdlib.ASecMan) **extends: object** 
 
 The static secman class implements function for working with
 the security manager of the currently executing engine.
@@ -2101,7 +2101,7 @@ to parse a string value.
 
 ## class: dateunit
 
-[1535:6] `static` **extends: object** 
+[1561:6] `static` **extends: object** 
 
 Defines the unit values accepted by Date.between(). Each member
 evaluates to its matching unit string, so between() can be called
@@ -2122,7 +2122,7 @@ string "days". This is less error prone than typing the string.
 
 ## class: callback
 
-[1312:14] (extern: com.aussom.types.AussomCallback) **extends: object** 
+[1338:14] (extern: com.aussom.types.AussomCallback) **extends: object** 
 
 Implements callback datatype methods. The callback is
 a function reference that can be passed around. This is
@@ -2185,7 +2185,7 @@ this rule.
 
 ## class: json
 
-[2459:21] `static` (extern: com.aussom.stdlib.AJson) **extends: object** 
+[2497:21] `static` (extern: com.aussom.stdlib.AJson) **extends: object** 
 
 The static json class implements some functions for
 working with JSON data.
@@ -2220,7 +2220,7 @@ working with JSON data.
 
 ## class: lang
 
-[2429:21] `static` (extern: com.aussom.stdlib.ALang) **extends: object** 
+[2467:21] `static` (extern: com.aussom.stdlib.ALang) **extends: object** 
 
 The staic lang object provides some standard
 functionality for the Aussom language.
@@ -2247,7 +2247,7 @@ functionality for the Aussom language.
 
 ## class: map
 
-[1085:14] (extern: com.aussom.types.AussomMap) **extends: object** 
+[1111:14] (extern: com.aussom.types.AussomMap) **extends: object** 
 
 Implements map datatype methods.
 
@@ -2408,7 +2408,7 @@ Implements map datatype methods.
 
 ## class: byteOrder
 
-[1910:6] `static` **extends: object** 
+[1936:6] `static` **extends: object** 
 
 Defines the byte order types.
 
@@ -2420,7 +2420,7 @@ Defines the byte order types.
 
 ## class: object
 
-[1244:14] (extern: com.aussom.types.AussomObject) 
+[1270:14] (extern: com.aussom.types.AussomObject) 
 
 Implements object datatype methods.
 

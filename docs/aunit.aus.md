@@ -242,6 +242,12 @@ should hold.
 
 #### Methods
 
+- **testRunner** ()
+
+
+- **newTestRunner** ()
+
+
 - **loadTestFile** (`string TestsScriptFileName`)
 
 	> Loads a test file with the provided file name and path. This function also identifies and saves the test classes that can be ran.

@@ -149,6 +149,10 @@
 	            <include>**/ParseDiagnostics.java</include>
 	            <include>**/EngineIsolation.java</include>
 	            <include>**/ExternAllowlist.java</include>
+	            <include>**/CallDepth.java</include>
+	            <include>**/RegexBudget.java</include>
+	            <include>**/ResourceLimits.java</include>
+	            <include>**/EngineControl.java</include>
 	            <include>**/*Test.java</include>
 	            <include>**/*Tests.java</include>
 	          </includes>

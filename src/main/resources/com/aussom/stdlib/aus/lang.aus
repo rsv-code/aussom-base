@@ -644,6 +644,13 @@ extern class string : com.aussom.types.AussomString {
      * Checks to see if the provided Java regex expression
      * matches the current string. It returns true if it
      * matches and false if not.
+     *
+     * The engine reads this string through its own metering
+     * while the match runs, so the host can budget, pause or
+     * cancel it. A REGEX_BUDGET_EXCEEDED exception is raised
+     * if the host set a step budget and the pattern reads
+     * past it, which happens when a pattern backtracks far
+     * more than the length of the string justifies.
      * @p Regex is a string with a Java regular expression
      * to match.
      * @r A boolean with true if it matches and false if not.
@@ -662,6 +669,13 @@ extern class string : com.aussom.types.AussomString {
 	/**
      * Replace the first occurance of the search regular expression
      * with the provided replacement string.
+     *
+     * The engine reads this string through its own metering
+     * while the match runs, so the host can budget, pause or
+     * cancel it. A REGEX_BUDGET_EXCEEDED exception is raised
+     * if the host set a step budget and the pattern reads
+     * past it, which happens when a pattern backtracks far
+     * more than the length of the string justifies.
      * @p Regex is a string with the regular expression to look for.
      * @p Replace is the string to replace with.
      * @r A new string with the replaced value.
@@ -671,6 +685,13 @@ extern class string : com.aussom.types.AussomString {
 	/**
      * Replaces all instance the provied regular expression
      * matches with the provided replacement string.
+     *
+     * The engine reads this string through its own metering
+     * while the match runs, so the host can budget, pause or
+     * cancel it. A REGEX_BUDGET_EXCEEDED exception is raised
+     * if the host set a step budget and the pattern reads
+     * past it, which happens when a pattern backtracks far
+     * more than the length of the string justifies.
      * @p Regex is a string with the regex pattern.
      * @p Replace is a string with the replacement string.
      * @r A new string with the replaced parts.
@@ -682,6 +703,11 @@ extern class string : com.aussom.types.AussomString {
      * allow blanks is set to true, it will also return blank
      * parts between delimiters, otherwise trimmed sections that
      * are empty won't be included in the results.
+     *
+     * The delimiter is a regular expression, so the same
+     * metering applies as for matches(): a host that set a
+     * step budget can have a runaway pattern raise
+     * REGEX_BUDGET_EXCEEDED rather than run for minutes.
      * @p Delim is a string with the delimier to split on.
      * @p AllowBlanks is an optional bool with true to return blank
      * sections and false for not. The default is false.
@@ -1923,6 +1949,12 @@ extern class Buffer : com.aussom.stdlib.ABuffer {
     /**
      * Creates a new Buffer object with the optional
      * provided number of bytes.
+     *
+     * The size is checked before anything is allocated. A
+     * negative size, or one too large for the runtime to
+     * address, raises an exception rather than quietly
+     * producing a Buffer of some other size.
+     *
      * @p Size is an int with the number of bytes to
      * allocate in the Buffer.
      * @r A new Buffer object.
@@ -2114,6 +2146,12 @@ extern class Buffer : com.aussom.stdlib.ABuffer {
 	 * Gets a string with the supplied length at the provided
 	 * optional index with the optional provided character set. If
 	 * not specified the index will be the read cursor position.
+	 *
+	 * The index and length are checked against the size of the
+	 * Buffer before anything is allocated, so reading past the
+	 * end raises an exception that says so rather than
+	 * allocating first and failing later.
+	 *
 	 * @p Length is an int with the number of bytes to get.
 	 * @p Index is an int with the start index.
 	 * @p Charset is a string with the character set to use.
