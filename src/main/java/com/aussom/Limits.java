@@ -118,16 +118,16 @@ public class Limits {
 
 	/**
 	 * Reads every limit from the supplied security manager. A key that
-	 * is missing, null, or not a number falls back to the default for
-	 * that limit, which is 0 (no limit) for everything except the call
-	 * depth. A negative value is treated the same way, since a
+	 * is missing, null, or not stored as an integer falls back to the
+	 * default for that limit, which is 0 (no limit) for everything except
+	 * the call depth. A negative value is treated the same way, since a
 	 * negative limit has no meaning.
 	 * @param SecMan is the security manager to read, may be null.
 	 */
 	public Limits(SecurityManagerInt SecMan) {
-		this.callDepth    = readLong(SecMan, CALL_DEPTH_PROP, DEFAULT_CALL_DEPTH);
-		this.regexSteps   = readLong(SecMan, REGEX_STEPS_PROP, 0L);
-		this.sleepSliceMs = readLong(SecMan, SLEEP_SLICE_PROP, DEFAULT_SLEEP_SLICE_MS);
+		this.callDepth    = read(SecMan, CALL_DEPTH_PROP, DEFAULT_CALL_DEPTH);
+		this.regexSteps   = read(SecMan, REGEX_STEPS_PROP, 0L);
+		this.sleepSliceMs = read(SecMan, SLEEP_SLICE_PROP, DEFAULT_SLEEP_SLICE_MS);
 	}
 
 	/**
@@ -151,43 +151,30 @@ public class Limits {
 		this.sleepSliceMs = pick(PropName, SLEEP_SLICE_PROP, v, Other.sleepSliceMs);
 	}
 
+	/**
+	 * Reads one setting from policy. The typed read and its default
+	 * belong to the security manager (see
+	 * SecurityManagerInt.getPropertyInt), which answers with the default
+	 * for anything that is not stored as an integer; it does not parse
+	 * strings. What is left here is the one rule specific to a limit,
+	 * that a negative value has no meaning and falls back to the default
+	 * rather than being honored.
+	 * @param SecMan is the security manager to read.
+	 * @param PropName is the property name.
+	 * @param Dflt is the value to use when the property is unusable.
+	 * @return A long with the setting value.
+	 */
+	private static long read(SecurityManagerInt SecMan, String PropName, long Dflt) {
+		long v = SecMan.getPropertyInt(PropName, (int) Dflt);
+		if (v < 0L) return Dflt;
+		return v;
+	}
+
 	private static long pick(String PropName, String Match, long Value, long Current) {
 		if (PropName.equals(Match)) {
 			return Value;
 		}
 		return Current;
-	}
-
-	/**
-	 * Null-safe numeric property read. A missing key, a null value, a
-	 * value of the wrong type, or a negative number all yield the
-	 * default rather than an exception. A policy question must never
-	 * become a NullPointerException; see F7 in
-	 * design/security-evaluation.md.
-	 * @param SecMan is the security manager to read, may be null.
-	 * @param PropName is the property name.
-	 * @param Dflt is the value to use when the property is unusable.
-	 * @return A long with the limit value.
-	 */
-	private static long readLong(SecurityManagerInt SecMan, String PropName, long Dflt) {
-		if (SecMan == null) return Dflt;
-		Object o = SecMan.getProperty(PropName);
-		if (o == null) return Dflt;
-		if (o instanceof Number) {
-			long v = ((Number) o).longValue();
-			if (v < 0L) return Dflt;
-			return v;
-		}
-		if (o instanceof String) {
-			try {
-				long v = Long.parseLong(((String) o).trim());
-				if (v < 0L) return Dflt;
-				return v;
-			} catch (NumberFormatException nfe) {
-				return Dflt;
-			}
-		}
-		return Dflt;
 	}
 
 	/** @return Maximum Aussom call depth, 0 for no limit. */

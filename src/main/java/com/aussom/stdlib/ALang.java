@@ -34,7 +34,7 @@ public class ALang {
 	}
 
 	public static AussomType getClassAussomdoc(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("aussomdoc.class.getJson")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("aussomdoc.class.getJson", false)) {
 			String className = ((AussomString)args.get(0)).getValue();
 			Engine eng = env.getEngine();
 			astClass cls = eng.getClassByName(className);

@@ -34,7 +34,7 @@ import com.aussom.types.AussomString;
 
 public class AReflect {
 	public static AussomType evalStr(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("reflect.eval.string")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("reflect.eval.string", false)) {
 			String code = ((AussomString)args.get(0)).getValue();
 			String name = ((AussomString)args.get(1)).getValue();
 			try {
@@ -70,7 +70,7 @@ public class AReflect {
 	}
 	
 	public static AussomType evalFile(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("reflect.eval.file")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("reflect.eval.file", false)) {
 			String FileName = ((AussomString)args.get(0)).getValue();
 			try {
 				env.getEngine().parseFile(FileName);
@@ -86,7 +86,7 @@ public class AReflect {
 	
 	
 	public static AussomType includeModule(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("reflect.include.module")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("reflect.include.module", false)) {
 			String incFile = ((AussomString)args.get(0)).getValue().replace(".", "/") + ".aus";
 			try {
 				env.getEngine().parseFile(incFile);
@@ -122,7 +122,7 @@ public class AReflect {
 	}
 
 	public static AussomType clearParseDiagnostics(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("reflect.clear.diagnostics")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("reflect.clear.diagnostics", false)) {
 			env.getEngine().clearParseDiagnostics();
 			return env.getClassInstance();
 		} else {

@@ -106,112 +106,112 @@ public class ASys {
 	}
 	
 	public static AussomType getOsArch(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("os.info.view")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("os.info.view", false)) {
 			return new AussomString(System.getProperty("os.arch"));
 		}
 		return new AussomNull();
 	}
 	
 	public static AussomType getOsName(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("os.info.view")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("os.info.view", false)) {
 			return new AussomString(System.getProperty("os.name"));
 		}
 		return new AussomNull();
 	}
 	
 	public static AussomType getOsVersion(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("os.info.view")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("os.info.view", false)) {
 			return new AussomString(System.getProperty("os.version"));
 		}
 		return new AussomNull();
 	}
 	
 	public static AussomType getFileSeparator(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("os.info.view")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("os.info.view", false)) {
 			return new AussomString(System.getProperty("file.separator"));
 		}
 		return new AussomNull();
 	}
 	
 	public static AussomType getLineSeparator(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("os.info.view")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("os.info.view", false)) {
 			return new AussomString(System.getProperty("line.separator"));
 		}
 		return new AussomNull();
 	}
 	
 	public static AussomType getJavaVersion(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("java.info.view")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("java.info.view", false)) {
 			return new AussomString(System.getProperty("java.version"));
 		}
 		return new AussomNull();
 	}
 	
 	public static AussomType getJavaVendor(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("java.info.view")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("java.info.view", false)) {
 			return new AussomString(System.getProperty("java.vendor"));
 		}
 		return new AussomNull();
 	}
 	
 	public static AussomType getJavaVendorUrl(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("java.info.view")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("java.info.view", false)) {
 			return new AussomString(System.getProperty("java.vendor.url"));
 		}
 		return new AussomNull();
 	}
 	
 	public static AussomType getJavaClassPath(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("java.classpath.view")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("java.classpath.view", false)) {
 			return new AussomString(System.getProperty("java.class.path"));
 		}
 		return new AussomNull();
 	}
 	
 	public static AussomType getJavaHome(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("java.home.view")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("java.home.view", false)) {
 			return new AussomString(System.getenv("JAVA_HOME"));
 		}
 		return new AussomNull();
 	}
 	
 	public static AussomType getAussomVersion(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("aussom.info.view")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("aussom.info.view", false)) {
 			return new AussomString(Engine.getAussomVersion());
 		}
 		return new AussomNull();
 	}
 	
 	public static AussomType getAssembly(Environment env, ArrayList<AussomType> args) throws Exception {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("aussom.info.view")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("aussom.info.view", false)) {
 			return new AussomString(_getAssembly());
 		}
 		return new AussomNull();
 	}
 	
 	public static AussomType getAssemblyPath(Environment env, ArrayList<AussomType> args) throws Exception {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("aussom.path.view")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("aussom.path.view", false)) {
 			return new AussomString(_getAssemblyPath());
 		}
 		return new AussomNull();
 	}
 	
 	public static AussomType getCurrentPath(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("current.path.view")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("current.path.view", false)) {
 			return new AussomString(System.getProperty("user.dir"));
 		}
 		return new AussomNull();
 	}
 	
 	public static AussomType getHomePath(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("home.path.view")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("home.path.view", false)) {
 			return new AussomString(System.getProperty("user.home"));
 		}
 		return new AussomNull();
 	}
 	
 	public static AussomType getUserName(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)env.getEngine().getSecurityManager().getProperty("user.name.view")) {
+		if (env.getEngine().getSecurityManager().getPropertyBoolean("user.name.view", false)) {
 			return new AussomString(System.getProperty("user.name"));
 		}
 		return new AussomNull();

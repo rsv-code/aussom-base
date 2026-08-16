@@ -93,6 +93,34 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	}
 
 	/**
+	 * Narrows a 64-bit index or size to an int, or refuses it.
+	 *
+	 * Aussom integers are 64-bit and Java array indexes are not, so
+	 * casting is not a formality: 4294967296 becomes 0 and 4294967295
+	 * becomes -1. The second one matters most, because a negative index
+	 * means "use the cursor", so a large positive index that wraps
+	 * silently changes the argument's meaning rather than just its
+	 * value, and moves the cursor as a side effect.
+	 *
+	 * Math.toIntExact refuses only values that do not fit, so -1 still
+	 * narrows to -1 and the cursor convention at each call site is
+	 * untouched.
+	 *
+	 * @param Method is the method name for the message.
+	 * @param Value is the 64-bit value the script passed.
+	 * @return An int with the same value.
+	 * @throws aussomException when the value does not fit an int.
+	 */
+	private int indexToInt(String Method, long Value) throws aussomException {
+		try {
+			return Math.toIntExact(Value);
+		} catch (ArithmeticException ae) {
+			throw new aussomException("Buffer." + Method + "(): Index or size of "
+				+ Value + " is out of range.");
+		}
+	}
+
+	/**
 	 * Validates a requested buffer size as the 64-bit value the script
 	 * actually passed: not negative, and addressable as a Java array.
 	 *
@@ -137,9 +165,9 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 		}
 	}
 	
-	public AussomType writeSeek(Environment env, ArrayList<AussomType> args) {
+	public AussomType writeSeek(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
-			int index = (int)((AussomInt)args.get(0)).getValue();
+			int index = this.indexToInt("writeSeek", ((AussomInt)args.get(0)).getValue());
 			if((index >= 0)&&(index < buff.length)) {
 				this.writeCursor = index;
 			} else {
@@ -149,9 +177,9 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 		}
 	}
 	
-	public AussomType readSeek(Environment env, ArrayList<AussomType> args) {
+	public AussomType readSeek(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
-			int index = (int)((AussomInt)args.get(0)).getValue();
+			int index = this.indexToInt("readSeek", ((AussomInt)args.get(0)).getValue());
 			if((index >= 0)&&(index < buff.length)) {
 				this.readCursor = index;
 			} else {
@@ -304,7 +332,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	}
 	
 	public AussomType getByte(Environment env, ArrayList<AussomType> args) throws aussomException {
-		int index = (int)((AussomInt)args.get(0)).getValue();
+		int index = this.indexToInt("getByte", ((AussomInt)args.get(0)).getValue());
 		boolean increment = false;
 		if(index < 0) { index = this.readCursor; increment = true; }
 		int val = this._getByte(index);
@@ -313,7 +341,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	}
 	
 	public AussomType getUByte(Environment env, ArrayList<AussomType> args) throws aussomException {
-		int index = (int)((AussomInt)args.get(0)).getValue();
+		int index = this.indexToInt("getUByte", ((AussomInt)args.get(0)).getValue());
 		boolean increment = false;
 		if(index < 0) { index = this.readCursor; increment = true; }
 		int val = this._getUByte(index);
@@ -322,7 +350,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	}
 	
 	public AussomType getShort(Environment env, ArrayList<AussomType> args) throws aussomException {
-		int index = (int)((AussomInt)args.get(0)).getValue();
+		int index = this.indexToInt("getShort", ((AussomInt)args.get(0)).getValue());
 		byteOrder bo = this.getByteOrder(((AussomString)args.get(1)).getValueString());
 		boolean increment = false;
 		if(index < 0) { index = this.readCursor; increment = true; }
@@ -332,7 +360,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	}
 	
 	public AussomType getUShort(Environment env, ArrayList<AussomType> args) throws aussomException {
-		int index = (int)((AussomInt)args.get(0)).getValue();
+		int index = this.indexToInt("getUShort", ((AussomInt)args.get(0)).getValue());
 		byteOrder bo = this.getByteOrder(((AussomString)args.get(1)).getValueString());
 		boolean increment = false;
 		if(index < 0) { index = this.readCursor; increment = true; }
@@ -342,7 +370,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	}
 	
 	public AussomType getInt(Environment env, ArrayList<AussomType> args) throws aussomException {
-		int index = (int)((AussomInt)args.get(0)).getValue();
+		int index = this.indexToInt("getInt", ((AussomInt)args.get(0)).getValue());
 		byteOrder bo = this.getByteOrder(((AussomString)args.get(1)).getValueString());
 		boolean increment = false;
 		if(index < 0) { index = this.readCursor; increment = true; }
@@ -352,7 +380,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	}
 	
 	public AussomType getUInt(Environment env, ArrayList<AussomType> args) throws aussomException {
-		int index = (int)((AussomInt)args.get(0)).getValue();
+		int index = this.indexToInt("getUInt", ((AussomInt)args.get(0)).getValue());
 		byteOrder bo = this.getByteOrder(((AussomString)args.get(1)).getValueString());
 		boolean increment = false;
 		if(index < 0) { index = this.readCursor; increment = true; }
@@ -362,7 +390,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	}
 	
 	public AussomType getLong(Environment env, ArrayList<AussomType> args) throws aussomException {
-		int index = (int)((AussomInt)args.get(0)).getValue();
+		int index = this.indexToInt("getLong", ((AussomInt)args.get(0)).getValue());
 		byteOrder bo = this.getByteOrder(((AussomString)args.get(1)).getValueString());
 		boolean increment = false;
 		if(index < 0) { index = this.readCursor; increment = true; }
@@ -372,7 +400,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	}
 	
 	public AussomType getFloat(Environment env, ArrayList<AussomType> args) throws aussomException {
-		int index = (int)((AussomInt)args.get(0)).getValue();
+		int index = this.indexToInt("getFloat", ((AussomInt)args.get(0)).getValue());
 		byteOrder bo = this.getByteOrder(((AussomString)args.get(1)).getValueString());
 		boolean increment = false;
 		if(index < 0) { index = this.readCursor; increment = true; }
@@ -382,7 +410,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	}
 	
 	public AussomType getDouble(Environment env, ArrayList<AussomType> args) throws aussomException {
-		int index = (int)((AussomInt)args.get(0)).getValue();
+		int index = this.indexToInt("getDouble", ((AussomInt)args.get(0)).getValue());
 		byteOrder bo = this.getByteOrder(((AussomString)args.get(1)).getValueString());
 		boolean increment = false;
 		if(index < 0) { index = this.readCursor; increment = true; }
@@ -401,7 +429,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	
 	public AussomType setStringAt(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
-			int index = (int) ((AussomInt)args.get(0)).getValue();
+			int index = this.indexToInt("setStringAt", ((AussomInt)args.get(0)).getValue());
 			String str = ((AussomString)args.get(1)).getValueString();
 			String cset = ((AussomString)args.get(2)).getValueString();
 			return new AussomInt(this._setStringAt(index, str, cset));
@@ -410,7 +438,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	
 	public AussomType setByte(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
-			int index = (int)((AussomInt)args.get(0)).getValue();
+			int index = this.indexToInt("setByte", ((AussomInt)args.get(0)).getValue());
 			int ival = (int)((AussomInt)args.get(1)).getValue();
 			this.setByte(index, ival);
 			return env.getClassInstance();
@@ -419,7 +447,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	
 	public AussomType setUByte(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
-			int index = (int)((AussomInt)args.get(0)).getValue();
+			int index = this.indexToInt("setUByte", ((AussomInt)args.get(0)).getValue());
 			int ival = (int)((AussomInt)args.get(1)).getValue();
 			this.setUByte(index, ival);
 			return env.getClassInstance();
@@ -428,7 +456,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	
 	public AussomType setShort(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
-			int index = (int)((AussomInt)args.get(0)).getValue();
+			int index = this.indexToInt("setShort", ((AussomInt)args.get(0)).getValue());
 			short ival = (short)((AussomInt)args.get(1)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(2)).getValueString());
 			this.setShort(index, ival, bo);
@@ -438,7 +466,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	
 	public AussomType setUShort(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
-			int index = (int)((AussomInt)args.get(0)).getValue();
+			int index = this.indexToInt("setUShort", ((AussomInt)args.get(0)).getValue());
 			int ival = (short)((AussomInt)args.get(1)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(2)).getValueString());
 			this.setUShort(index, ival, bo);
@@ -448,7 +476,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	
 	public AussomType setInt(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
-			int index = (int)((AussomInt)args.get(0)).getValue();
+			int index = this.indexToInt("setInt", ((AussomInt)args.get(0)).getValue());
 			int ival = (int)((AussomInt)args.get(1)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(2)).getValueString());
 			this.setInt(index, ival, bo);
@@ -458,7 +486,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	
 	public AussomType setUInt(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
-			int index = (int)((AussomInt)args.get(0)).getValue();
+			int index = this.indexToInt("setUInt", ((AussomInt)args.get(0)).getValue());
 			long ival = ((AussomInt)args.get(1)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(2)).getValueString());
 			this.setUInt(index, ival, bo);
@@ -468,7 +496,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	
 	public AussomType setLong(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
-			int index = (int)((AussomInt)args.get(0)).getValue();
+			int index = this.indexToInt("setLong", ((AussomInt)args.get(0)).getValue());
 			long ival = ((AussomInt)args.get(1)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(2)).getValueString());
 			this.setLong(index, ival, bo);
@@ -478,7 +506,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	
 	public AussomType setFloat(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
-			int index = (int)((AussomInt)args.get(0)).getValue();
+			int index = this.indexToInt("setFloat", ((AussomInt)args.get(0)).getValue());
 			double tval = ((AussomDouble)args.get(1)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(2)).getValueString());
 			this.setFloat(index, tval, bo);
@@ -488,7 +516,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	
 	public AussomType setDouble(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
-			int index = (int)((AussomInt)args.get(0)).getValue();
+			int index = this.indexToInt("setDouble", ((AussomInt)args.get(0)).getValue());
 			double tval = ((AussomDouble)args.get(1)).getValue();
 			byteOrder bo = this.getByteOrder(((AussomString)args.get(2)).getValueString());
 			this.setDouble(index, tval, bo);
@@ -496,8 +524,8 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 		}
 	}
 	
-	public AussomType byteToBinary(Environment env, ArrayList<AussomType> args) {
-		int index = (int)((AussomInt)args.get(0)).getValue();
+	public AussomType byteToBinary(Environment env, ArrayList<AussomType> args) throws aussomException {
+		int index = this.indexToInt("byteToBinary", ((AussomInt)args.get(0)).getValue());
 		if((index >= 0)&&(index < buff.length)) {
 			String bin = Integer.toBinaryString((this.buff[index] + 256) % 256);
 			while(bin.length() < 8) bin = "0" + bin;
@@ -507,8 +535,8 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 		}
 	}
 	
-	public AussomType shortToBinary(Environment env, ArrayList<AussomType> args) {
-		int index = (int)((AussomInt)args.get(0)).getValue();
+	public AussomType shortToBinary(Environment env, ArrayList<AussomType> args) throws aussomException {
+		int index = this.indexToInt("shortToBinary", ((AussomInt)args.get(0)).getValue());
 		byteOrder bo = this.getByteOrder(((AussomString)args.get(1)).getValueString());
 		
 		if((index >= 0)&&(index < buff.length + 1)) {
@@ -527,8 +555,8 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 		}
 	}
 	
-	public AussomType intToBinary(Environment env, ArrayList<AussomType> args) {
-		int index = (int)((AussomInt)args.get(0)).getValue();
+	public AussomType intToBinary(Environment env, ArrayList<AussomType> args) throws aussomException {
+		int index = this.indexToInt("intToBinary", ((AussomInt)args.get(0)).getValue());
 		byteOrder bo = this.getByteOrder(((AussomString)args.get(1)).getValueString());
 		
 		if((index >= 0)&&(index < buff.length + 3)) {
@@ -551,8 +579,8 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 		}
 	}
 	
-	public AussomType longToBinary(Environment env, ArrayList<AussomType> args) {
-		int index = (int)((AussomInt)args.get(0)).getValue();
+	public AussomType longToBinary(Environment env, ArrayList<AussomType> args) throws aussomException {
+		int index = this.indexToInt("longToBinary", ((AussomInt)args.get(0)).getValue());
 		byteOrder bo = this.getByteOrder(((AussomString)args.get(1)).getValueString());
 		
 		if((index >= 0)&&(index < buff.length + 7)) {
@@ -599,8 +627,8 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 		}
 	}
 	
-	public AussomType floatToBinary(Environment env, ArrayList<AussomType> args) {
-		int index = (int)((AussomInt)args.get(0)).getValue();
+	public AussomType floatToBinary(Environment env, ArrayList<AussomType> args) throws aussomException {
+		int index = this.indexToInt("floatToBinary", ((AussomInt)args.get(0)).getValue());
 		byteOrder bo = this.getByteOrder(((AussomString)args.get(1)).getValueString());
 		
 		if((index >= 0)&&(index < buff.length + 3)) {
@@ -631,8 +659,8 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 		}
 	}
 	
-	public AussomType doubleToBinary(Environment env, ArrayList<AussomType> args) {
-		int index = (int)((AussomInt)args.get(0)).getValue();
+	public AussomType doubleToBinary(Environment env, ArrayList<AussomType> args) throws aussomException {
+		int index = this.indexToInt("doubleToBinary", ((AussomInt)args.get(0)).getValue());
 		byteOrder bo = this.getByteOrder(((AussomString)args.get(1)).getValueString());
 		
 		if((index >= 0)&&(index < buff.length + 7)) {
@@ -679,12 +707,12 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 		}
 	}
 	
-	public AussomType copyFrom(Environment env, ArrayList<AussomType> args) {
+	public AussomType copyFrom(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
-			int dindex = (int)((AussomInt)args.get(0)).getValue();
+			int dindex = this.indexToInt("copyFrom", ((AussomInt)args.get(0)).getValue());
 			AussomObject obj = (AussomObject)args.get(1);
-			int sindex = (int)((AussomInt)args.get(2)).getValue();
-			int length = (int)((AussomInt)args.get(3)).getValue();
+			int sindex = this.indexToInt("copyFrom", ((AussomInt)args.get(2)).getValue());
+			int length = this.indexToInt("copyFrom", ((AussomInt)args.get(3)).getValue());
 			byte[] obuff = null;
 			
 			if((obj.getExternObject() != null)&&(obj.getExternObject() instanceof ABuffer)) {
@@ -707,12 +735,12 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 		}
 	}
 	
-	public AussomType copyTo(Environment env, ArrayList<AussomType> args) {
+	public AussomType copyTo(Environment env, ArrayList<AussomType> args) throws aussomException {
 		synchronized(this) {
-			int sindex = (int)((AussomInt)args.get(0)).getValue();
+			int sindex = this.indexToInt("copyTo", ((AussomInt)args.get(0)).getValue());
 			AussomObject obj = (AussomObject)args.get(1);
-			int dindex = (int)((AussomInt)args.get(2)).getValue();
-			int length = (int)((AussomInt)args.get(3)).getValue();
+			int dindex = this.indexToInt("copyTo", ((AussomInt)args.get(2)).getValue());
+			int length = this.indexToInt("copyTo", ((AussomInt)args.get(3)).getValue());
 			byte[] obuff = null;
 			
 			if((obj.getExternObject() != null)&&(obj.getExternObject() instanceof ABuffer)) {
@@ -785,7 +813,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	}
 	
 	public int _getShort(int index, byteOrder bo) throws aussomException {
-		if((index >= 0)&&(index < buff.length + 1)) {
+		if((index >= 0)&&(index + 1 < buff.length)) {
 			int val = 0;
 			if(bo == byteOrder.BIG) {
 				val = (
@@ -805,7 +833,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	}
 	
 	public int _getUShort(int index, byteOrder bo) throws aussomException {
-		if((index >= 0)&&(index < buff.length + 1)) {
+		if((index >= 0)&&(index + 1 < buff.length)) {
 			int val = 0;
 			
 			if(bo == byteOrder.BIG) {
@@ -826,7 +854,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	}
 	
 	public int _getInt(int index, byteOrder bo) throws aussomException {
-		if((index >= 0)&&(index < buff.length + 3)) {
+		if((index >= 0)&&(index + 3 < buff.length)) {
 			int val = 0;
 			if(bo == byteOrder.BIG) {
 				val = (
@@ -850,7 +878,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	}
 	
 	public long _getUInt(int index, byteOrder bo) throws aussomException {
-		if((index >= 0)&&(index < buff.length + 3)) {
+		if((index >= 0)&&(index + 3 < buff.length)) {
 			long val = 0l;
 			if(bo == byteOrder.BIG) {
 				val = (
@@ -874,7 +902,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	}
 	
 	public long _getLong(int index, byteOrder bo) throws aussomException {
-		if((index >= 0)&&(index < buff.length + 7)) {
+		if((index >= 0)&&(index + 7 < buff.length)) {
 			long val = 0;
 			if(bo == byteOrder.BIG) {
 				val = (
@@ -906,7 +934,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	}
 	
 	public float _getFloat(int index, byteOrder bo) throws aussomException {
-		if((index >= 0)&&(index < buff.length + 3)) {
+		if((index >= 0)&&(index + 3 < buff.length)) {
 			float val = 0;
 			if(bo == byteOrder.BIG) {
 				val = ByteBuffer.wrap(this.buff, index, 4).order(ByteOrder.BIG_ENDIAN).getFloat();
@@ -920,7 +948,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	}
 	
 	public double _getDouble(int index, byteOrder bo) throws aussomException {
-		if((index >= 0)&&(index < buff.length + 7)) {
+		if((index >= 0)&&(index + 7 < buff.length)) {
 			double val = 0;
 			if(bo == byteOrder.BIG) {
 				val = ByteBuffer.wrap(this.buff, index, 8).order(ByteOrder.BIG_ENDIAN).getDouble();
@@ -980,7 +1008,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	
 	public void setShort(int index, int ival, byteOrder bo) throws aussomException {
 		synchronized(this) {
-			if((index >= 0)&&(index < this.buff.length + 1)) {
+			if((index >= 0)&&(index + 1 < this.buff.length)) {
 				if(bo == byteOrder.BIG) {
 					this.buff[index + 1] = (byte)(ival & 0xff);
 					this.buff[index] = (byte)((ival >> 8) & 0xff);
@@ -996,7 +1024,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	
 	public void setUShort(int index, int ival, byteOrder bo) throws aussomException {
 		synchronized(this) {
-			if((index >= 0)&&(index < this.buff.length + 1)) {
+			if((index >= 0)&&(index + 1 < this.buff.length)) {
 				if(bo == byteOrder.BIG) {
 					this.buff[index + 1] = (byte)(ival & 0xff);
 					this.buff[index] = (byte)((ival >> 8) & 0xff);
@@ -1012,7 +1040,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	
 	public void setInt(int index, int ival, byteOrder bo) throws aussomException {
 		synchronized(this) {
-			if((index >= 0)&&(index < this.buff.length + 3)) {
+			if((index >= 0)&&(index + 3 < this.buff.length)) {
 				if(bo == byteOrder.BIG) {
 					this.buff[index + 3] = (byte)(ival & 0xff);
 					this.buff[index + 2] = (byte)((ival >> 8) & 0xff);
@@ -1032,7 +1060,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	
 	public void setUInt(int index, long ival, byteOrder bo) throws aussomException {
 		synchronized(this) {
-			if((index >= 0)&&(index < this.buff.length + 3)) {
+			if((index >= 0)&&(index + 3 < this.buff.length)) {
 				if(bo == byteOrder.BIG) {
 					this.buff[index + 3] = (byte)(ival & 0xff);
 					this.buff[index + 2] = (byte)((ival >> 8) & 0xff);
@@ -1052,7 +1080,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	
 	public void setLong(int index, long ival, byteOrder bo) throws aussomException {
 		synchronized(this) {
-			if((index >= 0)&&(index < this.buff.length + 7)) {
+			if((index >= 0)&&(index + 7 < this.buff.length)) {
 				if(bo == byteOrder.BIG) {
 					this.buff[index + 7] = (byte)(ival & 0xff);
 					this.buff[index + 6] = (byte)((ival >> 8) & 0xff);
@@ -1081,7 +1109,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	public void setFloat(int index, double tval, byteOrder bo) throws aussomException {
 		synchronized(this) {
 			int ival = Float.floatToIntBits((float) tval);	
-			if((index >= 0)&&(index < this.buff.length + 3)) {
+			if((index >= 0)&&(index + 3 < this.buff.length)) {
 				if(bo == byteOrder.BIG) {
 					this.buff[index + 3] = (byte)(ival & 0xff);
 					this.buff[index + 2] = (byte)((ival >> 8) & 0xff);
@@ -1102,7 +1130,7 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	public void setDouble(int index, double tval, byteOrder bo) throws aussomException {
 		synchronized(this) {
 			long ival = Double.doubleToRawLongBits(tval);	
-			if((index >= 0)&&(index < this.buff.length + 7)) {
+			if((index >= 0)&&(index + 7 < this.buff.length)) {
 				if(bo == byteOrder.BIG) {
 					this.buff[index + 7] = (byte)(ival & 0xff);
 					this.buff[index + 6] = (byte)((ival >> 8) & 0xff);

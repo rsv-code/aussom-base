@@ -125,7 +125,61 @@ public class ResourceLimits {
 		}
 
 		@Test
-		@DisplayName("4. A refusal is catchable and the engine keeps working")
+		@DisplayName("4. An index that does not fit in an int is refused, not narrowed")
+		void oversizedIndexRefused() throws Exception {
+			Engine eng = scriptEngine();
+			eng.evalLine("b = new Buffer(16); b.setByte(0, 65);");
+
+			// 2^32 casts to 0, so this used to read index 0 and answer 65.
+			AussomException ex = asEx(eng.evalLine("v = b.getByte(4294967296);"));
+			assertTrue(ex.getText().contains("out of range"),
+				"Should say why it was refused, was: " + ex.getText());
+
+			// 2^32-1 casts to -1, which is the "read at the cursor"
+			// convention, so the argument used to change meaning and the
+			// cursor moved with it.
+			eng.evalLine("b.readSeek(5);");
+			asEx(eng.evalLine("v = b.getByte(4294967295);"));
+			assertEquals("5", str(eng.evalLine("b.getReadCursor();")),
+				"A refused read must not move the cursor.");
+		}
+
+		@Test
+		@DisplayName("5. Paired: a negative index still reads at the cursor and advances it")
+		void negativeIndexStillMeansCursor() throws Exception {
+			Engine eng = scriptEngine();
+			eng.evalLine("b = new Buffer(16); b.setByte(5, 90); b.readSeek(5);");
+			assertEquals("90", str(eng.evalLine("b.getByte(-1);")),
+				"The documented cursor convention must survive the fix.");
+			assertEquals("6", str(eng.evalLine("b.getReadCursor();")),
+				"And it still advances the cursor.");
+		}
+
+		@Test
+		@DisplayName("6. Paired: multi-byte reads at the tail report cleanly, and the "
+			+ "last valid index still works")
+		void widthGuardsReportCleanly() throws Exception {
+			Engine eng = scriptEngine();
+			eng.evalLine("b = new Buffer(16);");
+
+			// Valid boundary reads: 2 bytes at 14, 4 at 12, 8 at 8.
+			assertFalse(eng.evalLine("s = b.getShort(14);").isEx(), "getShort(14) is valid.");
+			assertFalse(eng.evalLine("i = b.getInt(12);").isEx(), "getInt(12) is valid.");
+			assertFalse(eng.evalLine("l = b.getLong(8);").isEx(), "getLong(8) is valid.");
+
+			// One past each: the guard must report it rather than letting
+			// the array access fail with a Java error.
+			for (String call : new String[] { "b.getShort(15)", "b.getInt(13)", "b.getLong(9)" }) {
+				AussomException ex = asEx(eng.evalLine("x = " + call + ";"));
+				assertTrue(ex.getText().contains("Index out of bounds"),
+					call + " should report a range error, was: " + ex.getText());
+				assertFalse(ex.getText().contains("ArrayIndexOutOfBounds"),
+					call + " should not surface a Java error, was: " + ex.getText());
+			}
+		}
+
+		@Test
+		@DisplayName("7. A refusal is catchable and the engine keeps working")
 		void refusalIsCatchableAndRecoverable() throws Exception {
 			Engine eng = scriptEngine();
 			eng.evalLine("class t { public t() { } "
@@ -184,12 +238,26 @@ public class ResourceLimits {
 		}
 
 		@Test
-		@DisplayName("3. A numeric string in policy is read as a number")
-		void numericStringAccepted() throws Exception {
+		@DisplayName("3. A limit stored as something other than an integer is not "
+			+ "converted; the default stands")
+		void wrongTypeIsNotConverted() throws Exception {
+			// The security manager's typed reads never convert a value. The
+			// string "12" is not an integer, so the limit is not set to 12,
+			// it is left at its default. See SecurityManagerInt.
 			LimitSecMan sm = new LimitSecMan();
 			sm.with(Limits.REGEX_STEPS_PROP, "12");
+			sm.with(Limits.CALL_DEPTH_PROP, Double.valueOf(50.0));
 			Engine eng = new Engine(sm);
-			assertEquals(12L, eng.getLimits().getRegexSteps());
+
+			assertEquals(0L, eng.getLimits().getRegexSteps(),
+				"A string is not an integer, so no budget is set.");
+			assertEquals(Limits.DEFAULT_CALL_DEPTH, eng.getLimits().getCallDepth(),
+				"A double is not an integer either.");
+
+			// An Integer and a Long both read, since both are integers.
+			LimitSecMan ok = new LimitSecMan();
+			ok.with(Limits.REGEX_STEPS_PROP, Integer.valueOf(12));
+			assertEquals(12L, new Engine(ok).getLimits().getRegexSteps());
 		}
 
 		@Test

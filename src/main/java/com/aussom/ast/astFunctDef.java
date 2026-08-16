@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.aussom.CallStack;
+import com.aussom.Engine;
 import com.aussom.Environment;
 import com.aussom.types.*;
 import com.aussom.types.AussomException.exType;
@@ -442,8 +443,17 @@ public class astFunctDef extends astNode implements astNodeInt {
 				ex.setException(this.getLineNum(), "EXTERN_STACK_OVERFLOW", "External call, stack overflow exception for method '" + this.getName() + "'. Infinite recursion perhaps?", env.getCallStack().getStackTrace());
 				return ex;
 			} catch (InvocationTargetException e) {
+				Throwable cause = e.getTargetException();
+
+				String exstr = "";
+				if (cause instanceof StackOverflowError) {
+					exstr = Engine.topFrames(cause, 6);
+				} else {
+					exstr = cause.toString();
+				}
+
 				AussomException ex = new AussomException(exType.exRuntime);
-				ex.setException(this.getLineNum(), "EXTERN_INVOCATION_TARGET_EXCEPTION", "External call, invocation target exception for method '" + this.getName() + "', the external method threw an uncaught exception: " + e.getTargetException().toString(), env.getCallStack().getStackTrace());
+				ex.setException(this.getLineNum(), "EXTERN_INVOCATION_TARGET_EXCEPTION", "External call, invocation target exception for method '" + this.getName() + "', the external method threw an uncaught exception: " + exstr, env.getCallStack().getStackTrace());
 				return ex;
 			} catch (aussomException e) {
 				AussomException ex = new AussomException(exType.exRuntime);

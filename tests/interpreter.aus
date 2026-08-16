@@ -2554,6 +2554,134 @@ class interpreterTests {
 		return test.expect(ex, true);
 	}
 
+	public f9buff = null;
+
+	/***********************************************************************
+	 * Buffer 64-bit index tests (F9)
+	 *********************************************************************/
+	@Test(name = "(lang Buffer) An index too large for an int is refused.")
+	public bufferIndexTooLarge() {
+		this.f9buff = new Buffer(16);
+		return test.expectThrowsMessage(::readIndexTooLarge, "out of range");
+	}
+
+	/** Callback for bufferIndexTooLarge; 2^32 used to narrow to 0. */
+	public readIndexTooLarge() {
+		this.f9buff.getByte(4294967296);
+	}
+
+	@Test(name = "(lang Buffer) An index that wraps to a negative int is refused.")
+	public bufferIndexWrapsNegative() {
+		this.f9buff = new Buffer(16);
+		this.f9buff.setByte(5, 90);
+		this.f9buff.readSeek(5);
+		test.expectThrowsMessage(::readIndexWrapsNegative, "out of range");
+		return test.expect(this.f9buff.getReadCursor(), 5);
+	}
+
+	/** Callback for bufferIndexWrapsNegative; 2^32-1 used to narrow to -1. */
+	public readIndexWrapsNegative() {
+		this.f9buff.getByte(4294967295);
+	}
+
+	@Test(name = "(lang Buffer) A negative index still reads at the cursor.")
+	public bufferNegativeIndexReadsCursor() {
+		this.f9buff = new Buffer(16);
+		this.f9buff.setByte(5, 90);
+		this.f9buff.readSeek(5);
+		test.expect(this.f9buff.getByte(-1), 90);
+		return test.expect(this.f9buff.getReadCursor(), 6);
+	}
+
+	@Test(name = "(lang Buffer) A seek index too large for an int is refused.")
+	public bufferSeekIndexTooLarge() {
+		this.f9buff = new Buffer(16);
+		return test.expectThrowsMessage(::seekIndexTooLarge, "out of range");
+	}
+
+	/** Callback for bufferSeekIndexTooLarge. */
+	public seekIndexTooLarge() {
+		this.f9buff.readSeek(4294967296);
+	}
+
+	@Test(name = "(lang Buffer) Multi byte reads work at the last valid index.")
+	public bufferMultiByteAtLastValidIndex() {
+		this.f9buff = new Buffer(16);
+		test.expectInt(this.f9buff.getShort(14));
+		test.expectInt(this.f9buff.getInt(12));
+		return test.expectInt(this.f9buff.getLong(8));
+	}
+
+	@Test(name = "(lang Buffer) A short read past the end is refused.")
+	public bufferShortPastEnd() {
+		this.f9buff = new Buffer(16);
+		return test.expectThrowsMessage(::shortPastEnd, "Index out of bounds");
+	}
+
+	/** Callback for bufferShortPastEnd; 15 leaves only one byte. */
+	public shortPastEnd() {
+		this.f9buff.getShort(15);
+	}
+
+	@Test(name = "(lang Buffer) An int read past the end is refused.")
+	public bufferIntPastEnd() {
+		this.f9buff = new Buffer(16);
+		return test.expectThrowsMessage(::intPastEnd, "Index out of bounds");
+	}
+
+	/** Callback for bufferIntPastEnd; 13 leaves only three bytes. */
+	public intPastEnd() {
+		this.f9buff.getInt(13);
+	}
+
+	@Test(name = "(lang Buffer) A long read past the end is refused.")
+	public bufferLongPastEnd() {
+		this.f9buff = new Buffer(16);
+		return test.expectThrowsMessage(::longPastEnd, "Index out of bounds");
+	}
+
+	/** Callback for bufferLongPastEnd; 9 leaves only seven bytes. */
+	public longPastEnd() {
+		this.f9buff.getLong(9);
+	}
+
+	/***********************************************************************
+	 * Security manager tests (F6, F7)
+	 *********************************************************************/
+	@Test(name = "(lang SecurityManager) A new object carries its own policy, not the engine's.")
+	public secmanInstIsNotEnginePolicy() {
+		sman = new SecurityManager();
+		test.expect(secman.getProp("aussom.script.mode.enable"), true);
+		return test.expect(sman.getProp("aussom.script.mode.enable"), false);
+	}
+
+	@Test(name = "(lang secman) A denied view returns null rather than failing.")
+	public secmanDeniedViewReturnsNull() {
+		test.expect(secman.getProp("os.info.view"), false);
+		return test.expectNull(sys.getOsName());
+	}
+
+	@Test(name = "(lang secman) Properties read back with their own types.")
+	public secmanPropertyTypes() {
+		test.expectBool(secman.getProp("securitymanager.instantiate"));
+		test.expectInt(secman.getProp("aussom.limit.call.depth"));
+		return test.expectList(secman.getProp("aussom.extern.allowed"));
+	}
+
+	/***********************************************************************
+	 * Extern exception tests (F8)
+	 *********************************************************************/
+	@Test(name = "(extern) A host exception reports its own class and message.")
+	public externExceptionRelaysCause() {
+		test.expectThrowsMessage(::substrOutOfRange, "StringIndexOutOfBoundsException");
+		return test.expectThrowsMessage(::substrOutOfRange, "out of bounds for length 3");
+	}
+
+	/** Callback for externExceptionRelaysCause. */
+	public substrOutOfRange() {
+		x = "abc".substr(-5);
+	}
+
 	@Test(name = "(lang Buffer) Buffer size.")
 	public bufferSize() { return test.expect(this.buff.size(), 1024); }
 

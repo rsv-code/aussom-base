@@ -52,7 +52,7 @@ public class ATestRunner {
     public AussomType newTestRunner(Environment env, ArrayList<AussomType> args)
             throws Exception {
         Engine eng = env.getEngine();
-        if ((Boolean)env.getEngine().getSecurityManager().getProperty("test.aussom.runner")) {
+        if (env.getEngine().getSecurityManager().getPropertyBoolean("test.aussom.runner", false)) {
             // The child runs under the parent's policy. It must not be able to
             // do anything the engine that created it could not.
             this.runner = new UnitTestRunner(eng.getSecurityManager());

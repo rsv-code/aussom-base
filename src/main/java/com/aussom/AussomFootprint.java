@@ -86,6 +86,13 @@ public class AussomFootprint {
 	 * Values already counted, by identity rather than by equality, so
 	 * two lists holding the same string add it once and a self
 	 * referencing structure terminates.
+	 *
+	 * This is the one place in the engine that does not use a
+	 * ConcurrentHashMap, and identity is the reason: equality would
+	 * merge two distinct values that happen to compare equal, and the
+	 * whole point of the walk is to count each object once. Thread
+	 * safety is not needed here either, since the walk runs on one
+	 * thread against an engine that is not running.
 	 */
 	private final Map<Object, Object> seen = new IdentityHashMap<Object, Object>();
 

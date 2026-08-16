@@ -19,7 +19,6 @@ package com.aussom;
 import java.io.File;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -245,16 +244,6 @@ public class Engine implements AussomDebuggingInt {
 	private final Map<Long, ThreadScope> interpreterThreads = new ConcurrentHashMap<Long, ThreadScope>();
 	private final AtomicLong bankedCpuNanos = new AtomicLong(0L);
 	private final AtomicLong bankedAllocBytes = new AtomicLong(0L);
-
-	/*
-	 * Set when an OutOfMemoryError was seen inside this engine. The
-	 * heap state that caused it is process-wide and the engine's own
-	 * data is of unknown size, so the engine refuses further work
-	 * rather than pretending it is sound. The host is expected to drop
-	 * it and build another, which after the isolation rework is a parse
-	 * of lang.aus and a class table.
-	 */
-	private volatile boolean unusable = false;
 
 	/**
 	 * The standard library modules this engine can include. Owned by
@@ -495,19 +484,19 @@ public class Engine implements AussomDebuggingInt {
 	 * @return A boolean with true for permitted and false for denied.
 	 */
 	public boolean isExternClassAllowed(String ClassName) {
-		if (!(Boolean)this.secman.getProperty("aussom.extern.allowlist.enforce")) {
+		if (!this.secman.getPropertyBoolean("aussom.extern.allowlist.enforce", false)) {
 			return true;
 		}
 		if (ClassName == null) {
 			return false;
 		}
 
-		Object allowed = this.secman.getProperty("aussom.extern.allowed");
-		if (!(allowed instanceof Collection)) {
+		List<Object> allowed = this.secman.getPropertyList("aussom.extern.allowed");
+		if (allowed == null) {
 			return false;
 		}
 
-		for (Object entry : (Collection<?>)allowed) {
+		for (Object entry : allowed) {
 			if (entry == null) {
 				continue;
 			}
@@ -881,10 +870,6 @@ public class Engine implements AussomDebuggingInt {
 	 * @return An integer with 0 for success and any other value for failure.
 	 */
 	public int run() throws aussomException {
-		if (this.unusable) {
-			throw new aussomException("Engine.run(): This engine ran out of memory "
-				+ "and is no longer usable. Build a new one.");
-		}
 		if (!this.hasParseErrors) {
 			this.getLogger().trc("Running program now ...");
 
@@ -905,13 +890,6 @@ public class Engine implements AussomDebuggingInt {
 					AussomException ex = this.stackOverflowToException(soe, this.mainCallStack);
 					this.getLogger().err(((AussomTypeInt) ex).str());
 					return 1;
-				} catch (OutOfMemoryError oome) {
-					// Not converted into a script-visible exception: the
-					// heap is a process-wide condition and this engine's
-					// state is now of unknown size. Mark it and let the
-					// error travel, so the host sees what happened.
-					this.markUnusable();
-					throw oome;
 				}
 			} else {
 				throw new aussomException("Engine.run(): Failed to find main class.");
@@ -1685,23 +1663,6 @@ public class Engine implements AussomDebuggingInt {
 	}
 
 	/**
-	 * True when this engine saw an OutOfMemoryError and refuses further
-	 * work. Drop it and build another.
-	 * @return A boolean with true for unusable.
-	 */
-	public boolean isUnusable() {
-		return this.unusable;
-	}
-
-	/**
-	 * Records that this engine is no longer sound. Package-visible so
-	 * the boundary handlers can set it.
-	 */
-	void markUnusable() {
-		this.unusable = true;
-	}
-
-	/**
 	 * Converts a StackOverflowError into an Aussom exception, so an
 	 * Error never escapes the interpreter to a caller that is catching
 	 * Exception. The Java stack trace is not copied into the
@@ -1732,7 +1693,7 @@ public class Engine implements AussomDebuggingInt {
 	 * First few frames of a throwable, for the logger. Kept short: an
 	 * overflow trace is thousands of frames of the same cycle.
 	 */
-	private static String topFrames(Throwable t, int count) {
+	public static String topFrames(Throwable t, int count) {
 		StackTraceElement[] els = t.getStackTrace();
 		StringBuilder sb = new StringBuilder();
 		int n = count;
@@ -1776,7 +1737,7 @@ public class Engine implements AussomDebuggingInt {
 	 */
 	public void setDebugger(DebuggerInt d) throws aussomException {
 		if (d != null) {
-			if (!(Boolean) this.secman.getProperty("aussom.debugger.enable")) {
+			if (!this.secman.getPropertyBoolean("aussom.debugger.enable", false)) {
 				throw new aussomException(
 					"Engine.setDebugger: Security exception, action "
 					+ "'aussom.debugger.enable' not permitted.");
@@ -2072,7 +2033,7 @@ public class Engine implements AussomDebuggingInt {
 	public AussomType evalInFrame(String source, Environment frame) throws Exception {
 		// Security check on every entry; defends against runtime
 		// property changes via setProp.
-		if (!(Boolean) this.secman.getProperty("aussom.debugger.enable")) {
+		if (!this.secman.getPropertyBoolean("aussom.debugger.enable", false)) {
 			throw new aussomException(
 				"Engine.evalInFrame: Security exception, action "
 				+ "'aussom.debugger.enable' not permitted.");
@@ -2152,7 +2113,7 @@ public class Engine implements AussomDebuggingInt {
 		if (on) {
 			// Security check (every entry; defends against runtime
 			// property changes via setProp).
-			if (!(Boolean) this.secman.getProperty("aussom.script.mode.enable")) {
+			if (!this.secman.getPropertyBoolean("aussom.script.mode.enable", false)) {
 				throw new aussomException(
 					"Engine.setScriptMode: Security exception, action "
 					+ "'aussom.script.mode.enable' not permitted.");
@@ -2336,7 +2297,7 @@ public class Engine implements AussomDebuggingInt {
 			throw new aussomException(
 				"Engine.parseScriptLine: script mode is not enabled.");
 		}
-		if (!(Boolean) this.secman.getProperty("aussom.script.mode.enable")) {
+		if (!this.secman.getPropertyBoolean("aussom.script.mode.enable", false)) {
 			throw new aussomException(
 				"Engine.parseScriptLine: Security exception, action "
 				+ "'aussom.script.mode.enable' not permitted.");
@@ -2399,15 +2360,10 @@ public class Engine implements AussomDebuggingInt {
 			throw new aussomException(
 				"Engine.evalParsedScript: script mode is not enabled.");
 		}
-		if (!(Boolean) this.secman.getProperty("aussom.script.mode.enable")) {
+		if (!this.secman.getPropertyBoolean("aussom.script.mode.enable", false)) {
 			throw new aussomException(
 				"Engine.evalParsedScript: Security exception, action "
 				+ "'aussom.script.mode.enable' not permitted.");
-		}
-
-		if (this.unusable) {
-			throw new aussomException("Engine.evalParsedScript: This engine ran out "
-				+ "of memory and is no longer usable. Build a new one.");
 		}
 
 		List<astNode> stmts = body.getStatements();
@@ -2440,9 +2396,6 @@ public class Engine implements AussomDebuggingInt {
 					// gets a value back, never an Error.
 					last = this.stackOverflowToException(soe, this.mainCallStack);
 					break;
-				} catch (OutOfMemoryError oome) {
-					this.markUnusable();
-					throw oome;
 				}
 				if (last.isEx()) break;
 				if (last.isReturn()) {

@@ -690,12 +690,12 @@ public class astClass extends astNode implements astNodeInt {
 		// has no mock allocated, so primitives (the common case)
 		// don't pay for a Mock allocation just to check.
 		boolean spySet = (cobj != null) && cobj.isSpySet(functName);
-		if (spySet && !(Boolean)env.getEngine().getSecurityManager().getProperty("test.mock.spy")) {
+		if (spySet && !env.getEngine().getSecurityManager().getPropertyBoolean("test.mock.spy", false)) {
 			return new AussomException("astClass.call(): Security exception, action 'test.mock.spy' not permitted.");
 		}
 
 		if (cobj != null && cobj.isMockSet() && cobj.hasFunctionMock(functName)) {
-			if (!(Boolean)env.getEngine().getSecurityManager().getProperty("test.mock.inject")) {
+			if (!env.getEngine().getSecurityManager().getPropertyBoolean("test.mock.inject", false)) {
 				return new AussomException("astClass.call(): Security exception, action 'test.mock.inject' not permitted.");
 			}
 			ret = this.processMock(env, cobj, functName, args);

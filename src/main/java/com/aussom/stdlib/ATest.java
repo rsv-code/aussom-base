@@ -30,7 +30,7 @@ public class ATest {
 
         // First check that the security manager property
         // test.aussom.runner is set to true.
-        if (!(Boolean)env.getEngine().getSecurityManager().getProperty("test.aussom.runner")) {
+        if (!env.getEngine().getSecurityManager().getPropertyBoolean("test.aussom.runner", false)) {
             return new AussomException("testRunner.runTestsForClass(): Security exception, action 'test.aussom.runner' not permitted.");
         }
 

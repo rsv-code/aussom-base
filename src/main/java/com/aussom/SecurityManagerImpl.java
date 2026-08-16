@@ -19,10 +19,9 @@ package com.aussom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.aussom.types.AussomBool;
 import com.aussom.types.AussomDouble;
@@ -188,6 +187,159 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 		return this.props.get(PropName);
 	}
 
+	/*
+	 * ============================================================
+	 * Typed property reads
+	 *
+	 * These are what gates use. Reading getProperty and casting the
+	 * result is how a missing property becomes a
+	 * NullPointerException instead of an answer, and a policy
+	 * question must always have an answer. See F7 in
+	 * design/security-evaluation-f6-f9.md.
+	 *
+	 * Two shapes. The forms that take a default value answer with it
+	 * when the property is missing or is not of the type asked for.
+	 * The forms that do not take one answer null on no match, except
+	 * where the return type is a primitive and cannot be null; there
+	 * the zero value is the answer, which for a permission read means
+	 * denied.
+	 *
+	 * No value is ever converted. A property of the wrong type is not a
+	 * match, full stop: the string "5" is not an integer here, and a
+	 * number is not a string. Guessing what a loosely stored value
+	 * meant is how policy ends up deciding something nobody wrote down.
+	 *
+	 * All of them read through getProperty rather than the props map,
+	 * so a subclass that overrides getProperty to compute a value is
+	 * honored here too.
+	 * ============================================================
+	 */
+
+	/**
+	 * Boolean property with a caller-supplied default.
+	 *
+	 * Only a real Boolean answers the question. The string "true" does
+	 * not grant a permission: a value stored loosely should not decide
+	 * what a script is allowed to do.
+	 *
+	 * @param PropName is the property name to read.
+	 * @param DefaultValue is the value to use on no match.
+	 * @return A boolean with the property value, or DefaultValue.
+	 */
+	@Override
+	public boolean getPropertyBoolean(String PropName, boolean DefaultValue) {
+		Object o = this.getProperty(PropName);
+		if (o instanceof Boolean) {
+			return ((Boolean) o).booleanValue();
+		}
+		return DefaultValue;
+	}
+
+	/**
+	 * Integer property with a caller-supplied default.
+	 *
+	 * An integer value is one stored as an integer: Long, Integer, Short
+	 * or Byte. A host that writes props.put("k", 5) stores an Integer
+	 * while a script setting the same key stores a Long, so both read. A
+	 * Double, a String or anything else is not a match and answers
+	 * DefaultValue. Nothing is parsed or truncated.
+	 *
+	 * @param PropName is the property name to read.
+	 * @param DefaultValue is the value to use on no match.
+	 * @return A long with the property value, or DefaultValue.
+	 */
+	@Override
+	public long getPropertyInt(String PropName, int DefaultValue) {
+		Object o = this.getProperty(PropName);
+		if (o instanceof Long || o instanceof Integer
+				|| o instanceof Short || o instanceof Byte) {
+			return ((Number) o).longValue();
+		}
+		return DefaultValue;
+	}
+
+	/**
+	 * Double property with a caller-supplied default.
+	 *
+	 * A Double or a Float reads. An integer value is not a match, and
+	 * neither is a string: nothing is widened or parsed.
+	 * @param PropName is the property name to read.
+	 * @param DefaultValue is the value to use on no match.
+	 * @return A double with the property value, or DefaultValue.
+	 */
+	@Override
+	public double getPropertyDouble(String PropName, double DefaultValue) {
+		Object o = this.getProperty(PropName);
+		if (o instanceof Double || o instanceof Float) {
+			return ((Number) o).doubleValue();
+		}
+		return DefaultValue;
+	}
+
+	/**
+	 * String property with a caller-supplied default.
+	 * @param PropName is the property name to read.
+	 * @param DefaultValue is the value to use on no match.
+	 * @return A String with the property value, or DefaultValue.
+	 */
+	@Override
+	public String getPropertyString(String PropName, String DefaultValue) {
+		Object o = this.getProperty(PropName);
+		if (o instanceof String) {
+			return (String) o;
+		}
+		return DefaultValue;
+	}
+
+	/**
+	 * List property, null when the property is missing or is not a
+	 * collection.
+	 *
+	 * The returned list is a copy, so a caller cannot reach back into
+	 * policy through a value it was handed. That is the same rule
+	 * toAussom follows for the values it hands to a script.
+	 *
+	 * @param PropName is the property name to read.
+	 * @return A List with the property values, or null.
+	 */
+	@Override
+	public List<Object> getPropertyList(String PropName) {
+		Object o = this.getProperty(PropName);
+		if (!(o instanceof Collection)) {
+			return null;
+		}
+		List<Object> out = new ArrayList<Object>();
+		for (Object entry : (Collection<?>) o) {
+			out.add(entry);
+		}
+		return out;
+	}
+
+	/**
+	 * Map property, null when the property is missing or is not a map.
+	 *
+	 * The returned map is a copy, for the same reason getPropertyList
+	 * returns one. An entry whose key is not a String is dropped rather
+	 * than renamed: a key is not converted any more than a value is.
+	 *
+	 * @param PropName is the property name to read.
+	 * @return A Map with the property values, or null.
+	 */
+	@Override
+	public Map<String, Object> getPropertyMap(String PropName) {
+		Object o = this.getProperty(PropName);
+		if (!(o instanceof Map)) {
+			return null;
+		}
+		Map<String, Object> out = new ConcurrentHashMap<String, Object>();
+		for (Map.Entry<?, ?> ent : ((Map<?, ?>) o).entrySet()) {
+			if (ent.getKey() instanceof String) {
+				out.put((String) ent.getKey(), ent.getValue());
+			}
+		}
+		return out;
+	}
+
 	/**
 	 * Aussom getProperty. This method will get the property, match it to a 
 	 * standard AussomType and return it. If property 
@@ -196,7 +348,7 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 	 */
 	@Override
 	public AussomType getProp(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)this.getProperty("securitymanager.property.get")) {
+		if (this.getPropertyBoolean("securitymanager.property.get", false)) {
 			String PropName = ((AussomString)args.get(0)).getValueString();
 			return this.toAussom(this.props.get(PropName));
 		} else {
@@ -209,7 +361,7 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 	 */
 	@Override
 	public AussomType keySet(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)this.getProperty("securitymanager.property.list")) {
+		if (this.getPropertyBoolean("securitymanager.property.list", false)) {
 			AussomList cl = new AussomList();
 			for (String key : this.props.keySet()) {
 				cl.add(new AussomString(key));
@@ -225,7 +377,7 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 	 */
 	@Override
 	public AussomType getMap(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)this.getProperty("securitymanager.property.list")) {
+		if (this.getPropertyBoolean("securitymanager.property.list", false)) {
 			AussomMap cm = new AussomMap();
 			for (String key : this.props.keySet()) {
 				cm.put(key, this.toAussom(this.props.get(key)));
@@ -244,7 +396,7 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 	 */
 	@Override
 	public AussomType setProp(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)this.getProperty("securitymanager.property.set")) {
+		if (this.getPropertyBoolean("securitymanager.property.set", false)) {
 			String key = ((AussomString)args.get(0)).getValueString();
 			AussomType ct = args.get(1);
 			if (!this.storable(ct)) {
@@ -265,7 +417,7 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 	 */
 	@Override
 	public AussomType setMap(Environment env, ArrayList<AussomType> args) {
-		if ((Boolean)this.getProperty("securitymanager.property.set")) {
+		if (this.getPropertyBoolean("securitymanager.property.set", false)) {
 			AussomMap mp = (AussomMap)args.get(0);
 			for (String key : mp.getValue().keySet()) {
 				AussomType ct = mp.getValue().get(key);
@@ -381,7 +533,7 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 			}
 			return out;
 		} else if (Value instanceof AussomMap) {
-			Map<String, Object> out = new LinkedHashMap<String, Object>();
+			Map<String, Object> out = new ConcurrentHashMap<String, Object>();
 			for (Map.Entry<String, AussomType> ent : ((AussomMap)Value).getValue().entrySet()) {
 				out.put(ent.getKey(), this.toJava(ent.getValue()));
 			}

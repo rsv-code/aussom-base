@@ -17,6 +17,9 @@
 package com.aussom;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import com.aussom.types.AussomType;
 
 /**
@@ -28,6 +31,13 @@ import com.aussom.types.AussomType;
 public interface SecurityManagerInt {
 	// Java get property value.
 	public Object getProperty(String PropName);
+
+	public boolean getPropertyBoolean(String PropName, boolean DefaultValue);
+	public long getPropertyInt(String PropName, int DefaultValue);
+	public double getPropertyDouble(String PropName, double DefaultValue);
+	public String getPropertyString(String PropName, String DefaultValue);
+	public List<Object> getPropertyList(String PropName);
+	public Map<String, Object> getPropertyMap(String PropName);
 	
 	/*
 	 * Aussom set or get property. Either one of these may throw not permitted or 

@@ -54,7 +54,7 @@ public class ASecurityManager extends SecurityManagerImpl {
 	 *
 	 * The check is in newSecurityManager() instead, which the Aussom
 	 * constructor in lang.aus calls. See F6 in
-	 * design/security-evaluation-f6-f10.md.
+	 * design/security-evaluation-f6-f9.md.
 	 */
 	public ASecurityManager() {
 		super();
@@ -77,8 +77,8 @@ public class ASecurityManager extends SecurityManagerImpl {
 	 * @return This object, or an AussomException when policy refuses.
 	 */
 	public AussomType newSecurityManager(Environment env, ArrayList<AussomType> args) {
-		if (!(Boolean) env.getEngine().getSecurityManager()
-				.getProperty("securitymanager.instantiate")) {
+		if (!env.getEngine().getSecurityManager()
+				.getPropertyBoolean("securitymanager.instantiate", false)) {
 			return new AussomException("SecurityManager(): Security exception, action "
 				+ "'securitymanager.instantiate' not permitted.");
 		}
