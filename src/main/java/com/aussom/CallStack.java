@@ -17,6 +17,7 @@
 package com.aussom;
 
 import com.aussom.ast.astFunctDef;
+import com.aussom.types.Members;
 
 /**
  * CallStack object is a linked list representation of the Aussom function call
@@ -26,6 +27,16 @@ import com.aussom.ast.astFunctDef;
  */
 public class CallStack {
 	private CallStack parent = null;
+
+	/**
+	 * The locals of the frame this node stands for, when it has any.
+	 * Held so a footprint measurement taken while the engine is paused
+	 * can reach what a running program is holding: locals are otherwise
+	 * reachable only from the interpreter's own Java stack. Set where
+	 * the frame is pushed; null on the synthetic frames that share a
+	 * caller's scope. See Engine.measureRetainedFootprint.
+	 */
+	private Members locals = null;
 	private String fileName = "";
 	private int lineNumber = -1;
 	private String className = "";
@@ -83,6 +94,22 @@ public class CallStack {
 	 * Gets the parent call object.
 	 * @return A parent CallStack object or null if it doesn't exist.
 	 */
+	/**
+	 * The locals of this frame, or null when it has none of its own.
+	 * @return A Members with the frame's locals.
+	 */
+	public Members getLocals() {
+		return this.locals;
+	}
+
+	/**
+	 * Sets the locals of this frame.
+	 * @param Locals is the Members holding the frame's locals.
+	 */
+	public void setLocals(Members Locals) {
+		this.locals = Locals;
+	}
+
 	public CallStack getParent() {
 		synchronized(this) {
 			return this.parent;

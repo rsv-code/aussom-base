@@ -136,7 +136,7 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 			Arrays.asList("com.aussom.stdlib.*", "com.aussom.types.*"));
 
 		/*
-		 * Runtime settings read by com.aussom.Limits. Three numbers, each
+		 * Runtime settings read by com.aussom.Limits. Four numbers, each
 		 * bounding something the JVM will not bound on its own. See
 		 * design/security-evaluation-f4-f5.md section 5.
 		 *
@@ -177,6 +177,29 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 		 * the program until the sleep finishes on its own.
 		 */
 		this.props.put(Limits.SLEEP_SLICE_PROP, Limits.DEFAULT_SLEEP_SLICE_MS);
+
+		/*
+		 * Largest source file the engine will parse, 0 for no limit, so
+		 * nothing is refused unless a host asks for it. This is the one
+		 * parse cost worth bounding: a file is read whole into memory
+		 * before the parser sees a token, and what it becomes measures out
+		 * at roughly 37 times the source. It is checked against the file
+		 * length before the read, and it applies to files only, never to
+		 * source handed in as a string, so it cannot refuse the standard
+		 * library. See design/security-evaluation-g1-g3.md.
+		 */
+		this.props.put(Limits.SOURCE_BYTES_PROP, 0L);
+
+		/*
+		 * Whether an include may be reached through a symbolic link.
+		 * Default true, which is what the engine has always done and is
+		 * frequently deliberate: a shared module directory or a versioned
+		 * library linked into a root. A host running untrusted tenants,
+		 * whose include root is a directory those tenants can write to,
+		 * sets it false to say that modules come from inside the root and
+		 * nothing there may point elsewhere. See Engine.addInclude.
+		 */
+		this.props.put("aussom.include.symlink.follow", true);
 	}
 	
 	/**

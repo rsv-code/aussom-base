@@ -265,7 +265,13 @@ public class ASys {
 		// The control state is read before waiting either way, so a
 		// program cancelled before it got here does not sleep at all.
 		if (eng.getControlState() != ControlState.RUNNING) {
-			if (eng.awaitResumeOrCancel()) {
+			// Publish the frame on the way into the wait, so a footprint
+			// measurement taken while the engine is paused can reach this
+			// thread's locals.
+			eng.publishParkedFrame(env.getCallStack());
+			boolean cancelled = eng.awaitResumeOrCancel();
+			eng.publishParkedFrame(null);
+			if (cancelled) {
 				return Engine.cancelledException(env);
 			}
 		}
@@ -282,7 +288,10 @@ public class ASys {
 			Thread.sleep(slice);
 			remaining -= slice;
 			if (remaining > 0L && eng.getControlState() != ControlState.RUNNING) {
-				if (eng.awaitResumeOrCancel()) {
+				eng.publishParkedFrame(env.getCallStack());
+				boolean cancelled = eng.awaitResumeOrCancel();
+				eng.publishParkedFrame(null);
+				if (cancelled) {
 					return Engine.cancelledException(env);
 				}
 			}

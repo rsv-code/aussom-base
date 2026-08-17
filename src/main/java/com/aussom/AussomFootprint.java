@@ -20,7 +20,6 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.aussom.stdlib.ABuffer;
 import com.aussom.types.AussomList;
 import com.aussom.types.AussomMap;
 import com.aussom.types.AussomObject;
@@ -44,6 +43,7 @@ import com.aussom.types.Members;
  *   <li>Map: 48 bytes plus 48 per entry, plus keys and values</li>
  *   <li>Object: 48 bytes, plus its members</li>
  *   <li>Buffer: 16 bytes plus the real array length</li>
+ *   <li>Class definition: 145 bytes per AST node</li>
  * </ul>
  *
  * <p>Two properties matter more than the exact numbers. A value held in
@@ -52,9 +52,10 @@ import com.aussom.types.Members;
  * double-count a string held by two lists. And a structure that
  * contains itself is counted once rather than walked forever.
  *
- * <p>What the model does not cover: the class definitions themselves,
- * anything a host handed in through an extern object other than a
- * buffer, and native or JIT memory, which belongs to nobody.
+ * <p>What the model does not cover: native and JIT memory, which
+ * belongs to nobody, and an extern object whose class does not
+ * implement AussomFootprintInt, since there is no way to ask it what it
+ * holds.
  *
  * <p>Walk it on an engine that is not running. See
  * Engine.measureRetainedFootprint and
@@ -81,6 +82,18 @@ public class AussomFootprint {
 	public static final long OBJECT_BASE_BYTES = 48L;
 	/** Bytes charged for a buffer, before its bytes. */
 	public static final long BUFFER_BASE_BYTES = 16L;
+
+	/**
+	 * Bytes charged per AST node of a parsed class definition.
+	 *
+	 * Measured rather than guessed: sources of 405 KB and 200 KB retain
+	 * 141 and 146 bytes per node, so the node is what scales. Source
+	 * bytes are not a usable proxy, varying from 14 to 37 times with
+	 * comment density, and neither is allocation during the parse. See
+	 * Engine.chargeClassDefinitions and
+	 * design/security-evaluation-g1-g3.md.
+	 */
+	public static final long AST_NODE_BYTES = 145L;
 
 	/**
 	 * Values already counted, by identity rather than by equality, so
@@ -143,12 +156,15 @@ public class AussomFootprint {
 		if (Value instanceof AussomObject) {
 			AussomObject ao = (AussomObject) Value;
 			this.bytes += OBJECT_BASE_BYTES;
+			// An extern that can report what it holds is asked. One that
+			// cannot contributes only the object above, which is the
+			// documented limit of the model. The extern goes in the seen
+			// set too, so two Aussom objects wrapping one extern charge
+			// it once like everything else here.
 			Object ext = ao.getExternObject();
-			if (ext instanceof ABuffer) {
-				byte[] buff = ((ABuffer) ext).getBuffer();
-				long blen = 0L;
-				if (buff != null) blen = buff.length;
-				this.bytes += BUFFER_BASE_BYTES + blen;
+			if (ext instanceof AussomFootprintInt && this.seen.put(ext, Boolean.TRUE) == null) {
+				long ext_bytes = ((AussomFootprintInt) ext).getRetainedBytes();
+				if (ext_bytes > 0L) this.bytes += ext_bytes;
 			}
 			this.addMembers(ao);
 			return;

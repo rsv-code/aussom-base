@@ -23,13 +23,15 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import com.aussom.AussomFootprint;
+import com.aussom.AussomFootprintInt;
 import com.aussom.Environment;
 import com.aussom.Util;
 import com.aussom.ast.aussomException;
 import com.aussom.types.*;
 
 
-public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
+public class ABuffer implements AussomTypeObjectInt, AussomTypeInt, AussomFootprintInt {
 	private int writeCursor = 0;
 	private int readCursor = 0;
 
@@ -73,6 +75,18 @@ public class ABuffer implements AussomTypeObjectInt, AussomTypeInt {
 	public void newBuffer(int Size) { this.buff = new byte[Size]; }
 	
 	public byte[] getBuffer() { return this.buff; }
+
+	/**
+	 * Bytes this buffer retains: its array, plus the array's own
+	 * overhead. The buffer is the one stdlib class that holds bulk
+	 * memory, which is why it reports it.
+	 * @return A long with the retained bytes.
+	 */
+	@Override
+	public long getRetainedBytes() {
+		if (this.buff == null) return 0L;
+		return AussomFootprint.BUFFER_BASE_BYTES + this.buff.length;
+	}
 	public void setBuffer(byte[] Buff) { this.buff = Buff; }
 	
 	/**

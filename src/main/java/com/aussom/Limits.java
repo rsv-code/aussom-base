@@ -20,7 +20,7 @@ package com.aussom;
  * Numeric runtime settings for one engine, read from its security
  * manager.
  *
- * <p>Three of them, and each bounds something the JVM will not bound for
+ * <p>Four of them, and each bounds something the JVM will not bound for
  * you:
  *
  * <ul>
@@ -38,6 +38,13 @@ package com.aussom;
  *     engine's control state again, which is the ceiling on how long a
  *     pause or a cancel waits to take effect. 0 turns slicing off and
  *     restores one uninterruptible wait.</li>
+ * <li><b>Source bytes</b> (aussom.limit.source.bytes, default 0 for no
+ *     limit). The largest source file the engine will parse, checked
+ *     against the file's length before it is read. Source is the one
+ *     parse cost worth bounding: a file is read whole into memory before
+ *     the parser sees a token, and the definitions it becomes measure out
+ *     at roughly 37 times the source. See
+ *     design/security-evaluation-g1-g3.md.</li>
  * </ul>
  *
  * <p><b>Why there are no per-value size caps here.</b> Earlier drafts
@@ -78,6 +85,7 @@ public class Limits {
 	public static final String CALL_DEPTH_PROP  = "aussom.limit.call.depth";
 	public static final String REGEX_STEPS_PROP = "aussom.limit.regex.steps";
 	public static final String SLEEP_SLICE_PROP = "aussom.limit.sleep.slice";
+	public static final String SOURCE_BYTES_PROP = "aussom.limit.source.bytes";
 
 	/**
 	 * Call depth used when the security manager says nothing. Chosen
@@ -105,6 +113,7 @@ public class Limits {
 	private final long callDepth;
 	private final long regexSteps;
 	private final long sleepSliceMs;
+	private final long sourceBytes;
 
 	/**
 	 * Builds a snapshot with no limits at all and the default call
@@ -114,6 +123,7 @@ public class Limits {
 		this.callDepth = DEFAULT_CALL_DEPTH;
 		this.regexSteps = 0L;
 		this.sleepSliceMs = DEFAULT_SLEEP_SLICE_MS;
+		this.sourceBytes = 0L;
 	}
 
 	/**
@@ -128,6 +138,7 @@ public class Limits {
 		this.callDepth    = read(SecMan, CALL_DEPTH_PROP, DEFAULT_CALL_DEPTH);
 		this.regexSteps   = read(SecMan, REGEX_STEPS_PROP, 0L);
 		this.sleepSliceMs = read(SecMan, SLEEP_SLICE_PROP, DEFAULT_SLEEP_SLICE_MS);
+		this.sourceBytes  = read(SecMan, SOURCE_BYTES_PROP, 0L);
 	}
 
 	/**
@@ -149,6 +160,7 @@ public class Limits {
 		this.callDepth    = pick(PropName, CALL_DEPTH_PROP,  v, Other.callDepth);
 		this.regexSteps   = pick(PropName, REGEX_STEPS_PROP, v, Other.regexSteps);
 		this.sleepSliceMs = pick(PropName, SLEEP_SLICE_PROP, v, Other.sleepSliceMs);
+		this.sourceBytes  = pick(PropName, SOURCE_BYTES_PROP, v, Other.sourceBytes);
 	}
 
 	/**
@@ -194,5 +206,19 @@ public class Limits {
 	 * change them with the rest.
 	 */
 	public long getSleepSliceMs() { return this.sleepSliceMs; }
+
+	/**
+	 * @return Largest source file the engine will parse in bytes, 0 for
+	 * no limit.
+	 *
+	 * Checked against the file length before the file is read, so an
+	 * oversized source is refused rather than loaded and then rejected.
+	 * It bounds files only: source handed to the engine as a string, by
+	 * a host or through JSR 223, has already been measured by whoever
+	 * built the string. The standard library is loaded from the jar as a
+	 * string for that reason, so this cannot refuse lang.aus and brick
+	 * an engine at construction.
+	 */
+	public long getSourceBytes() { return this.sourceBytes; }
 
 }

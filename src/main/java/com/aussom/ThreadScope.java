@@ -51,6 +51,14 @@ public class ThreadScope implements AutoCloseable {
 	private volatile boolean closed = false;
 
 	/**
+	 * The frame this thread parked in, when it is parked. Written by the
+	 * thread itself as it enters the wait and cleared as it leaves; read
+	 * by whichever thread takes a footprint measurement, which is why it
+	 * is volatile. Null when the thread is running.
+	 */
+	private volatile CallStack parkedFrame = null;
+
+	/**
 	 * A scope that does nothing, handed back when the calling thread is
 	 * already registered with this engine. The outer scope owns the
 	 * accounting and the registration; closing an inner one must not
@@ -86,6 +94,23 @@ public class ThreadScope implements AutoCloseable {
 	 * The thread this scope belongs to.
 	 * @return A long with the thread id.
 	 */
+	/**
+	 * The frame this thread is parked in, or null when it is running or
+	 * parked somewhere that has no frame to report.
+	 * @return A CallStack with the parked frame.
+	 */
+	public CallStack getParkedFrame() {
+		return this.parkedFrame;
+	}
+
+	/**
+	 * Records the frame this thread is parking in.
+	 * @param Frame is the frame, or null to clear.
+	 */
+	public void setParkedFrame(CallStack Frame) {
+		this.parkedFrame = Frame;
+	}
+
 	public long getThreadId() {
 		return this.threadId;
 	}

@@ -17,10 +17,12 @@
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.aussom.Engine;
@@ -282,6 +284,79 @@ public class ResourceLimits {
 			assertEquals("50", str(eng.evalLine(
 				"secman.getProp(\"" + Limits.SLEEP_SLICE_PROP + "\");")),
 				"sleep slice should read back as the default");
+		}
+	}
+
+	@Nested
+	@DisplayName("parse limits and accounting")
+	class ParseLimits {
+
+		/**
+		 * Writes a source file of roughly the requested size.
+		 */
+		private java.io.File sourceOf(java.nio.file.Path dir, int classCount) throws Exception {
+			StringBuilder src = new StringBuilder();
+			for (int c = 0; c < classCount; c++) {
+				src.append("class gen").append(c).append(" {\n");
+				src.append("    public gen").append(c).append("() { }\n");
+				src.append("    public meth(a, b) { x = a + b; return x; }\n");
+				src.append("}\n");
+			}
+			src.append("class app { public app() { } public main(args) { return 0; } }\n");
+			java.nio.file.Path f = dir.resolve("src.aus");
+			java.nio.file.Files.writeString(f, src.toString());
+			return f.toFile();
+		}
+
+		@Test
+		@DisplayName("1. Paired: a source file over the limit is refused before it "
+			+ "is read, and the default of 0 parses it")
+		void sourceByteLimit(@TempDir java.nio.file.Path tmp) throws Exception {
+			java.io.File src = sourceOf(tmp, 200);
+			long size = src.length();
+
+			// Default policy has no limit.
+			Engine open = new Engine(new TestSecurityManagerImpl());
+			open.parseFile(src.getPath());
+			assertFalse(open.hasParseErrors(), "The default of 0 should parse anything.");
+
+			Engine capped = new Engine(new LimitSecMan()
+				.with(Limits.SOURCE_BYTES_PROP, Long.valueOf(size - 1L)));
+			Exception thrown = assertThrows(Exception.class, () -> {
+				capped.parseFile(src.getPath());
+			});
+			assertTrue(thrown.getMessage().contains(String.valueOf(size)),
+				"The refusal should say how big the file was: " + thrown.getMessage());
+			assertTrue(thrown.getMessage().contains(String.valueOf(size - 1L)),
+				"The refusal should say what the limit was: " + thrown.getMessage());
+		}
+
+		@Test
+		@DisplayName("2. Parsing is counted, so compile work lands in the same "
+			+ "totals a host meters execution with")
+		void parseIsAccounted(@TempDir java.nio.file.Path tmp) throws Exception {
+			Engine eng = new Engine(new TestSecurityManagerImpl());
+			eng.resetAccounting();
+			long before = eng.getAllocatedBytes();
+			eng.parseFile(sourceOf(tmp, 400).getPath());
+			long after = eng.getAllocatedBytes();
+
+			// -1 means this JVM does not report per-thread allocation.
+			if (before < 0L || after < 0L) return;
+			assertTrue(after > before,
+				"Parse allocation should be banked to the engine; " + before + " -> " + after);
+		}
+
+		@Test
+		@DisplayName("3. A cancelled engine refuses to keep loading")
+		void cancelStopsParsing(@TempDir java.nio.file.Path tmp) throws Exception {
+			Engine eng = new Engine(new TestSecurityManagerImpl());
+			eng.cancel();
+			Exception thrown = assertThrows(Exception.class, () -> {
+				eng.parseFile(sourceOf(tmp, 10).getPath());
+			});
+			assertTrue(thrown.getMessage().contains("cancelled"),
+				"A cancelled engine should stop the load: " + thrown.getMessage());
 		}
 	}
 }

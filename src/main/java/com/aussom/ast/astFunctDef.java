@@ -340,6 +340,10 @@ public class astFunctDef extends astNode implements astNodeInt {
 		// deeper", which is what the call depth limit counts.
 		cst.enterCall();
 		cst.setCalledFunction(this);
+		// The locals this call runs in, so a footprint measurement taken
+		// while the engine is paused can reach them. They are otherwise
+		// held only by the interpreter's own Java stack.
+		cst.setLocals(env.getLocals());
 		
 		// Itterate statement list of function
 		if(!tnode.isEx()) {

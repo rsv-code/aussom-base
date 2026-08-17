@@ -18,8 +18,13 @@ package com.aussom;
 
 import java.io.File;
 import java.io.StringReader;
+import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -93,6 +98,15 @@ public class Engine implements AussomDebuggingInt {
 	private astFunctDef mainFunctDef = null;
 	private AussomList mainFunctArgs = new AussomList(false);
 	private CallStack mainCallStack = new CallStack();
+
+	/**
+	 * Estimated bytes this engine's parsed class definitions hold.
+	 * Accumulated as each file is parsed rather than walked when a
+	 * measurement is asked for, so measuring costs nothing extra and
+	 * parsing pays once. Parsing only ever adds definitions, so the
+	 * total does not need invalidating.
+	 */
+	private final AtomicLong classDefBytes = new AtomicLong(0L);
 	
 	/**
 	 * This flag is set if the parser encounters errors. This is used 
@@ -585,6 +599,11 @@ public class Engine implements AussomDebuggingInt {
 					if (!this.isPathExcludePath(tinc)) {
 						File f = new File(localIncPath);
 						if (f.exists()) {
+							if (!this.getSecurityManager().getPropertyBoolean("aussom.include.symlink.follow", true)
+									&& this.includeHasSymlink(pth, Include)) {
+								throw new aussomException("Attempting to add include '" + tinc
+									+ "' through a symbolic link, which policy does not allow.");
+							}
 							found = true;
 							if (!this.includes.contains(tinc)) {
 								this.getLogger().trc("Engine.addInclude(): Include " + Include + " found in '" + pth + "'");
@@ -824,6 +843,21 @@ public class Engine implements AussomDebuggingInt {
 	 * @throws Exception on parse failure.
 	 */
 	public void parseFile(String FileName) throws Exception {
+		// Checked against the file length before the read, so an
+		// oversized source is refused rather than pulled into memory and
+		// then rejected. Util.read builds the whole file into a
+		// StringBuffer and copies it, so the read costs several times the
+		// file before the parser sees a token. Files only: source handed
+		// in as a string has already been measured by whoever built it,
+		// which is also why this cannot refuse the standard library.
+		long max = this.limits.getSourceBytes();
+		if (max > 0L) {
+			long len = new File(FileName).length();
+			if (len > max) {
+				throw new aussomException("Engine.parseFile(): Source file '" + FileName
+					+ "' is " + len + " bytes, over the limit of " + max + " bytes.");
+			}
+		}
 		this.parseString(FileName, Util.read(FileName));
 	}
 	
@@ -835,6 +869,34 @@ public class Engine implements AussomDebuggingInt {
 	 * @throws Exception on parse failure.
 	 */
 	public void parseString(String FileName, String Contents) throws Exception {
+		// Registered for the length of the parse, so compile CPU and
+		// allocation land in the same totals a host meters execution
+		// with. Includes are resolved during the parse and re-enter this
+		// method, and a nested entry banks to the outer scope rather than
+		// counting twice. See design/security-evaluation-g1-g3.md.
+		try (ThreadScope scope = this.enterInterpreterThread()) {
+			// A cancelled engine stops loading here. Every include comes
+			// back through this method, so a cancel reaches a multi-file
+			// load at the next include; it does not interrupt the parse of
+			// one file, which is bounded by that file's length.
+			if (this.getControlState() == ControlState.CANCELLED) {
+				throw new aussomException("Engine.parseString(): Parse of '" + FileName
+					+ "' cancelled.");
+			}
+			this.parseSource(FileName, Contents);
+		}
+	}
+
+	/**
+	 * Parses source into this engine's class table. The body of
+	 * parseString, split out so the accounting scope and the control
+	 * check wrap one call rather than the whole method.
+	 * @param FileName is a String with the file name to assign to the code.
+	 * @param Contents is a String with the Aussom code to parse.
+	 * @throws Exception on parse failure.
+	 */
+	private void parseSource(String FileName, String Contents) throws Exception {
+		List<String> classesBefore = new ArrayList<String>(this.classes.keySet());
 		Lexer scanner = new Lexer(new StringReader(Contents), FileName);
 		// Diagnostics accumulate here; a file and its includes are
 		// separate parseString calls but one logical load.
@@ -860,6 +922,7 @@ public class Engine implements AussomDebuggingInt {
 			this.setParseError();
 		}
 		this.fileNames.add(FileName);
+		this.chargeClassDefinitions(classesBefore);
 	}
 	
 	/**
@@ -907,6 +970,40 @@ public class Engine implements AussomDebuggingInt {
 	 * @return A boolean with true if in an exclude path
 	 * and false if not.
 	 */
+	/**
+	 * Whether any part of an include name, below its include path, is a
+	 * symbolic link.
+	 *
+	 * Every component is checked rather than just the file, because a
+	 * linked directory in the middle of the name reaches outside the root
+	 * exactly as a linked file does. Links at or above the include path
+	 * itself are not policed: that is the host's own choice of where the
+	 * root lives, and a root that is a link, or lives under one, keeps
+	 * working. What this answers is whether the name a script wrote
+	 * traverses a link.
+	 *
+	 * Checked only when the aussom.include.symlink.follow policy is
+	 * false. Following links is ordinary filesystem behaviour and often
+	 * deliberate, so the default leaves it alone.
+	 *
+	 * @param Root is a String with the include path the name is under.
+	 * @param Include is a String with the include's relative path.
+	 * @return A boolean with true when a link was found.
+	 */
+	private boolean includeHasSymlink(String Root, String Include) {
+		// Include always uses '/' separators: astInclude.getPath builds it
+		// that way. Path.resolve applies the platform separator.
+		Path p = new File(Root).toPath();
+		for (String part : Include.split("/")) {
+			if (part.isEmpty()) continue;
+			p = p.resolve(part);
+			if (Files.isSymbolicLink(p)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public boolean isPathExcludePath(String testPath) {
 		for (String excludePath : this.excludePaths) {
 			if (testPath.startsWith(excludePath))
@@ -1628,18 +1725,120 @@ public class Engine implements AussomDebuggingInt {
 	}
 
 	/**
+	 * Adds the definitions this parse produced to the class definition
+	 * total. Walks only the classes whose names are new, so a program of
+	 * many files costs one pass over each definition rather than one pass
+	 * over everything for every file.
+	 *
+	 * Aussom class definitions are not small: 405 KB of source measures
+	 * out at about 15 MB of AST, and a host that cannot see that cannot
+	 * budget for it. Node count is what scales predictably, at roughly
+	 * 145 bytes per node across sources of different sizes; source bytes
+	 * and bytes allocated during the parse were both measured and both
+	 * vary by more than a factor of two. See
+	 * design/security-evaluation-g1-g3.md.
+	 *
+	 * @param Existing is a List of the class names that were present
+	 * before this parse ran.
+	 */
+	private void chargeClassDefinitions(List<String> Existing) {
+		Map<Object, Object> seen = new IdentityHashMap<Object, Object>();
+		long nodes = 0L;
+		for (Map.Entry<String, astClass> ent : this.classes.entrySet()) {
+			if (Existing.contains(ent.getKey())) continue;
+			nodes += countNodes(ent.getValue(), seen);
+		}
+		if (nodes > 0L) {
+			this.classDefBytes.addAndGet(nodes * AussomFootprint.AST_NODE_BYTES);
+		}
+	}
+
+	/**
+	 * Counts the AST nodes reachable from a value, by identity so a node
+	 * reached twice counts once.
+	 *
+	 * The walk is reflective because astNode carries a single child field
+	 * and there is no general accessor for a node's children, so a hand
+	 * written visitor would mean a case for each of more than thirty node
+	 * types and would go stale the next time one is added. It runs once
+	 * per parsed file and never on an execution path.
+	 *
+	 * @param Value is the value to walk, may be null.
+	 * @param Seen is the identity set of nodes already counted.
+	 * @return A long with the number of nodes counted.
+	 */
+	private long countNodes(Object Value, Map<Object, Object> Seen) {
+		if (Value == null) return 0L;
+
+		if (Value instanceof astNode) {
+			if (Seen.put(Value, Boolean.TRUE) != null) return 0L;
+			long count = 1L;
+			for (Class<?> c = Value.getClass(); c != null && c != Object.class; c = c.getSuperclass()) {
+				for (Field f : c.getDeclaredFields()) {
+					if (f.getType().isPrimitive()) continue;
+					if (f.getType() == String.class) continue;
+					try {
+						f.setAccessible(true);
+						count += this.countNodes(f.get(Value), Seen);
+					} catch (RuntimeException e) {
+						// A field the JVM will not open is skipped rather
+						// than failing a parse over a measurement.
+					} catch (IllegalAccessException e) {
+						// Same.
+					}
+				}
+			}
+			return count;
+		}
+
+		if (Value instanceof Collection) {
+			long count = 0L;
+			for (Object o : (Collection<?>) Value) {
+				count += this.countNodes(o, Seen);
+			}
+			return count;
+		}
+
+		if (Value instanceof Map) {
+			long count = 0L;
+			for (Object o : ((Map<?, ?>) Value).values()) {
+				count += this.countNodes(o, Seen);
+			}
+			return count;
+		}
+
+		return 0L;
+	}
+
+	/**
+	 * Estimated bytes this engine's parsed class definitions hold.
+	 * @return A long with the estimate.
+	 */
+	public long getClassDefinitionBytes() {
+		return this.classDefBytes.get();
+	}
+
+	/**
 	 * Walks this engine's reachable Aussom values and returns an
 	 * estimate of the bytes they hold.
 	 *
 	 * Call it on an engine that is not running: pause() then
 	 * awaitPaused(), or between programs. The walk reads the value
 	 * graph without locking it, so a running interpreter thread would
-	 * make the result meaningless rather than merely stale.
+	 * make the result meaningless rather than merely stale. That is
+	 * refused rather than left to the caller: an engine with threads
+	 * running that is not fully paused answers -1, meaning no
+	 * measurement is available, the same convention getCpuNanos and
+	 * getAllocatedBytes use.
 	 *
 	 * Roots are this engine's own: its static class instances, the main
-	 * class instance, and the script-mode environment. A value held in
-	 * two places is counted once, and a structure that contains itself
-	 * is counted once.
+	 * class instance, the script-mode environment, and the locals of
+	 * every frame a paused thread is standing in. That last one is why a
+	 * paused program measures what it is actually holding: a running
+	 * program keeps most of its data in locals, which nothing else
+	 * reaches. The estimated size of the parsed class definitions is
+	 * added on top. A value held in two places is counted once, and a
+	 * structure that contains itself is counted once.
 	 *
 	 * The number is an estimate from a documented model, not a promise
 	 * of exact bytes. See AussomFootprint for the model.
@@ -1647,6 +1846,16 @@ public class Engine implements AussomDebuggingInt {
 	 * @return A long with the estimated bytes retained.
 	 */
 	public long measureRetainedFootprint() {
+		// A walk of a running engine reads a graph that is being rewritten
+		// under it, which is a number nobody can use. Refuse instead. -1
+		// is "no measurement available", the convention getCpuNanos and
+		// getAllocatedBytes already use for a JVM that cannot report.
+		// An engine with no registered threads is not running, which is
+		// the ordinary measurement after a program ends.
+		if (!this.interpreterThreads.isEmpty() && !this.isFullyPaused()) {
+			return -1L;
+		}
+
 		AussomFootprint fp = new AussomFootprint();
 		for (AussomType t : this.staticClasses.values()) {
 			fp.add(t);
@@ -1659,7 +1868,44 @@ public class Engine implements AussomDebuggingInt {
 				fp.add(t);
 			}
 		}
-		return fp.getBytes();
+
+		// The locals of every frame a paused thread is standing in. A
+		// running program keeps most of what it holds here rather than in
+		// a static or a member, so without these roots a paused engine
+		// sitting on a large structure measures as almost nothing.
+		for (ThreadScope scope : this.interpreterThreads.values()) {
+			CallStack frame = scope.getParkedFrame();
+			while (frame != null) {
+				Members mem = frame.getLocals();
+				if (mem != null) {
+					for (AussomType t : mem.getMap().values()) {
+						fp.add(t);
+					}
+				}
+				frame = frame.getParent();
+			}
+		}
+
+		return fp.getBytes() + this.classDefBytes.get();
+	}
+
+	/**
+	 * Records the frame the calling thread is parking in, so a footprint
+	 * measurement taken while the engine is paused can reach that
+	 * thread's locals. Called by a checkpoint on its way into the wait
+	 * and cleared on the way out, which keeps it off the running path
+	 * and keeps it from ever naming a frame that has already returned.
+	 *
+	 * Not for embedders. It is public because the standard library
+	 * checkpoints live in another package.
+	 *
+	 * @param Frame is the frame being parked in, or null to clear.
+	 */
+	public void publishParkedFrame(CallStack Frame) {
+		ThreadScope scope = this.interpreterThreads.get(Long.valueOf(Thread.currentThread().getId()));
+		if (scope != null) {
+			scope.setParkedFrame(Frame);
+		}
 	}
 
 	/**
