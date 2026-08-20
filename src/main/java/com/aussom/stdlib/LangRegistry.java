@@ -24,6 +24,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,36 @@ public class LangRegistry {
 	};
 
 	/**
+	 * The base standard library source, read from the jar once per JVM
+	 * and shared by every registry built from it.
+	 *
+	 * Sharing this does not weaken the isolation described above. What
+	 * that guarantee is about is the module map: which modules an engine
+	 * can include, and no engine being able to change that for another.
+	 * Each registry still gets its own map below, so put, addModule and
+	 * replacing a base module stay per engine. Only the source text is
+	 * shared, and source text is immutable input to a parse rather than
+	 * state produced by it. Every engine still parses lang.aus for
+	 * itself, so no class definition object is shared.
+	 *
+	 * It is worth about 142 KB per engine. Reading the resources again
+	 * for every engine produced fresh String objects, so a host holding
+	 * a hundred engines held a hundred copies of the same 145710
+	 * characters. Wrapped unmodifiable because a later change that
+	 * mutated it would silently alter what every engine built after
+	 * that point could include.
+	 */
+	private static final Map<String, String> BASE_SOURCE = loadBaseSource();
+
+	private static Map<String, String> loadBaseSource() {
+		Map<String, String> src = new ConcurrentHashMap<String, String>();
+		for (String name : BASE_MODULES) {
+			src.put(name, Util.loadResource("/com/aussom/stdlib/aus/" + name));
+		}
+		return Collections.unmodifiableMap(src);
+	}
+
+	/**
 	 * Module name to Aussom source.
 	 */
 	private final Map<String, String> modules = new ConcurrentHashMap<String, String>();
@@ -75,9 +106,7 @@ public class LangRegistry {
 	 */
 	public LangRegistry() {
 		this.resolveJarFile();
-		for (String name : BASE_MODULES) {
-			this.modules.put(name, Util.loadResource("/com/aussom/stdlib/aus/" + name));
-		}
+		this.modules.putAll(BASE_SOURCE);
 	}
 
 	/**

@@ -313,5 +313,33 @@ public class EngineIsolation {
 				assertTrue(b.getLangRegistry().contains(m), "base module '" + m + "' missing");
 			}
 		}
+
+		/**
+		 * The base module source is read once per JVM and shared by every
+		 * registry, so one engine replacing a base module must not reach
+		 * any other engine, nor any engine built afterwards. Sharing
+		 * immutable source is safe; sharing the map would not be, and
+		 * this is the test that tells the difference.
+		 */
+		@Test
+		@DisplayName("13. Replacing a base module affects only the engine that did it")
+		void replacingABaseModuleDoesNotLeak() throws Exception {
+			Engine a = newEngine();
+			Engine b = newEngine();
+			String original = b.getLangRegistry().get("math.aus");
+			assertNotNull(original, "expected math.aus in the base stdlib");
+
+			a.addModule("math.aus", "class MyMath { public MyMath() {} }");
+
+			assertEquals("class MyMath { public MyMath() {} }",
+				a.getLangRegistry().get("math.aus"),
+				"the engine that replaced it should see its own version");
+			assertEquals(original, b.getLangRegistry().get("math.aus"),
+				"another live engine must still see the original math.aus");
+
+			Engine c = newEngine();
+			assertEquals(original, c.getLangRegistry().get("math.aus"),
+				"an engine built afterwards must still get the original math.aus");
+		}
 	}
 }
