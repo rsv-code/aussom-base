@@ -1772,6 +1772,14 @@ public class parser extends java_cup.runtime.lr_parser {
 
   public parser(Lexer lex, Engine Eng, String FileName, boolean LoadExternClasses, astStatementList ScriptStmtTarget) {
       super(lex);
+      // Replace the CUP runtime's java.util.Stack, which is a Vector and
+      // therefore synchronized on every access, with an unsynchronized
+      // one. A parse stack belongs to one parser for one parse, so the
+      // locking bought nothing. lr_parser only ever assigns this field
+      // in its own constructor and calls removeAllElements to reset, so
+      // this assignment holds for the life of the parser. See
+      // AussomParseStack.
+      this.stack = new AussomParseStack();
       lexer = lex;
       this.eng = Eng;
       this.fileName = FileName;
