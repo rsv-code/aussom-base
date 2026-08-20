@@ -126,13 +126,25 @@ public class Debugger {
 		public void onPause(astNode node, Environment env, PauseReason reason)
 				throws aussomException {
 			long tid = Thread.currentThread().getId();
-			events.add(new PauseEvent(tid, node, reason));
-			pausedEnv.put(tid, env);
-			if (!blockOnPause) return;
+
+			// The semaphore is created before the event is published, and
+			// the order matters. A test driver waits on awaitPauseCount
+			// and then calls releaseThread, so releaseThread can run the
+			// instant the event becomes visible. If the semaphore did not
+			// exist yet, releaseThread would find null, drop the permit
+			// on the floor, and this thread would then block forever on a
+			// semaphore that will never be released. Creating it first
+			// closes that window: a release arriving any time after the
+			// event is visible leaves a permit waiting for the acquire
+			// below.
 			Semaphore s = locks.computeIfAbsent(tid,
 				new java.util.function.Function<Long, Semaphore>() {
 					@Override public Semaphore apply(Long k) { return new Semaphore(0); }
 				});
+			pausedEnv.put(tid, env);
+			events.add(new PauseEvent(tid, node, reason));
+
+			if (!blockOnPause) return;
 			try { s.acquire(); }
 			catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
 		}
