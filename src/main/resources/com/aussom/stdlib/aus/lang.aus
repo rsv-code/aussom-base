@@ -788,7 +788,7 @@ extern class string : com.aussom.types.AussomString {
 	/**
      * Parses this string as an int. Convenience method that delegates
      * to Int.parse. Throws on parse failure with the same contract as
-     * Int.parse — wrap the call in try/catch when the input may be
+     * Int.parse - wrap the call in try/catch when the input may be
      * invalid.
      * @p Radix is an optional int with the numeric base to parse in
      * (e.g. 16 for hex). When omitted, base 10 is used.
@@ -798,7 +798,7 @@ extern class string : com.aussom.types.AussomString {
 
 	/**
      * Parses this string as a double. Convenience method that
-     * delegates to Double.parse. Throws on parse failure — wrap the
+     * delegates to Double.parse. Throws on parse failure - wrap the
      * call in try/catch when the input may be invalid.
      * @r A double with the parsed value.
      */
@@ -806,7 +806,7 @@ extern class string : com.aussom.types.AussomString {
 
 	/**
      * Parses this string as a bool. Convenience method that delegates
-     * to Bool.parse. Throws on parse failure — wrap the call in
+     * to Bool.parse. Throws on parse failure - wrap the call in
      * try/catch when the input may be invalid.
      * @r A bool with the parsed value.
      */

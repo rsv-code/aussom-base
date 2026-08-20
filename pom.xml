@@ -252,6 +252,39 @@
 	        </executions>
 	      </plugin>
 
+	      <!-- Splits the CUP generated action method so HotSpot will
+	           compile it. CUP puts every grammar action in one method
+	           and only splits past 300 productions; this grammar has
+	           226, so it emits a single ~36000 bytecode method, and a
+	           method of 8000 or more is never JIT compiled at any tier.
+	           No grammar rewrite can fix that, because 77% of the
+	           method is CUP's own per case emission, so it happens here.
+	           Bound to process-sources: after cup:generate, before
+	           compile. MethodSizeTest fails the build if this stops
+	           working. See src/build/SplitParserActions.java and
+	           design/starup-perf-improvements.md section 2. -->
+	      <plugin>
+	        <groupId>org.codehaus.mojo</groupId>
+	        <artifactId>exec-maven-plugin</artifactId>
+	        <version>3.1.0</version>
+	        <executions>
+	          <execution>
+	            <id>split-parser-actions</id>
+	            <phase>process-sources</phase>
+	            <goals>
+	              <goal>exec</goal>
+	            </goals>
+	            <configuration>
+	              <executable>${java.home}/bin/java</executable>
+	              <arguments>
+	                <argument>src/build/SplitParserActions.java</argument>
+	                <argument>src/main/java/com/aussom/parser.java</argument>
+	              </arguments>
+	            </configuration>
+	          </execution>
+	        </executions>
+	      </plugin>
+
 			<plugin>
 				<groupId>org.sonatype.central</groupId>
 				<artifactId>central-publishing-maven-plugin</artifactId>

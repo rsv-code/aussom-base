@@ -236,7 +236,7 @@ static extern class math : com.aussom.stdlib.AMath {
 	public extern round(double Val);
 
 	/**
-     * Returns d × 2^scaleFactor rounded as if performed by a single
+     * Returns d * 2^scaleFactor rounded as if performed by a single
      * correctly rounded floating-point multiply to a member of the
      * double value set.
      * @p DoubleVal is a double with the d value.

@@ -1887,7 +1887,8 @@ class CUP$parser$actions {
     this.parser = parser;
   }
 
-  /** Method 0 with the actual generated action code for actions 0 to 300. */
+  /** Actions 0 to 24. Split from CUP's single part so HotSpot will compile it;
+      see src/build/SplitParserActions.java. */
   public final java_cup.runtime.Symbol CUP$parser$do_action_part00000000(
     int                        CUP$parser$act_num,
     java_cup.runtime.lr_parser CUP$parser$parser,
@@ -1900,9 +1901,7 @@ class CUP$parser$actions {
 
       /* select the action based on the action number */
       switch (CUP$parser$act_num)
-        {
-          /*. . . . . . . . . . . . . . . . . . . .*/
-          case 0: // input ::= block 
+        {          case 0: // input ::= block 
             {
               Engine RESULT =null;
 		int rleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
@@ -2300,7 +2299,29 @@ class CUP$parser$actions {
           return CUP$parser$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
-          case 25: // annotation ::= AT IDENT LPAREN annotationArgList RPAREN 
+          /* . . . . . .*/
+          default:
+            throw new Exception(
+               "Invalid action number "+CUP$parser$act_num+"found in internal parse table");
+
+        }
+    } /* end of method */
+
+  /** Actions 25 to 49. Split from CUP's single part so HotSpot will compile it;
+      see src/build/SplitParserActions.java. */
+  public final java_cup.runtime.Symbol CUP$parser$do_action_part00000001(
+    int                        CUP$parser$act_num,
+    java_cup.runtime.lr_parser CUP$parser$parser,
+    java.util.Stack            CUP$parser$stack,
+    int                        CUP$parser$top)
+    throws java.lang.Exception
+    {
+      /* Symbol object for return from actions */
+      java_cup.runtime.Symbol CUP$parser$result;
+
+      /* select the action based on the action number */
+      switch (CUP$parser$act_num)
+        {          case 25: // annotation ::= AT IDENT LPAREN annotationArgList RPAREN 
             {
               astAnnotation RESULT =null;
 		int annotationNameleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-3)).left;
@@ -2767,7 +2788,29 @@ class CUP$parser$actions {
           return CUP$parser$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
-          case 50: // memberDefinition ::= AccessType expVar SEMI 
+          /* . . . . . .*/
+          default:
+            throw new Exception(
+               "Invalid action number "+CUP$parser$act_num+"found in internal parse table");
+
+        }
+    } /* end of method */
+
+  /** Actions 50 to 74. Split from CUP's single part so HotSpot will compile it;
+      see src/build/SplitParserActions.java. */
+  public final java_cup.runtime.Symbol CUP$parser$do_action_part00000002(
+    int                        CUP$parser$act_num,
+    java_cup.runtime.lr_parser CUP$parser$parser,
+    java.util.Stack            CUP$parser$stack,
+    int                        CUP$parser$top)
+    throws java.lang.Exception
+    {
+      /* Symbol object for return from actions */
+      java_cup.runtime.Symbol CUP$parser$result;
+
+      /* select the action based on the action number */
+      switch (CUP$parser$act_num)
+        {          case 50: // memberDefinition ::= AccessType expVar SEMI 
             {
               astNode RESULT =null;
 		int amleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).left;
@@ -3265,7 +3308,29 @@ class CUP$parser$actions {
           return CUP$parser$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
-          case 75: // functDefArg ::= expVar EQ expNull 
+          /* . . . . . .*/
+          default:
+            throw new Exception(
+               "Invalid action number "+CUP$parser$act_num+"found in internal parse table");
+
+        }
+    } /* end of method */
+
+  /** Actions 75 to 99. Split from CUP's single part so HotSpot will compile it;
+      see src/build/SplitParserActions.java. */
+  public final java_cup.runtime.Symbol CUP$parser$do_action_part00000003(
+    int                        CUP$parser$act_num,
+    java_cup.runtime.lr_parser CUP$parser$parser,
+    java.util.Stack            CUP$parser$stack,
+    int                        CUP$parser$top)
+    throws java.lang.Exception
+    {
+      /* Symbol object for return from actions */
+      java_cup.runtime.Symbol CUP$parser$result;
+
+      /* select the action based on the action number */
+      switch (CUP$parser$act_num)
+        {          case 75: // functDefArg ::= expVar EQ expNull 
             {
               astNode RESULT =null;
 		int vleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).left;
@@ -3676,7 +3741,29 @@ class CUP$parser$actions {
           return CUP$parser$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
-          case 100: // expression ::= expClosure 
+          /* . . . . . .*/
+          default:
+            throw new Exception(
+               "Invalid action number "+CUP$parser$act_num+"found in internal parse table");
+
+        }
+    } /* end of method */
+
+  /** Actions 100 to 124. Split from CUP's single part so HotSpot will compile it;
+      see src/build/SplitParserActions.java. */
+  public final java_cup.runtime.Symbol CUP$parser$do_action_part00000004(
+    int                        CUP$parser$act_num,
+    java_cup.runtime.lr_parser CUP$parser$parser,
+    java.util.Stack            CUP$parser$stack,
+    int                        CUP$parser$top)
+    throws java.lang.Exception
+    {
+      /* Symbol object for return from actions */
+      java_cup.runtime.Symbol CUP$parser$result;
+
+      /* select the action based on the action number */
+      switch (CUP$parser$act_num)
+        {          case 100: // expression ::= expClosure 
             {
               astNode RESULT =null;
 		int clleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
@@ -4118,7 +4205,29 @@ class CUP$parser$actions {
           return CUP$parser$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
-          case 125: // operExp ::= expression SET expression 
+          /* . . . . . .*/
+          default:
+            throw new Exception(
+               "Invalid action number "+CUP$parser$act_num+"found in internal parse table");
+
+        }
+    } /* end of method */
+
+  /** Actions 125 to 149. Split from CUP's single part so HotSpot will compile it;
+      see src/build/SplitParserActions.java. */
+  public final java_cup.runtime.Symbol CUP$parser$do_action_part00000005(
+    int                        CUP$parser$act_num,
+    java_cup.runtime.lr_parser CUP$parser$parser,
+    java.util.Stack            CUP$parser$stack,
+    int                        CUP$parser$top)
+    throws java.lang.Exception
+    {
+      /* Symbol object for return from actions */
+      java_cup.runtime.Symbol CUP$parser$result;
+
+      /* select the action based on the action number */
+      switch (CUP$parser$act_num)
+        {          case 125: // operExp ::= expression SET expression 
             {
               astNode RESULT =null;
 		int elleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).left;
@@ -4662,7 +4771,29 @@ class CUP$parser$actions {
           return CUP$parser$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
-          case 150: // instructionListBlock ::= LBRACKET instructionList RBRACKET 
+          /* . . . . . .*/
+          default:
+            throw new Exception(
+               "Invalid action number "+CUP$parser$act_num+"found in internal parse table");
+
+        }
+    } /* end of method */
+
+  /** Actions 150 to 174. Split from CUP's single part so HotSpot will compile it;
+      see src/build/SplitParserActions.java. */
+  public final java_cup.runtime.Symbol CUP$parser$do_action_part00000006(
+    int                        CUP$parser$act_num,
+    java_cup.runtime.lr_parser CUP$parser$parser,
+    java.util.Stack            CUP$parser$stack,
+    int                        CUP$parser$top)
+    throws java.lang.Exception
+    {
+      /* Symbol object for return from actions */
+      java_cup.runtime.Symbol CUP$parser$result;
+
+      /* select the action based on the action number */
+      switch (CUP$parser$act_num)
+        {          case 150: // instructionListBlock ::= LBRACKET instructionList RBRACKET 
             {
               astStatementList RESULT =null;
 		int illeft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
@@ -5100,7 +5231,29 @@ class CUP$parser$actions {
           return CUP$parser$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
-          case 175: // expFor ::= FOR LPAREN expForExp SEMI expForExp SEMI expForExp RPAREN LBRACKET instructionList RBRACKET 
+          /* . . . . . .*/
+          default:
+            throw new Exception(
+               "Invalid action number "+CUP$parser$act_num+"found in internal parse table");
+
+        }
+    } /* end of method */
+
+  /** Actions 175 to 199. Split from CUP's single part so HotSpot will compile it;
+      see src/build/SplitParserActions.java. */
+  public final java_cup.runtime.Symbol CUP$parser$do_action_part00000007(
+    int                        CUP$parser$act_num,
+    java_cup.runtime.lr_parser CUP$parser$parser,
+    java.util.Stack            CUP$parser$stack,
+    int                        CUP$parser$top)
+    throws java.lang.Exception
+    {
+      /* Symbol object for return from actions */
+      java_cup.runtime.Symbol CUP$parser$result;
+
+      /* select the action based on the action number */
+      switch (CUP$parser$act_num)
+        {          case 175: // expFor ::= FOR LPAREN expForExp SEMI expForExp SEMI expForExp RPAREN LBRACKET instructionList RBRACKET 
             {
               astNode RESULT =null;
 		int fleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-10)).left;
@@ -5556,7 +5709,29 @@ class CUP$parser$actions {
           return CUP$parser$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
-          case 200: // expListIndividual ::= expDouble 
+          /* . . . . . .*/
+          default:
+            throw new Exception(
+               "Invalid action number "+CUP$parser$act_num+"found in internal parse table");
+
+        }
+    } /* end of method */
+
+  /** Actions 200 to 224. Split from CUP's single part so HotSpot will compile it;
+      see src/build/SplitParserActions.java. */
+  public final java_cup.runtime.Symbol CUP$parser$do_action_part00000008(
+    int                        CUP$parser$act_num,
+    java_cup.runtime.lr_parser CUP$parser$parser,
+    java.util.Stack            CUP$parser$stack,
+    int                        CUP$parser$top)
+    throws java.lang.Exception
+    {
+      /* Symbol object for return from actions */
+      java_cup.runtime.Symbol CUP$parser$result;
+
+      /* select the action based on the action number */
+      switch (CUP$parser$act_num)
+        {          case 200: // expListIndividual ::= expDouble 
             {
               astNode RESULT =null;
 		int dleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
@@ -5995,7 +6170,29 @@ class CUP$parser$actions {
           return CUP$parser$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
-          case 225: // expThrow ::= THROW expression 
+          /* . . . . . .*/
+          default:
+            throw new Exception(
+               "Invalid action number "+CUP$parser$act_num+"found in internal parse table");
+
+        }
+    } /* end of method */
+
+  /** Actions 225 to 225. Split from CUP's single part so HotSpot will compile it;
+      see src/build/SplitParserActions.java. */
+  public final java_cup.runtime.Symbol CUP$parser$do_action_part00000009(
+    int                        CUP$parser$act_num,
+    java_cup.runtime.lr_parser CUP$parser$parser,
+    java.util.Stack            CUP$parser$stack,
+    int                        CUP$parser$top)
+    throws java.lang.Exception
+    {
+      /* Symbol object for return from actions */
+      java_cup.runtime.Symbol CUP$parser$result;
+
+      /* select the action based on the action number */
+      switch (CUP$parser$act_num)
+        {          case 225: // expThrow ::= THROW expression 
             {
               astNode RESULT =null;
 		int tleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
@@ -6030,11 +6227,25 @@ class CUP$parser$actions {
     int                        CUP$parser$top)
     throws java.lang.Exception
     {
-              return CUP$parser$do_action_part00000000(
-                               CUP$parser$act_num,
-                               CUP$parser$parser,
-                               CUP$parser$stack,
-                               CUP$parser$top);
+      if (CUP$parser$act_num <= 24)
+        return CUP$parser$do_action_part00000000(CUP$parser$act_num, CUP$parser$parser, CUP$parser$stack, CUP$parser$top);
+      if (CUP$parser$act_num <= 49)
+        return CUP$parser$do_action_part00000001(CUP$parser$act_num, CUP$parser$parser, CUP$parser$stack, CUP$parser$top);
+      if (CUP$parser$act_num <= 74)
+        return CUP$parser$do_action_part00000002(CUP$parser$act_num, CUP$parser$parser, CUP$parser$stack, CUP$parser$top);
+      if (CUP$parser$act_num <= 99)
+        return CUP$parser$do_action_part00000003(CUP$parser$act_num, CUP$parser$parser, CUP$parser$stack, CUP$parser$top);
+      if (CUP$parser$act_num <= 124)
+        return CUP$parser$do_action_part00000004(CUP$parser$act_num, CUP$parser$parser, CUP$parser$stack, CUP$parser$top);
+      if (CUP$parser$act_num <= 149)
+        return CUP$parser$do_action_part00000005(CUP$parser$act_num, CUP$parser$parser, CUP$parser$stack, CUP$parser$top);
+      if (CUP$parser$act_num <= 174)
+        return CUP$parser$do_action_part00000006(CUP$parser$act_num, CUP$parser$parser, CUP$parser$stack, CUP$parser$top);
+      if (CUP$parser$act_num <= 199)
+        return CUP$parser$do_action_part00000007(CUP$parser$act_num, CUP$parser$parser, CUP$parser$stack, CUP$parser$top);
+      if (CUP$parser$act_num <= 224)
+        return CUP$parser$do_action_part00000008(CUP$parser$act_num, CUP$parser$parser, CUP$parser$stack, CUP$parser$top);
+      return CUP$parser$do_action_part00000009(CUP$parser$act_num, CUP$parser$parser, CUP$parser$stack, CUP$parser$top);
     }
 }
 
