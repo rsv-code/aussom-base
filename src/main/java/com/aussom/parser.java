@@ -1780,6 +1780,26 @@ public class parser extends java_cup.runtime.lr_parser {
   }
 
   /**
+   * Builds the doc node for a doc comment, honouring the engine's
+   * aussomdoc.retain policy.
+   *
+   * A node is attached either way, so getDocNode returns the same shape
+   * whatever policy says; only the text differs. Returning null instead
+   * would save a little more but would break any caller that reasonably
+   * writes getDocNode().getAussomdoc(), and those callers are in other
+   * projects where the breakage would surface as a NullPointerException.
+   */
+  private astAussomDoc docNode(String Text, int Left, int Right) {
+      String t = Text;
+      if (!this.eng.getSecurityManager().getPropertyBoolean("aussomdoc.retain", true)) {
+          t = "";
+      }
+      astAussomDoc ad = new astAussomDoc(t);
+      ad.setParserInfo(this.fileName, Left, Right, this.cur_token.left, this.cur_token.right);
+      return ad;
+  }
+
+  /**
    * Binds an extern class after checking that this engine's security
    * manager permits the named class. The check is here rather than in
    * astClass because the parser is what holds the engine, and this is
@@ -2177,8 +2197,7 @@ class CUP$parser$actions {
 		astNode exp = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
         // Set doc node.
-        astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
+        astAussomDoc ad = this.parser.docNode(doc, docleft, docright);
         exp.setDocNode(ad);
         RESULT = exp;
     
@@ -2201,8 +2220,7 @@ class CUP$parser$actions {
 		astNode exp = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
         // Set doc node.
-        astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
+        astAussomDoc ad = this.parser.docNode(doc, docleft, docright);
         exp.setDocNode(ad);
         exp.addAnnotations(annList);
         RESULT = exp;
@@ -2698,8 +2716,7 @@ class CUP$parser$actions {
 		astNode md = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
         // Set doc node.
-        astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
+        astAussomDoc ad = this.parser.docNode(doc, docleft, docright);
         md.setDocNode(ad);
         RESULT = md;
     
@@ -2740,8 +2757,7 @@ class CUP$parser$actions {
 		astNode md = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
         // Set doc node.
-        astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
+        astAussomDoc ad = this.parser.docNode(doc, docleft, docright);
         md.setDocNode(ad);
         md.addAnnotations(annList);
         RESULT = md;
@@ -3022,8 +3038,7 @@ class CUP$parser$actions {
 		astNode fd = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
         // Set doc node.
-        astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
+        astAussomDoc ad = this.parser.docNode(doc, docleft, docright);
         fd.setDocNode(ad);
         RESULT = fd;
     
@@ -3064,8 +3079,7 @@ class CUP$parser$actions {
 		astNode fd = (astNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
         // Set doc node.
-        astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
+        astAussomDoc ad = this.parser.docNode(doc, docleft, docright);
         fd.setDocNode(ad);
         fd.addAnnotations(annList);
         RESULT = fd;

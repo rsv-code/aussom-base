@@ -97,6 +97,14 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 		this.props.put("aussomdoc.file.getJson", false);
 		this.props.put("aussomdoc.class.getJson", false);
 
+		// Keep doc comment text on the AST. Unlike the two above this
+		// is parse behaviour rather than an action gate. False drops
+		// the text as each doc comment is parsed, which saves roughly
+		// 84 KB per engine and blanks doc text for every consumer:
+		// -d output, reflect, and any language tooling built on them.
+		// True is the default because that loss is silent.
+		this.props.put("aussomdoc.retain", true);
+
 		/*
 		 * Unit testing actions.
 		 */

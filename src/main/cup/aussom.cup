@@ -71,6 +71,26 @@ parser code {:
   }
 
   /**
+   * Builds the doc node for a doc comment, honouring the engine's
+   * aussomdoc.retain policy.
+   *
+   * A node is attached either way, so getDocNode returns the same shape
+   * whatever policy says; only the text differs. Returning null instead
+   * would save a little more but would break any caller that reasonably
+   * writes getDocNode().getAussomdoc(), and those callers are in other
+   * projects where the breakage would surface as a NullPointerException.
+   */
+  private astAussomDoc docNode(String Text, int Left, int Right) {
+      String t = Text;
+      if (!this.eng.getSecurityManager().getPropertyBoolean("aussomdoc.retain", true)) {
+          t = "";
+      }
+      astAussomDoc ad = new astAussomDoc(t);
+      ad.setParserInfo(this.fileName, Left, Right, this.cur_token.left, this.cur_token.right);
+      return ad;
+  }
+
+  /**
    * Binds an extern class after checking that this engine's security
    * manager permits the named class. The check is here rather than in
    * astClass because the parser is what holds the engine, and this is
@@ -413,16 +433,14 @@ classBlock ::=
 |   AUSSOM_DOC:doc classDefExpr:exp
     {:
         // Set doc node.
-        astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
+        astAussomDoc ad = this.parser.docNode(doc, docleft, docright);
         exp.setDocNode(ad);
         RESULT = exp;
     :}
 |   AUSSOM_DOC:doc annotationList:annList classDefExpr:exp
     {:
         // Set doc node.
-        astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
+        astAussomDoc ad = this.parser.docNode(doc, docleft, docright);
         exp.setDocNode(ad);
         exp.addAnnotations(annList);
         RESULT = exp;
@@ -621,8 +639,7 @@ memberDefinitionBlock ::=
 |   AUSSOM_DOC:doc memberDefinition:md
     {:
         // Set doc node.
-        astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
+        astAussomDoc ad = this.parser.docNode(doc, docleft, docright);
         md.setDocNode(ad);
         RESULT = md;
     :}
@@ -634,8 +651,7 @@ memberDefinitionBlock ::=
 |   AUSSOM_DOC:doc annotationList:annList memberDefinition:md
     {:
         // Set doc node.
-        astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
+        astAussomDoc ad = this.parser.docNode(doc, docleft, docright);
         md.setDocNode(ad);
         md.addAnnotations(annList);
         RESULT = md;
@@ -734,8 +750,7 @@ functionDefinitionBlock ::=
 |   AUSSOM_DOC:doc functionDefinition:fd
     {:
         // Set doc node.
-        astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
+        astAussomDoc ad = this.parser.docNode(doc, docleft, docright);
         fd.setDocNode(ad);
         RESULT = fd;
     :}
@@ -747,8 +762,7 @@ functionDefinitionBlock ::=
 |   AUSSOM_DOC:doc annotationList:annList functionDefinition:fd
     {:
         // Set doc node.
-        astAussomDoc ad = new astAussomDoc(doc);
-        ad.setParserInfo(this.parser.fileName, docleft, docright, this.parser.cur_token.left, this.parser.cur_token.right);
+        astAussomDoc ad = this.parser.docNode(doc, docleft, docright);
         fd.setDocNode(ad);
         fd.addAnnotations(annList);
         RESULT = fd;
