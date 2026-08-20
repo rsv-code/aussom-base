@@ -25,13 +25,17 @@ public class AussomRef extends AussomType implements AussomTypeInt {
 	private String mkey = "";
 	private ArrayList<AussomType> lobj;
 	private ConcurrentHashMap<String, AussomType> mobj;
-	
+
+	/**
+	 * AussomRef constructor. mobj is lazily loaded because this is a hot path and
+	 * the mobj is rarely used. It's still loaded if need be later.
+	 */
 	public AussomRef() {
 		this.setType(cType.cRef);
 		this.isMap = true;
 		this.lkey = -1;
 		this.mkey = "";
-		this.mobj = new ConcurrentHashMap<String, AussomType>();
+		this.mobj = null;
 	}
 	
 	public void setList(int Key, ArrayList<AussomType> Lobj) {
@@ -58,8 +62,13 @@ public class AussomRef extends AussomType implements AussomTypeInt {
 		return this.mobj;
 	}
 	
-	public AussomType getValue() throws Exception {
+	public synchronized AussomType getValue() throws Exception {
 		if (this.isMap) {
+			// If not initialized
+			if (this.mobj == null) {
+				this.mobj = new ConcurrentHashMap<String, AussomType>();
+			}
+
 			if (this.mobj.containsKey(this.mkey)) {
 				return this.mobj.get(this.mkey);
 			} else {
@@ -76,6 +85,9 @@ public class AussomRef extends AussomType implements AussomTypeInt {
 	
 	public synchronized void assign(AussomType Value) {
 		if (this.isMap) {
+			// If not initialized
+			if (this.mobj == null) { this.mobj = new ConcurrentHashMap<String, AussomType>(); }
+
 			synchronized(this.mobj) {
 				this.mobj.put(this.mkey, Value);
 			}
@@ -87,28 +99,33 @@ public class AussomRef extends AussomType implements AussomTypeInt {
 	}
 
 	@Override
-	public String toString(int Level) {
+	public synchronized String toString(int Level) {
 		String rstr = "";
 		rstr += AussomType.getTabs(Level) + "{\n";
 		rstr += AussomType.getTabs(Level + 1) + "\"type\": \"" + this.getType().name() + "\",\n";
 		if (!this.isMap && this.lkey != -1) {
-		  rstr += AussomType.getTabs(Level + 1) + "\"objType\": \"list\",\n";
-		  rstr += AussomType.getTabs(Level + 1) + "\"lkey\": " + this.lkey + ",\n";
-		  rstr += AussomType.getTabs(Level + 1) + "\"lobj\": [\n";
-		  for (int i = 0; i < this.lobj.size(); i++) {
-			rstr += ((AussomTypeInt)this.lobj.get(i)).toString(Level + 2) + ",\n";
-		  }
-		  rstr += AussomType.getTabs(Level + 1) + "],\n";
+			rstr += AussomType.getTabs(Level + 1) + "\"objType\": \"list\",\n";
+			rstr += AussomType.getTabs(Level + 1) + "\"lkey\": " + this.lkey + ",\n";
+			rstr += AussomType.getTabs(Level + 1) + "\"lobj\": [\n";
+			for (int i = 0; i < this.lobj.size(); i++) {
+				rstr += ((AussomTypeInt)this.lobj.get(i)).toString(Level + 2) + ",\n";
+			}
+			rstr += AussomType.getTabs(Level + 1) + "],\n";
 		} else if (this.isMap && this.mkey != "") {
-		  rstr += AussomType.getTabs(Level + 1) + "\"objType\": \"map\",\n";
-		  rstr += AussomType.getTabs(Level + 1) + "\"mkey\": \"" + this.mkey + "\",\n";
-		  rstr += AussomType.getTabs(Level + 1) + "\"mobj\": {\n";
-		  for(String key : this.mobj.keySet()) {
-			AussomType val = this.mobj.get(key);
-			rstr += AussomType.getTabs(Level + 2) + key + ":\n";
-			rstr += ((AussomTypeInt)val).toString(Level + 2) + ",\n";
-		  }
-		  rstr += AussomType.getTabs(Level + 1) + "},\n";
+			// If not initialized
+			if (this.mobj == null) {
+				this.mobj = new ConcurrentHashMap<String, AussomType>();
+			}
+
+			rstr += AussomType.getTabs(Level + 1) + "\"objType\": \"map\",\n";
+			rstr += AussomType.getTabs(Level + 1) + "\"mkey\": \"" + this.mkey + "\",\n";
+			rstr += AussomType.getTabs(Level + 1) + "\"mobj\": {\n";
+			for(String key : this.mobj.keySet()) {
+				AussomType val = this.mobj.get(key);
+				rstr += AussomType.getTabs(Level + 2) + key + ":\n";
+				rstr += ((AussomTypeInt)val).toString(Level + 2) + ",\n";
+			}
+			rstr += AussomType.getTabs(Level + 1) + "},\n";
 		}
 		rstr += AussomType.getTabs(Level) + "}";
 		return rstr;

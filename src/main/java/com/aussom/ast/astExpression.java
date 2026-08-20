@@ -100,12 +100,20 @@ public class astExpression extends astNode implements astNodeInt {
 
 	@Override
 	public AussomType evalImpl(Environment env, boolean getRef) throws aussomException {
-		// Load-bearing init: when both `left` and `right` are null
-		// neither switch below assigns ret, but the trailing
-		// `!ret.isEx()` guard reads it. Keep this allocation; the
-		// other initializers in this file are pure waste and have
-		// been dropped under O5.
-		AussomType ret = new AussomNull();
+		// Deliberately not initialized. This used to hold an eagerly
+		// allocated AussomNull, which every branch below then threw
+		// away; it was 17% of all interpreter allocation because this
+		// method runs for every expression evaluated. See
+		// design/interpreter-perf-investigation.md.
+		//
+		// Leaving it uninitialized rather than setting it to null puts
+		// the compiler in charge: every case in both switches assigns
+		// ret, and the else branch covers left and right both being
+		// null, so javac can prove ret is assigned before it is read
+		// below. Add a case that forgets to assign and the build fails
+		// with "variable ret might not have been initialized" instead
+		// of quietly returning the wrong value.
+		AussomType ret;
 
 		if((this.left != null)&&(this.right != null)) {
 			switch(this.eType) {
@@ -215,6 +223,10 @@ public class astExpression extends astNode implements astNodeInt {
 					break;
 				}
 			}
+		} else {
+			// Neither operand is set, so no switch ran. This is the one
+			// path that still needs an AussomNull.
+			ret = new AussomNull();
 		}
 
 		// If child is defined, evaluate it as well.
