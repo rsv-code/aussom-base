@@ -41,6 +41,12 @@ import com.aussom.types.AussomType;
  */
 public class SecurityManagerImpl implements SecurityManagerInt {
 	/**
+	 * The class loader for the Engine. This must be set by extending
+	 * this SecurityManager and then setting the one you want to use.
+	 */
+	protected ClassLoader engineClassLoader = ClassLoader.getSystemClassLoader();
+
+	/**
 	 * Holds the properties for the security manager.
 	 */
 	protected ConcurrentHashMap<String, Object> props = new ConcurrentHashMap<String, Object>();
@@ -49,12 +55,6 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 	 * Default constructor adds the standard properties.
 	 */
 	public SecurityManagerImpl() {
-		/*
-		 * Used to set the Engines own ClassLoader. This is used in astClass to
-		 * instantiate extern classes and such.
-		 */
-		props.put("engine.classloader", ClassLoader.getSystemClassLoader());
-
 		/*
 		 * Security manager itself.
 		 */
@@ -214,6 +214,15 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 		 * nothing there may point elsewhere. See Engine.addInclude.
 		 */
 		this.props.put("aussom.include.symlink.follow", true);
+	}
+
+	/**
+	 * Get the Engine class loader.
+	 * @return A ClassLoader.
+	 */
+	@Override
+	public ClassLoader getEngineClassLoader() {
+		return this.engineClassLoader;
 	}
 	
 	/**

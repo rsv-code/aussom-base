@@ -29,6 +29,13 @@ import com.aussom.types.AussomType;
  * @author Austin Lehman
  */
 public interface SecurityManagerInt {
+	/**
+	 * The class loader the engine resolves extern classes with.
+	 */
+	public default ClassLoader getEngineClassLoader() {
+		return ClassLoader.getSystemClassLoader();
+	}
+
 	// Java get property value.
 	public Object getProperty(String PropName);
 
