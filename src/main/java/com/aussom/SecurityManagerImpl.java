@@ -50,6 +50,12 @@ public class SecurityManagerImpl implements SecurityManagerInt {
 	 */
 	public SecurityManagerImpl() {
 		/*
+		 * Used to set the Engines own ClassLoader. This is used in astClass to
+		 * instantiate extern classes and such.
+		 */
+		props.put("engine.classloader", ClassLoader.getSystemClassLoader());
+
+		/*
 		 * Security manager itself.
 		 */
 		// instantiate - can new instances be created from this one? This 

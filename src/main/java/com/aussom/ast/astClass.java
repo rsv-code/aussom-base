@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.aussom.CallStack;
+import com.aussom.Engine;
 import com.aussom.Environment;
 import com.aussom.stdlib.UnitTest;
 import com.aussom.stdlib.UnitTestClass;
@@ -1289,8 +1290,8 @@ public class astClass extends astNode implements astNodeInt {
 		return obj;
 	}
 
-	private void loadExternClass() throws aussomException {
-		ClassLoader cl = ClassLoader.getSystemClassLoader();
+	private void loadExternClass(Engine eng) throws aussomException {
+		ClassLoader cl = eng.getEngineClassLoader();
 	    try {
 	        this.externClass = cl.loadClass(this.externClassName);
 	    } catch (ClassNotFoundException e) {
@@ -1362,10 +1363,10 @@ public class astClass extends astNode implements astNodeInt {
 		return externClassName;
 	}
 
-	public void setExternClassName(String externClass, boolean LoadExtern) throws aussomException {
+	public void setExternClassName(Engine eng, String externClass, boolean LoadExtern) throws aussomException {
 		this.externClassName = externClass;
 		if (LoadExtern)
-			this.loadExternClass();
+			this.loadExternClass(eng);
 	}
 
 	@SuppressWarnings("rawtypes")

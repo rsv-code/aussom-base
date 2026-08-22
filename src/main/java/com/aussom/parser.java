@@ -1817,13 +1817,13 @@ public class parser extends java_cup.runtime.lr_parser {
    * A denial is reported the same way a missing extern class is, so
    * the two failures look alike to a caller.
    */
-  private void bindExternClass(astClass Ac, String ExternName) throws aussomException {
+  private void bindExternClass(Engine eng, astClass Ac, String ExternName) throws aussomException {
       if (this.loadExternClasses && !this.eng.isExternClassAllowed(ExternName)) {
           throw new aussomException("Extern class '" + ExternName
               + "' is not permitted. Add it, or a matching '<package>.*' prefix, "
               + "to the security manager property 'aussom.extern.allowed'.");
       }
-      Ac.setExternClassName(ExternName, this.loadExternClasses);
+      Ac.setExternClassName(eng, ExternName, this.loadExternClasses);
   }
 
   /**
@@ -2471,7 +2471,7 @@ class CUP$parser$actions {
 		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astClass)ac).setStatic((boolean)is);
 		((astClass)ac).setExtern(true);
-		this.parser.bindExternClass((astClass)ac, ((astInclude)i).getExternClass());
+		this.parser.bindExternClass(eng, (astClass)ac, ((astInclude)i).getExternClass());
 		RESULT = ac;
 	
               CUP$parser$result = parser.getSymbolFactory().newSymbol("classDefExpr",4, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-6)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -2502,7 +2502,7 @@ class CUP$parser$actions {
 		ac.setParserInfo(this.parser.fileName, classNameleft, classNameright, this.parser.cur_token.left, this.parser.cur_token.right);
 		((astClass)ac).setStatic((boolean)is);
 		((astClass)ac).setExtern(true);
-		this.parser.bindExternClass((astClass)ac, ((astInclude)i).getExternClass());
+		this.parser.bindExternClass(eng, (astClass)ac, ((astInclude)i).getExternClass());
 		((astClass)ac).setExtendedClasses(cl);
 		RESULT = ac;
 	

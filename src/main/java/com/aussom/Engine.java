@@ -43,6 +43,13 @@ import com.aussom.types.*;
  */
 public class Engine implements AussomDebuggingInt {
 	/**
+	 * The ClassLoader used bby astClass to reflect on extern objects. By
+	 * default set to the system ClassLoader but this is settable on
+	 * Engine startup by the SecurityManager.
+	 */
+	protected ClassLoader engineClassLoader = ClassLoader.getSystemClassLoader();
+
+	/**
 	 * Defines the run mode of then engine. When set to DOC some
 	 * errors are ignored like missing includes.
 	 */
@@ -324,6 +331,10 @@ public class Engine implements AussomDebuggingInt {
 	 * @throws Exception on init failure or failure to instantiate static classes.
 	 */
 	public Engine(SecurityManagerInt SecMan, LangRegistry Registry) throws Exception {
+		if (SecMan.getProperty("engine.classloader") != null) {
+			this.engineClassLoader = (ClassLoader) SecMan.getProperty("engine.classloader");
+		}
+
 		this.secman = SecMan;
 		this.langRegistry = new LangRegistry(Registry);
 
@@ -339,6 +350,15 @@ public class Engine implements AussomDebuggingInt {
 		this.instantiateStaticClasses();
 
 		this.initComplete = true;
+	}
+
+	/**
+	 * Gets the Engine class loader. This is used spesifically in astClass to
+	 * instantiate extern objects.
+	 * @return A ClassLoader object.
+	 */
+	public ClassLoader getEngineClassLoader() {
+		return this.engineClassLoader;
 	}
 
 	/**
