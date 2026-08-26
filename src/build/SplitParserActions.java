@@ -84,6 +84,40 @@ public final class SplitParserActions {
 
 	private static final String END_OF_METHOD = "    } /* end of method */";
 
+	/**
+	 * Notice stamped onto the generated parser.
+	 *
+	 * CUP does not disclaim its output the way JFlex does. Its license
+	 * says the portions of CUP output hard-coded into the CUP source are
+	 * covered by the CUP license, so this file is part Aussom grammar
+	 * actions under Apache 2.0 and part CUP boilerplate under the CUP
+	 * license, and the CUP notice has to travel with it. See
+	 * THIRD-PARTY.md.
+	 */
+	private static final String CUP_NOTICE =
+		  "/*\n"
+		+ " * GENERATED FILE. Do not edit; edit src/main/cup/aussom.cup instead.\n"
+		+ " *\n"
+		+ " * The grammar actions in this file are generated from aussom.cup and\n"
+		+ " * are licensed under the Apache License, Version 2.0, like the rest of\n"
+		+ " * Aussom. The surrounding parser boilerplate is emitted by the CUP\n"
+		+ " * Parser Generator and remains under the CUP license:\n"
+		+ " *\n"
+		+ " *   CUP Parser Generator Copyright Notice, License, and Disclaimer\n"
+		+ " *   Copyright 1996-2015 by Scott Hudson, Frank Flannery,\n"
+		+ " *   C. Scott Ananian, Michael Petter\n"
+		+ " *\n"
+		+ " *   Permission to use, copy, modify, and distribute this software and\n"
+		+ " *   its documentation for any purpose and without fee is hereby\n"
+		+ " *   granted, provided that the above copyright notice appear in all\n"
+		+ " *   copies and that both the copyright notice and this permission\n"
+		+ " *   notice and warranty disclaimer appear in supporting documentation.\n"
+		+ " *\n"
+		+ " *   Full text and disclaimer:\n"
+		+ " *   https://github.com/DrMichaelPetter/cup/blob/master/licence.txt\n"
+		+ " *   and META-INF/THIRD-PARTY-NOTICES.txt in the built jar.\n"
+		+ " */\n";
+
 	private static final String DISPATCH_DOC =
 		"  /** Method splitting the generated action code into several parts. */";
 
@@ -112,6 +146,9 @@ public final class SplitParserActions {
 		}
 
 		String out = split(src, perPart, file.toString());
+		if (!out.startsWith("/*\n * GENERATED FILE.")) {
+			out = CUP_NOTICE + out;
+		}
 		Files.write(file, out.getBytes(StandardCharsets.UTF_8));
 	}
 

@@ -1,0 +1,53 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.1.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.1.0
+                              http://maven.apache.org/xsd/assembly-2.1.0.xsd">
+  <!--
+    Replaces the built-in jar-with-dependencies descriptor so that the
+    license files in the shipped jar are ours rather than whichever
+    dependency the plugin happened to unpack last.
+
+    The built-in descriptor unpacks every dependency over the top of the
+    project's own classes, so a dependency's META-INF/LICENSE.txt wins
+    and the NOTICE of every Apache dependency but one is lost. See
+    THIRD-PARTY.md.
+  -->
+  <id>jar-with-dependencies</id>
+  <formats>
+    <format>jar</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+
+  <dependencySets>
+    <dependencySet>
+      <outputDirectory>/</outputDirectory>
+      <useProjectArtifact>true</useProjectArtifact>
+      <unpack>true</unpack>
+      <scope>runtime</scope>
+      <unpackOptions>
+        <!--
+          Drop each dependency's own license and notice files. Their
+          content is preserved instead by META-INF/THIRD-PARTY-NOTICES.txt,
+          which this project owns and which cannot be overwritten by an
+          unpack. Every one of these is the verbatim Apache License 2.0,
+          the same text as our own LICENSE.
+        -->
+        <excludes>
+          <exclude>META-INF/LICENSE</exclude>
+          <exclude>META-INF/LICENSE.txt</exclude>
+          <exclude>META-INF/NOTICE</exclude>
+          <exclude>META-INF/NOTICE.txt</exclude>
+        </excludes>
+      </unpackOptions>
+    </dependencySet>
+  </dependencySets>
+
+  <files>
+    <!-- Our license, placed after the unpack so nothing can clobber it. -->
+    <file>
+      <source>LICENSE</source>
+      <outputDirectory>META-INF</outputDirectory>
+      <destName>LICENSE.txt</destName>
+    </file>
+  </files>
+</assembly>
