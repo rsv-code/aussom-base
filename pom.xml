@@ -3,7 +3,7 @@
   
   <groupId>io.gitlab.cupofcode</groupId>
   <artifactId>aussom.base</artifactId>
-  <version>1.4.6</version>
+  <version>1.4.7</version>
   <packaging>jar</packaging>
   
   <name>aussom.base</name>
@@ -122,8 +122,51 @@
     <!-- Standard Maven layout. Sources live under src/main/java,
          resources under src/main/resources, tests under src/test/java
          + src/test/resources. -->
+    <resources>
+      <!-- The default resource directory. It has to be listed because
+           declaring this block replaces the default rather than adding
+           to it. -->
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+
+      <!-- The project's own license, staged here by the antrun
+           execution below and shipped as META-INF/LICENSE.txt. The
+           root LICENSE stays the single copy in the repository; it is
+           copied at build time so the two can never drift. -->
+      <resource>
+        <directory>${project.build.directory}/license-resources</directory>
+        <targetPath>META-INF</targetPath>
+      </resource>
+    </resources>
+
     <plugins>
 	    
+	      <!-- Stage the root LICENSE as LICENSE.txt for the resource
+	           entry above, so the published jar carries the project's
+	           license and not just the third-party notices. Runs before
+	           process-resources, which is when the resource entry is
+	           copied into target/classes. -->
+	      <plugin>
+	        <artifactId>maven-antrun-plugin</artifactId>
+	        <version>3.1.0</version>
+	        <executions>
+	          <execution>
+	            <id>stage-license</id>
+	            <phase>generate-resources</phase>
+	            <goals>
+	              <goal>run</goal>
+	            </goals>
+	            <configuration>
+	              <target>
+	                <copy file="${project.basedir}/LICENSE"
+	                      tofile="${project.build.directory}/license-resources/LICENSE.txt"/>
+	              </target>
+	            </configuration>
+	          </execution>
+	        </executions>
+	      </plugin>
+
 	      <plugin>
 	        <artifactId>maven-compiler-plugin</artifactId>
 	        <version>3.6.1</version>

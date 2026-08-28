@@ -31,6 +31,10 @@
           which this project owns and which cannot be overwritten by an
           unpack. Every one of these is the verbatim Apache License 2.0,
           the same text as our own LICENSE.
+
+          This also drops the META-INF/LICENSE.txt that the thin jar now
+          carries, because the project artifact is unpacked here too. The
+          files section below puts ours back, from the same source file.
         -->
         <excludes>
           <exclude>META-INF/LICENSE</exclude>
