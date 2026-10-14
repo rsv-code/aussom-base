@@ -1314,6 +1314,18 @@ class interpreterTests {
 	 @Test(name = "(object access) Method access for member variable by index expression.")
 	 public objectAccessMemVarIndexExp() { this.obj = new cont(); fname = 'pub'; ex = false; try { t = this.obj.c[fname]; }  catch(e) { ex = true; } return test.expect(ex, false); }
 
+	 @Test(name = "(object access) Member access for local variable private by index.")
+	 public objectAccessLocalVarIndexPri() { l = new atest(); ex = false; try { t = l['pri']; }  catch(e) { ex = true; } return test.expect(ex, true); }
+
+	 @Test(name = "(object access) Member access by index followed by dot member.")
+	 public objectAccessIndexThenDot() { l = new cont(); return test.expect(l['c'].pub, 'Pub'); }
+
+	 @Test(name = "(object access) Member access by index followed by index member.")
+	 public objectAccessIndexThenIndex() { l = new cont(); return test.expect(l['c']['pub'], 'Pub'); }
+
+	 @Test(name = "(object access) Member assignment by index.")
+	 public objectAssignIndex() { l = new atest(); l['pub'] = 'Changed'; return test.expect(l.pub, 'Changed'); }
+
 	 // access inherited members (base-declared members reached through a derived object).
 	 // The private cases currently LEAK: a base-declared private member is reachable from
 	 // outside code when accessed through a derived-typed reference.

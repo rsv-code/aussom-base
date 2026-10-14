@@ -292,16 +292,19 @@ public class astObj  extends astNode implements astNodeInt {
 				String ind = ((AussomString)ctindex).getValue();
 				AussomObject ao = (AussomObject) env.getCurObj();
 				if (ao.containsMember(ind)) {
-					// We found it!
+					// We found it! Apply the same access check as dot access.
+					if (!this.memberHasAccess(env, ind)) {
+						AussomException e = new AussomException(exType.exRuntime);
+						e.setException(getLineNum(), "NO_ACCESS", "astObj.evalObj(): No access to member '" + ind + "'.", env.getCallStack().getStackTrace());
+						return e;
+					}
 					if (this.getChild() != null) {
-						if (env.getCurObj() instanceof AussomMap) {
-							Environment tenv = env.clone(((AussomMap)env.getCurObj()).getValue().get(ind));
-							ret = this.getChild().eval(tenv, getRef);
-						} else {
-							AussomException e = new AussomException(exType.exRuntime);
-							e.setException(this.getLineNum(), "INVALID_EXPRESSION", "astObj.evalObj(): Expecting type Map but found '" + ((AussomObject) env.getCurObj()).getType() + "' instead.", env.getCallStack().getStackTrace());
-							return e;
-						}
+						Environment tenv = env.clone(ao.getMember(ind));
+						ret = this.getChild().eval(tenv, getRef);
+					} else if (getRef) {
+						AussomRef ref = new AussomRef();
+						ref.setMap(ind, ao.getMembers().getMap());
+						ret = ref;
 					} else {
 						ret = ao.getMember(ind);
 					}
