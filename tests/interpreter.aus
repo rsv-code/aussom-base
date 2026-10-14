@@ -3984,6 +3984,22 @@ class interpreterTests {
         return test.expect(p.callPriv(), "priv:1");
     }
 
+    @Test(name = "(access) Private extern function is a parse error.")
+    public accessPrivateExternRejected() {
+        src = "extern class pe : com.aussom.stdlib.ABuffer { public pe() { } private extern size(); }";
+        ex = "";
+        try { r = new testRunner(); r.loadTestString("privExtern", src); } catch (e) { ex = e.getText(); }
+        return test.expect(ex.contains("must be public"), true);
+    }
+
+    @Test(name = "(access) Extern function with no access modifier is a parse error.")
+    public accessDefaultExternRejected() {
+        src = "extern class de : com.aussom.stdlib.ABuffer { public de() { } extern size(); }";
+        ex = "";
+        try { r = new testRunner(); r.loadTestString("defExtern", src); } catch (e) { ex = e.getText(); }
+        return test.expect(ex.contains("must be public"), true);
+    }
+
     // ---------- Recursive self-call into overloaded method ----------
 
     @Test(name = "(recursive) Self-call through an overloaded name dispatches identically.")

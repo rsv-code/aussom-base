@@ -3226,6 +3226,11 @@ class CUP$parser$actions {
 		astFunctDefArgsList al = (astFunctDefArgsList)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-2)).value;
 		
 		f.setParserInfo(this.parser.fileName, fleft, fright, this.parser.cur_token.left, this.parser.cur_token.right);
+		// Any script can bind its own class to the same Java class, so the
+		// Java side is the real API and an extern can't be kept private.
+		if (am != AccessType.aPublic) {
+			throw new aussomException(f, "PARSE_ERROR: Extern function '" + f.getName() + "' must be public.", "");
+		}
 		((astFunctDef)f).setArgList(al);
 		((astFunctDef)f).setExtern(true);
 		f.setAccessType(am);

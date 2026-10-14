@@ -777,7 +777,7 @@ extern class string : com.aussom.types.AussomString {
      * @r A new formatted string.
      */
 	public format(...) { return this._format(etc); }
-	private extern _format(list Args);
+	public extern _format(list Args);
 
 	/**
      * Converts the value to a JSON encoded string.
@@ -1343,7 +1343,7 @@ extern class callback : com.aussom.types.AussomCallback {
      * @r Any object that the called function returns.
      */
 	public call(...) { return this._call(etc); }
-	private extern _call(list args);
+	public extern _call(list args);
 
 	/**
      * Sets a mock on the object for the specified function
@@ -1585,7 +1585,7 @@ extern class Date : com.aussom.stdlib.ADate {
 	public Date(int Mills = null) {
 		return this.newDate(Mills);
 	}
-	private extern newDate(int Mills = null);
+	public extern newDate(int Mills = null);
 
 	/**
 	 * Gets the hour of the day evaluated at UTC, represented by
@@ -1962,7 +1962,7 @@ extern class Buffer : com.aussom.stdlib.ABuffer {
 	public Buffer(int Size = 1024) {
 		return this.newBuffer(Size);
 	}
-	private extern newBuffer(int Size = 1024);
+	public extern newBuffer(int Size = 1024);
 
 	/**
 	 * Gets the size of the Buffer in bytes.
@@ -2601,7 +2601,7 @@ extern class SecurityManager : com.aussom.stdlib.ASecurityManager {
 	public SecurityManager() {
 		return this.newSecurityManager();
 	}
-	private extern newSecurityManager();
+	public extern newSecurityManager();
 
     /**
      * Gets the security manager property value with

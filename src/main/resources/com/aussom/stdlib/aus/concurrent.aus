@@ -47,7 +47,7 @@ extern class AtomicLong : com.aussom.stdlib.AAtomicLong {
 	public AtomicLong(int Initial = 0) {
 		return this.newAtomicLong(Initial);
 	}
-	private extern newAtomicLong(int Initial = 0);
+	public extern newAtomicLong(int Initial = 0);
 
 	/**
 	 * Gets the current value.
@@ -112,7 +112,7 @@ extern class AtomicBool : com.aussom.stdlib.AAtomicBool {
 	public AtomicBool(bool Initial = false) {
 		return this.newAtomicBool(Initial);
 	}
-	private extern newAtomicBool(bool Initial = false);
+	public extern newAtomicBool(bool Initial = false);
 
 	/**
 	 * Gets the current value.
@@ -160,7 +160,7 @@ extern class AtomicRef : com.aussom.stdlib.AAtomicRef {
 	public AtomicRef(Initial = null) {
 		return this.newAtomicRef(Initial);
 	}
-	private extern newAtomicRef(Initial = null);
+	public extern newAtomicRef(Initial = null);
 
 	/**
 	 * Gets the current value.
@@ -256,7 +256,7 @@ extern class BlockingQueue : com.aussom.stdlib.ABlockingQueue {
 	public BlockingQueue(int Capacity = 0) {
 		return this.newBlockingQueue(Capacity);
 	}
-	private extern newBlockingQueue(int Capacity = 0);
+	public extern newBlockingQueue(int Capacity = 0);
 
 	/**
 	 * Adds a value, waiting up to TimeoutMs for space.
@@ -322,7 +322,7 @@ extern class Semaphore : com.aussom.stdlib.ASemaphore {
 	public Semaphore(int Permits = 1) {
 		return this.newSemaphore(Permits);
 	}
-	private extern newSemaphore(int Permits = 1);
+	public extern newSemaphore(int Permits = 1);
 
 	/**
 	 * Tries to take a permit, waiting up to TimeoutMs.
@@ -362,7 +362,7 @@ extern class Latch : com.aussom.stdlib.ALatch {
 	public Latch(int Count = 1) {
 		return this.newLatch(Count);
 	}
-	private extern newLatch(int Count = 1);
+	public extern newLatch(int Count = 1);
 
 	/**
 	 * Counts down by one. At zero all waiters are released.
