@@ -17,9 +17,7 @@
 package com.aussom.stdlib;
 
 import com.aussom.*;
-import com.aussom.ast.astAnnotation;
 import com.aussom.ast.astClass;
-import com.aussom.ast.astNode;
 import com.aussom.ast.aussomException;
 import com.aussom.types.*;
 
@@ -248,15 +246,6 @@ public class UnitTestRunner extends Engine {
             for (UnitTest test : testClass.getTests()) {
                 result.total++;
                 String testLogStr = test.getTestDisplayString();
-
-                try {
-
-                    astNode af = cls.getFunct(test.getFunctionName(), "");
-                    astAnnotation functAnn = af.getAnnotation("Test");
-                } catch (Exception e) {
-                    result.failed++;
-                    testLogStr += "FAILED\n" + e.getMessage();
-                }
 
                 if (test.getSkip()) {
                     result.skipped++;

@@ -1101,6 +1101,9 @@ public class astClass extends astNode implements astNodeInt {
 				if (at.isEx()) {
 					ret = at;
 					break;
+				} else if (at.getType() != cType.cBool && at.getType() != cType.cInt && at.getType() != cType.cDouble) {
+					ret = new AussomException("mockWhen(): Condition expecting return type of bool, int or double but found " + at.getType().name() + " instead.");
+					break;
 				} else {
 					if (at.getNumericBool() == true) {
 						found = true;

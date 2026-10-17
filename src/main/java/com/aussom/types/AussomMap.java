@@ -23,6 +23,8 @@ import com.aussom.ast.astClass;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.json.simple.JSONValue;
+
 public class AussomMap extends AussomObject implements AussomTypeInt, AussomTypeObjectInt {
 	private ConcurrentHashMap<String, AussomType> value = new ConcurrentHashMap<String, AussomType>();
 	
@@ -220,7 +222,7 @@ public class AussomMap extends AussomObject implements AussomTypeInt, AussomType
 					|| ct instanceof AussomMap
 					|| ct instanceof AussomObject
 				) {
-				parts.add("\"" + key + "\":" + ((AussomTypeObjectInt)ct).toJson(env, new ArrayList<AussomType>()).getValueString());
+				parts.add("\"" + JSONValue.escape(key) + "\":" + ((AussomTypeObjectInt)ct).toJson(env, new ArrayList<AussomType>()).getValueString());
 				
 			} else {
 				return new AussomException("Unexpected type found '" + ct.getType().name() + "' when converting to JSON.");
@@ -249,7 +251,7 @@ public class AussomMap extends AussomObject implements AussomTypeInt, AussomType
 					|| ct instanceof AussomMap
 					|| ct instanceof AussomObject
 				) {
-				mparts.add("\"" + key + "\":" + ((AussomTypeObjectInt)ct).pack(env, new ArrayList<AussomType>()).getValueString());
+				mparts.add("\"" + JSONValue.escape(key) + "\":" + ((AussomTypeObjectInt)ct).pack(env, new ArrayList<AussomType>()).getValueString());
 				
 			} else {
 				return new AussomException("Unexpected type found '" + ct.getType().name() + "' when packing map.");

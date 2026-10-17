@@ -3333,6 +3333,18 @@ class interpreterTests {
         return false;
     }
 
+    @Test(name = "(mock) Mock when condition returning a string is a catchable error.")
+    public mockWhenBadCondition() {
+        u = new user();
+        u.mockWhen("getName", ::onMockStringCond, "Bob Durden");
+        ex = "";
+        try { u.getName(); } catch (e) { ex = e.getText(); }
+        return test.expect(ex, "mockWhen(): Condition expecting return type of bool, int or double but found cString instead.");
+    }
+
+    /** Condition for mockWhenBadCondition; returns the wrong type on purpose. */
+    public onMockStringCond(cobj, args) { return "yes"; }
+
     @Test(name = "(mock) Spy set/get test 1.")
     public mockSpyTest1() {
         u = new user();

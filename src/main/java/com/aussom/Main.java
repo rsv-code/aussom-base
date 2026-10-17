@@ -196,8 +196,10 @@ public class Main {
 			result = testRunner.runTests();
 		}  catch (aussomException e) {
 			LOG.err(e.getAussomStackTrace());
+			result = 1;
 		} catch (Exception e) {
 			LOG.err(Util.stackTraceToString(e));
+			result = 1;
 		}
 
 		// Exit with the code now.
