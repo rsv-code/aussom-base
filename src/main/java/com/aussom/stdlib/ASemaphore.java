@@ -21,6 +21,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import com.aussom.Environment;
+import com.aussom.Util;
 import com.aussom.types.AussomBool;
 import com.aussom.types.AussomException;
 import com.aussom.types.AussomInt;
@@ -41,7 +42,10 @@ public class ASemaphore {
 	public ASemaphore() { }
 
 	public AussomType newSemaphore(Environment env, ArrayList<AussomType> args) {
-		this.sem = new Semaphore((int) ((AussomInt) args.get(0)).getValue());
+		long permits = ((AussomInt) args.get(0)).getValue();
+		AussomException err = Util.checkIntRange("Semaphore", permits);
+		if (err != null) return err;
+		this.sem = new Semaphore((int) permits);
 		return env.getClassInstance();
 	}
 
@@ -59,7 +63,12 @@ public class ASemaphore {
 	}
 
 	public AussomType release(Environment env, ArrayList<AussomType> args) {
-		this.sem.release();
+		try {
+			this.sem.release();
+		} catch (Error e) {
+			// Semaphore throws Error when the permit count would pass the int maximum.
+			return new AussomException("Semaphore.release(): Permit count is already at the maximum int value " + Integer.MAX_VALUE + ".");
+		}
 		return env.getClassInstance();
 	}
 

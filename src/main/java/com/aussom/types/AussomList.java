@@ -130,7 +130,10 @@ public class AussomList extends AussomObject implements AussomTypeInt, AussomTyp
 	}
 	
 	public synchronized AussomType addAllAt(Environment env, ArrayList<AussomType> args) {
-		this.value.addAll((int)((AussomInt)args.get(1)).getValue(), ((AussomList)args.get(0)).getValue());
+		long index = ((AussomInt)args.get(1)).getValue();
+		AussomException err = Util.checkIntRange("list.addAllAt", index);
+		if (err != null) return err;
+		this.value.addAll((int) index, ((AussomList)args.get(0)).getValue());
 		return this;
 	}
 	
@@ -161,7 +164,10 @@ public class AussomList extends AussomObject implements AussomTypeInt, AussomTyp
 	}
 	
 	public synchronized AussomType get(Environment env, ArrayList<AussomType> args) {
-		int index = (int) ((AussomInt)args.get(0)).getValue();
+		long value = ((AussomInt)args.get(0)).getValue();
+		AussomException err = Util.checkIntRange("list.get", value);
+		if (err != null) return err;
+		int index = (int) value;
 		if(index >= 0 && index < this.value.size()) {
 			return this.value.get(index);
 		} else {
@@ -183,7 +189,10 @@ public class AussomList extends AussomObject implements AussomTypeInt, AussomTyp
 	}
 	
 	public synchronized AussomType removeAt(Environment env, ArrayList<AussomType> args) {
-		int index = (int) ((AussomInt)args.get(0)).getValue();
+		long value = ((AussomInt)args.get(0)).getValue();
+		AussomException err = Util.checkIntRange("list.removeAt", value);
+		if (err != null) return err;
+		int index = (int) value;
 		if(index >= 0 && index < this.value.size()) {
 			return (AussomType)this.value.remove(index);
 		} else {
@@ -200,7 +209,10 @@ public class AussomList extends AussomObject implements AussomTypeInt, AussomTyp
 	}
 	
 	public synchronized AussomType set(Environment env, ArrayList<AussomType> args) {
-		int index = (int) ((AussomInt)args.get(0)).getValue();
+		long value = ((AussomInt)args.get(0)).getValue();
+		AussomException err = Util.checkIntRange("list.set", value);
+		if (err != null) return err;
+		int index = (int) value;
 		if(index >= 0 && index < this.value.size()) {
 			return this.value.set(index, args.get(1));
 		} else {
@@ -213,8 +225,14 @@ public class AussomList extends AussomObject implements AussomTypeInt, AussomTyp
 	}
 	
 	public synchronized AussomType subList(Environment env, ArrayList<AussomType> args) {
-		int bindex = (int)((AussomInt)args.get(0)).getValue();
-		int eindex = (int)((AussomInt)args.get(1)).getValue();
+		long bvalue = ((AussomInt)args.get(0)).getValue();
+		AussomException err = Util.checkIntRange("list.subList", bvalue);
+		if (err != null) return err;
+		long evalue = ((AussomInt)args.get(1)).getValue();
+		err = Util.checkIntRange("list.subList", evalue);
+		if (err != null) return err;
+		int bindex = (int) bvalue;
+		int eindex = (int) evalue;
 		if(eindex >= bindex && bindex >= 0 && eindex <= this.value.size()) {
 			AussomList ret = new AussomList();
 			ret.setValue(new ArrayList<AussomType>(this.value.subList(bindex, eindex)));

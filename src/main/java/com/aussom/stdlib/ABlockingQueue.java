@@ -21,6 +21,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import com.aussom.Environment;
+import com.aussom.Util;
 import com.aussom.types.AussomBool;
 import com.aussom.types.AussomException;
 import com.aussom.types.AussomInt;
@@ -46,6 +47,8 @@ public class ABlockingQueue {
 
 	public AussomType newBlockingQueue(Environment env, ArrayList<AussomType> args) {
 		long capacity = ((AussomInt) args.get(0)).getValue();
+		AussomException err = Util.checkIntRange("BlockingQueue", capacity);
+		if (err != null) return err;
 		if (capacity > 0) {
 			this.queue = new LinkedBlockingQueue<AussomType>((int) capacity);
 		}

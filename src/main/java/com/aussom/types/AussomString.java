@@ -98,7 +98,10 @@ public class AussomString extends AussomObject implements AussomTypeInt, AussomT
 	}
 	
 	public AussomType charAt(Environment env, ArrayList<AussomType> args) throws aussomException {
-		int index = (int) ((AussomInt)args.get(0)).getValue();
+		long value = ((AussomInt)args.get(0)).getValue();
+		AussomException err = Util.checkIntRange("string.charAt", value);
+		if (err != null) return err;
+		int index = (int) value;
 		if (index >= 0 && index < this.value.length()) {
 			return new AussomString("" + this.value.charAt(index));
 		} else {
@@ -140,7 +143,10 @@ public class AussomString extends AussomObject implements AussomTypeInt, AussomT
 	}
 	
 	public AussomType indexOfStart(Environment env, ArrayList<AussomType> args) {
-		return new AussomInt(this.value.indexOf(((AussomString)args.get(0)).getValue(), (int)((AussomInt)args.get(1)).getValue()));
+		long start = ((AussomInt)args.get(1)).getValue();
+		AussomException err = Util.checkIntRange("string.indexOfStart", start);
+		if (err != null) return err;
+		return new AussomInt(this.value.indexOf(((AussomString)args.get(0)).getValue(), (int) start));
 	}
 	
 	public AussomType isEmpty(Environment env, ArrayList<AussomType> args) {
@@ -156,7 +162,10 @@ public class AussomString extends AussomObject implements AussomTypeInt, AussomT
 	}
 	
 	public AussomType lastIndexOfStart(Environment env, ArrayList<AussomType> args) {
-		return new AussomInt(this.value.lastIndexOf(((AussomString)args.get(0)).getValue(), (int)((AussomInt)args.get(1)).getValue()));
+		long start = ((AussomInt)args.get(1)).getValue();
+		AussomException err = Util.checkIntRange("string.lastIndexOfStart", start);
+		if (err != null) return err;
+		return new AussomInt(this.value.lastIndexOf(((AussomString)args.get(0)).getValue(), (int) start));
 	}
 	
 	public AussomType length(Environment env, ArrayList<AussomType> args) {
@@ -253,10 +262,16 @@ public class AussomString extends AussomObject implements AussomTypeInt, AussomT
 	}
 	
 	public AussomType substr(Environment env, ArrayList<AussomType> args) {
+		long begin = ((AussomInt)args.get(0)).getValue();
+		AussomException err = Util.checkIntRange("string.substr", begin);
+		if (err != null) return err;
 		if (args.get(1).isNull()) {
-			return new AussomString(this.value.substring((int)((AussomInt)args.get(0)).getValue()));
+			return new AussomString(this.value.substring((int) begin));
 		} else {
-			return new AussomString(this.value.substring((int)((AussomInt)args.get(0)).getValue(), (int)((AussomInt)args.get(1)).getValue()));
+			long end = ((AussomInt)args.get(1)).getValue();
+			err = Util.checkIntRange("string.substr", end);
+			if (err != null) return err;
+			return new AussomString(this.value.substring((int) begin, (int) end));
 		}
 	}
 	

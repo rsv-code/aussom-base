@@ -19,6 +19,7 @@ package com.aussom.stdlib;
 import java.util.ArrayList;
 
 import com.aussom.Environment;
+import com.aussom.Util;
 import com.aussom.types.AussomException;
 import com.aussom.types.AussomInt;
 import com.aussom.types.AussomString;
@@ -30,7 +31,10 @@ public class SInt {
 			if(args.get(1).isNull()) {
 				return new AussomInt(Long.parseLong(((AussomString)args.get(0)).getValue()));
 			} else {
-				return new AussomInt(Long.parseLong(((AussomString)args.get(0)).getValue(), (int)((AussomInt)args.get(1)).getValue()));
+				long radix = ((AussomInt)args.get(1)).getValue();
+				AussomException err = Util.checkIntRange("Int.parse", radix);
+				if (err != null) return err;
+				return new AussomInt(Long.parseLong(((AussomString)args.get(0)).getValue(), (int) radix));
 			}
 		} catch(Exception e) {
 			return new AussomException("Int.parse(): Integer parse exception.");

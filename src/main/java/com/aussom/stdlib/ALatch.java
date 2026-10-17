@@ -21,6 +21,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import com.aussom.Environment;
+import com.aussom.Util;
 import com.aussom.types.AussomBool;
 import com.aussom.types.AussomException;
 import com.aussom.types.AussomInt;
@@ -41,7 +42,11 @@ public class ALatch {
 	public ALatch() { }
 
 	public AussomType newLatch(Environment env, ArrayList<AussomType> args) {
-		this.latch = new CountDownLatch((int) ((AussomInt) args.get(0)).getValue());
+		long count = ((AussomInt) args.get(0)).getValue();
+		AussomException err = Util.checkIntRange("Latch", count);
+		if (err != null) return err;
+		if (count < 0) return new AussomException("Latch(): Count must not be negative.");
+		this.latch = new CountDownLatch((int) count);
 		return env.getClassInstance();
 	}
 

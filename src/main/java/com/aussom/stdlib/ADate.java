@@ -111,21 +111,30 @@ public class ADate implements AussomTypeObjectInt, AussomTypeInt, Serializable {
 	}
 
 	public AussomType setHours(Environment env, ArrayList<AussomType> args) {
-		int h = (int) ((AussomInt) args.get(0)).getValue();
+		long value = ((AussomInt) args.get(0)).getValue();
+		AussomException err = Util.checkIntRange("Date.setHours", value);
+		if (err != null) return err;
+		int h = (int) value;
 		ZonedDateTime zdt = this.instant.atZone(ZONE);
 		this.instant = zdt.withHour(h).toInstant();
 		return env.getClassInstance();
 	}
 
 	public AussomType setMinutes(Environment env, ArrayList<AussomType> args) {
-		int m = (int) ((AussomInt) args.get(0)).getValue();
+		long value = ((AussomInt) args.get(0)).getValue();
+		AussomException err = Util.checkIntRange("Date.setMinutes", value);
+		if (err != null) return err;
+		int m = (int) value;
 		ZonedDateTime zdt = this.instant.atZone(ZONE);
 		this.instant = zdt.withMinute(m).toInstant();
 		return env.getClassInstance();
 	}
 
 	public AussomType setSeconds(Environment env, ArrayList<AussomType> args) {
-		int s = (int) ((AussomInt) args.get(0)).getValue();
+		long value = ((AussomInt) args.get(0)).getValue();
+		AussomException err = Util.checkIntRange("Date.setSeconds", value);
+		if (err != null) return err;
+		int s = (int) value;
 		ZonedDateTime zdt = this.instant.atZone(ZONE);
 		this.instant = zdt.withSecond(s).toInstant();
 		return env.getClassInstance();
@@ -231,19 +240,28 @@ public class ADate implements AussomTypeObjectInt, AussomTypeInt, Serializable {
 	/* ---- Date-component setters (mutate in place) ---- */
 
 	public AussomType setYear(Environment env, ArrayList<AussomType> args) {
-		int y = (int) ((AussomInt) args.get(0)).getValue();
+		long value = ((AussomInt) args.get(0)).getValue();
+		AussomException err = Util.checkIntRange("Date.setYear", value);
+		if (err != null) return err;
+		int y = (int) value;
 		this.instant = this.instant.atZone(ZONE).withYear(y).toInstant();
 		return env.getClassInstance();
 	}
 
 	public AussomType setMonth(Environment env, ArrayList<AussomType> args) {
-		int m = (int) ((AussomInt) args.get(0)).getValue();
+		long value = ((AussomInt) args.get(0)).getValue();
+		AussomException err = Util.checkIntRange("Date.setMonth", value);
+		if (err != null) return err;
+		int m = (int) value;
 		this.instant = this.instant.atZone(ZONE).withMonth(m).toInstant();
 		return env.getClassInstance();
 	}
 
 	public AussomType setDayOfMonth(Environment env, ArrayList<AussomType> args) {
-		int d = (int) ((AussomInt) args.get(0)).getValue();
+		long value = ((AussomInt) args.get(0)).getValue();
+		AussomException err = Util.checkIntRange("Date.setDayOfMonth", value);
+		if (err != null) return err;
+		int d = (int) value;
 		this.instant = this.instant.atZone(ZONE).withDayOfMonth(d).toInstant();
 		return env.getClassInstance();
 	}

@@ -19,6 +19,7 @@ package com.aussom.stdlib;
 import java.util.ArrayList;
 
 import com.aussom.Environment;
+import com.aussom.Util;
 import com.aussom.ast.aussomException;
 import com.aussom.types.AussomDouble;
 import com.aussom.types.AussomException;
@@ -39,7 +40,7 @@ public class AMath {
 		AussomType ret = new AussomInt(0);
 		AussomType arg = args.get(0);
 		if(arg.getType() == cType.cBool);
-		else if(arg.getType() == cType.cInt) ret = new AussomInt(Math.abs((int)((AussomInt)arg).getValue()));
+		else if(arg.getType() == cType.cInt) ret = new AussomInt(Math.abs(((AussomInt)arg).getValue()));
 		else if(arg.getType() == cType.cDouble) ret = new AussomDouble(Math.abs(((AussomDouble)arg).getValue()));
 		else ret = new AussomException("math.abs(): Expecting object of type bool, int or double but found " + arg.getType().name() + " instead.");
 		return ret;
@@ -156,7 +157,10 @@ public class AMath {
 	}
 	
 	public static AussomType scalb(Environment env, ArrayList<AussomType> args) {
-		return new AussomDouble(Math.scalb(((AussomDouble)args.get(0)).getValue(), (int)((AussomInt)args.get(1)).getValue()));
+		long scale = ((AussomInt)args.get(1)).getValue();
+		AussomException err = Util.checkIntRange("math.scalb", scale);
+		if (err != null) return err;
+		return new AussomDouble(Math.scalb(((AussomDouble)args.get(0)).getValue(), (int) scale));
 	}
 	
 	public static AussomType signum(Environment env, ArrayList<AussomType> args) {

@@ -20,12 +20,29 @@ package com.aussom;
 import java.io.*;
 import java.util.ArrayList;
 
+import com.aussom.types.AussomException;
+
 /**
  * Aussom interpreter utility functions.
  * @author austin
  */
 public class Util {
 	
+	/**
+	 * Checks that a value fits a Java int before it is narrowed to one.
+	 * @param Method is the Aussom method name for the message, such as list.get.
+	 * @param Value is the value to check.
+	 * @return An AussomException if the value does not fit, otherwise null.
+	 */
+	public static AussomException checkIntRange(String Method, long Value) {
+		if (Value > Integer.MAX_VALUE) {
+			return new AussomException(Method + "(): Value " + Value + " is larger than the maximum int value " + Integer.MAX_VALUE + ".");
+		} else if (Value < Integer.MIN_VALUE) {
+			return new AussomException(Method + "(): Value " + Value + " is smaller than the minimum int value " + Integer.MIN_VALUE + ".");
+		}
+		return null;
+	}
+
 	/**
 	 * Reads a file with the provided file name and returns it as 
 	 * a String.

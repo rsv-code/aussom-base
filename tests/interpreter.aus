@@ -990,7 +990,14 @@ class interpreterTests {
 	    }
 	    return test.expect(excaught, true);
 	 }
-	 
+
+	 @Test(name = "(list operations) Index too large for an int is an error, not wrapped.")
+	 public listIndexTooLarge() {
+	    ex = '';
+	    try { [1, 2].get(4294967296); } catch (e) { ex = e.getText(); }
+	    return test.expect(ex, "list.get(): Value 4294967296 is larger than the maximum int value 2147483647.");
+	 }
+
 	 /***********************************************************************
 	  * Map operations.
 	  *********************************************************************/

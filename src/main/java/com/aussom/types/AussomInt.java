@@ -125,11 +125,17 @@ public class AussomInt extends AussomObject implements AussomTypeInt, AussomType
 	}
 	
 	public AussomType rotateLeft(Environment env, ArrayList<AussomType> args) {
-		return new AussomInt(Long.rotateLeft(this.value, (int)((AussomInt)args.get(0)).getValue()));
+		long distance = ((AussomInt)args.get(0)).getValue();
+		AussomException err = Util.checkIntRange("int.rotateLeft", distance);
+		if (err != null) return err;
+		return new AussomInt(Long.rotateLeft(this.value, (int) distance));
 	}
 	
 	public AussomType rotateRight(Environment env, ArrayList<AussomType> args) {
-		return new AussomInt(Long.rotateRight(this.value, (int)((AussomInt)args.get(0)).getValue()));
+		long distance = ((AussomInt)args.get(0)).getValue();
+		AussomException err = Util.checkIntRange("int.rotateRight", distance);
+		if (err != null) return err;
+		return new AussomInt(Long.rotateRight(this.value, (int) distance));
 	}
 	
 	public AussomType signum(Environment env, ArrayList<AussomType> args) {
@@ -153,7 +159,10 @@ public class AussomInt extends AussomObject implements AussomTypeInt, AussomType
 			if(args.get(1).isNull()) {
 				return new AussomInt(Long.parseLong(((AussomString)args.get(0)).getValue()));
 			} else {
-				return new AussomInt(Long.parseLong(((AussomString)args.get(0)).getValue(), (int)((AussomInt)args.get(1)).getValue()));
+				long radix = ((AussomInt)args.get(1)).getValue();
+				AussomException err = Util.checkIntRange("int.parse", radix);
+				if (err != null) return err;
+				return new AussomInt(Long.parseLong(((AussomString)args.get(0)).getValue(), (int) radix));
 			}
 		} catch(Exception e) {
 			return new AussomException("int.parse(): Integer parse exception.");
